@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\project-end-device.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\project-gateway.ewp</path>
+  </project>
+  <batchBuild/>
+</workspace>
+
+

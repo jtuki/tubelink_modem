@@ -30,3 +30,14 @@
 
 # Debug files
 *.dSYM/
+
+# mammut customized git ignored files @{
+eli_modem/ewstm8/eli_modem_workspace_output/
+eli_modem/ewstm8/eli_modem_workspace/settings/
+# only eww (workspaces) and ewp (projects) are useful.
+*.dep
+*.ewt
+# we don't upload pdf and chm files.
+*.chm
+*.pdf
+# @}
