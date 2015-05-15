@@ -13,8 +13,8 @@ extern "C"
 {
 #endif
 
-#define LPWAN_RADIO_RX_BUFFER_MAX_LEN       40
-#define LPWAN_RADIO_TX_BUFFER_MAX_LEN       40
+#define LPWAN_RADIO_RX_BUFFER_MAX_LEN       80
+#define LPWAN_RADIO_TX_BUFFER_MAX_LEN       80
 
 #ifdef __cplusplus
 }

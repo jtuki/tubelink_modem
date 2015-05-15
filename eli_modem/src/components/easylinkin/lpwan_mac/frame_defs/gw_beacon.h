@@ -99,7 +99,7 @@ __LPWAN struct beacon_header {
 /**
  * bits 1: is_join_ack?
  * bits 1: is_msg_pending? (besides the ACK, there is also pending msg)
- * bits 3: estimation_down_time
+ * bits 3: estimation_down_time (estimated downlink time for the pending message)
  * bits 2: preferred_next_tx_power (the recommended next tx power of end-device)
  * bits 1: _reserved
  * 

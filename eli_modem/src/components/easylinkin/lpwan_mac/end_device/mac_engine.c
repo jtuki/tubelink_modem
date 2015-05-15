@@ -797,8 +797,6 @@ static os_int8 rx_and_see_is_it_a_beacon(os_uint8 *rx_buf, os_uint8 len,
 
     lpwan_radio_read(rx_buf, len);
 
-    hostIf_SendToHost(&rx_buf[1], rx_buf[0]);
-    hostIf_SendToHost("123456\r\n", strlen("123456\r\n"));
     os_int8 _len = -1;
     if (rx_buf[0] > 0) {
         _len = lpwan_parse_frame_header((void *) (rx_buf+1), rx_buf[0],

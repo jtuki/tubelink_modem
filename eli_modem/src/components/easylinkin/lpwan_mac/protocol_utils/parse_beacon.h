@@ -20,8 +20,8 @@ struct parsed_beacon_info {
     version_t required_min_version;
     version_t lpwan_protocol_version;
     
-    os_int8 beacon_seq_id; /**< \sa BEACON_MAX_SEQ_NUM */
-    os_uint8 beacon_group_seq_id;
+    os_int8 beacon_seq_id; /**< range [0, BEACON_MAX_SEQ_NUM) */
+    os_uint8 beacon_group_seq_id; /**< range [0, ::beacon_groups_num] */
     os_uint8 beacon_class_seq_id; /**< range [1, ::beacon_classes_num] */
     
     os_uint8 packed_ack_delay_num;

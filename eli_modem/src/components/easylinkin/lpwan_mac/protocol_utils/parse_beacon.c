@@ -55,6 +55,8 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
     case BEACON_PERIOD_5S:
         info->beacon_period_length = \
             _beacon_period_length_list[(int) get_bits(bcn_info[0], 7, 6)];
+        info->beacon_section_length_us = \
+            _beacon_section_length_us[(int) get_bits(bcn_info[0], 7, 6)];
         break;
     }
 
