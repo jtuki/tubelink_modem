@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325" name="Debug" parent="cdt.managedbuild.config.gnu.mingw.exe.debug">
+					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.debug.491488253" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.debug.523755542" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.debug"/>
+							<builder buildPath="${workspace_loc:/easylinkin_eclipse_proj}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.1328906779" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.359874093" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug">
+								<option id="gnu.both.asm.option.include.paths.474966927" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1674916802" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.887655869" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.880139518" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug">
+								<option id="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level.384894411" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level.2040171744" name="Debug Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.144585124" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.388434353" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" valueType="enumerated"/>
+								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.460228684" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1319713158" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
+									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
+									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
+								</option>
+								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1984943599" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.1180142925" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug">
+								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.193222717" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.722214017" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug"/>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.mingw.exe.release.1121719299">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.exe.release.1121719299" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.mingw.exe.release.1121719299" name="Release" parent="cdt.managedbuild.config.gnu.mingw.exe.release">
+					<folderInfo id="cdt.managedbuild.config.gnu.mingw.exe.release.1121719299." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.mingw.exe.release.1013880280" name="MinGW GCC" superClass="cdt.managedbuild.toolchain.gnu.mingw.exe.release">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.mingw.exe.release.1116370906" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.mingw.exe.release"/>
+							<builder buildPath="${workspace_loc:/easylinkin_eclipse_proj}/Release" id="cdt.managedbuild.tool.gnu.builder.mingw.base.462463201" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release.1320009226" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release">
+								<option id="gnu.both.asm.option.include.paths.1316782011" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1824191997" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.1528749538" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release.1130694190" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.release">
+								<option id="gnu.cpp.compiler.mingw.exe.release.option.optimization.level.1078724085" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.mingw.exe.release.option.debugging.level.717626441" name="Debug Level" superClass="gnu.cpp.compiler.mingw.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.984644657" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.mingw.exe.release.option.optimization.level.1306999754" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.release.option.optimization.level" valueType="enumerated"/>
+								<option id="gnu.c.compiler.mingw.exe.release.option.debugging.level.1038867205" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1418305512" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
+									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
+									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
+								</option>
+								<option id="gnu.c.compiler.option.include.paths.215447858" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2098444937" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.release.644089550" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.release">
+								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.42428201" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release.1426937031" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.release"/>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="easylinkin_eclipse_proj.cdt.managedbuild.target.gnu.mingw.exe.2119486432" name="Executable" projectType="cdt.managedbuild.target.gnu.mingw.exe"/>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325;cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.144585124;cdt.managedbuild.tool.gnu.c.compiler.input.1984943599">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.mingw.exe.release.1121719299;cdt.managedbuild.config.gnu.mingw.exe.release.1121719299.;cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.release.984644657;cdt.managedbuild.tool.gnu.c.compiler.input.2098444937">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+</cproject>
