@@ -17,7 +17,7 @@ extern "C"
 
 #define __should_never_fall_here() haddock_assert(OS_FALSE)
 
-#if defined HDK_USER_CFG_MAIN_PC_TEST && HDK_USER_CFG_MAIN_PC_TEST == OS_TRUE
+#if defined HDK_USER_CFG_HAL_PC && HDK_USER_CFG_HAL_PC == OS_TRUE
 #include <stdio.h>
 #include <stdlib.h>
 #define haddock_assert(condition) do { \
@@ -28,6 +28,7 @@ extern "C"
     } \
 } while (0)
 #elif defined HDK_CFG_DEBUG && HDK_CFG_DEBUG == OS_TRUE
+// not on PC platform, debug mode enabled (simply use watchdog to implement assert).
 #define haddock_assert(condition) do { \
     if (!(condition)) \
         while (1) {} \

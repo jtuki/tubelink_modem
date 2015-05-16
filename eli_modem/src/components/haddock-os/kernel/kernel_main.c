@@ -21,7 +21,7 @@
 #include "lib/assert.h"
 
 
-int main ()
+void main ()
 {
     // hardware related initialization.
     haddock_hal_init();
@@ -88,6 +88,4 @@ int main ()
         }
 #endif
     }
-    
-    return 0;
 }

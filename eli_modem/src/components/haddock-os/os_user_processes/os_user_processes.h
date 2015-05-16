@@ -15,7 +15,7 @@ extern "C"
 
 #include "hdk_user_config.h"
 #include "haddock_types.h"
-#include "eli_endnode/eli_endnode_process.h"
+#include "easylinkin_modem/easylinkin_modem_process.h"
 
 
     
@@ -26,9 +26,10 @@ extern "C"
 #elif (defined HDK_USER_CFG_MAIN_EXAMPLE_USER) && (HDK_USER_CFG_MAIN_EXAMPLE_USER == OS_TRUE)
 #define os_user_processes_init() \
     os_processes_init_example_user()
-#elif (defined HDK_USER_CFG_ELI_ENDNODE) && (HDK_USER_CFG_ELI_ENDNODE == OS_TRUE)
+
+#elif (defined HDK_USER_CFG_MAIN_ELI_MODEM) && (HDK_USER_CFG_MAIN_ELI_MODEM == OS_TRUE)
 #define os_user_processes_init() \
-        os_processes_init_eli_endnode()
+        os_processes_init_easylinkin_modem()
 #endif
 
 

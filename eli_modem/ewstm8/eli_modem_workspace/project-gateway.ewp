@@ -192,6 +192,8 @@
           <state>USE_STM8L1526_EVAL</state>
           <state>STM8L15X_MD</state>
           <state>__MCU_8051</state>
+          <state>MODEM_FOR_GATEWAY</state>
+          <state>xMODEM_FOR_END_DEVICE</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -1123,6 +1125,9 @@
         <name>lpwan_mac</name>
         <group>
           <name>end_device</name>
+          <excluded>
+            <configuration>eli_modem_gateway_stm8l151g6</configuration>
+          </excluded>
           <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\end_device\config_end_device.h</name>
           </file>
@@ -1185,6 +1190,18 @@
           </file>
         </group>
         <group>
+          <name>gateway</name>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\gateway\config_gateway.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine.h</name>
+          </file>
+        </group>
+        <group>
           <name>protocol_utils</name>
           <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_uplink_msg.c</name>
@@ -1193,10 +1210,28 @@
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_uplink_msg.h</name>
           </file>
           <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_frame_hdr.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_frame_hdr.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_gw_beacon.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_gw_beacon.h</name>
+          </file>
+          <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_beacon.c</name>
           </file>
           <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_beacon.h</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_device_uplink_msg.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_device_uplink_msg.h</name>
           </file>
           <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_frame_hdr.c</name>
@@ -1242,9 +1277,6 @@
           <name>$PROJ_DIR$\..\..\src\components\easylinkin\radio\radio_config.h</name>
         </file>
       </group>
-      <file>
-        <name>$PROJ_DIR$\..\..\src\components\easylinkin\main_eli.c</name>
-      </file>
     </group>
     <group>
       <name>haddock-os</name>
@@ -1371,18 +1403,18 @@
       <group>
         <name>os_user_processes</name>
         <group>
-          <name>eli_endnode</name>
+          <name>easylinkin_modem</name>
           <file>
-            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\eli_endnode\eli_endnode_process.c</name>
+            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\easylinkin_modem\easylinkin_modem_process.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\eli_endnode\eli_endnode_process.h</name>
+            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\easylinkin_modem\easylinkin_modem_process.h</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\eli_endnode\process_hostif.c</name>
+            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\easylinkin_modem\process_hostif.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\eli_endnode\process_hostif.h</name>
+            <name>$PROJ_DIR$\..\..\src\components\haddock-os\os_user_processes\easylinkin_modem\process_hostif.h</name>
           </file>
         </group>
         <group>

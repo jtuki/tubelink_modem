@@ -24,7 +24,7 @@ os_int8 lpwan_parse_device_uplink_msg(struct device_uplink_msg *up_msg,
     info->beacon_lqi = up_msg->hdr.beacon_lqi;
     info->beacon_rssi = up_msg->hdr.beacon_rssi;
 
-    info->type = get_bits(up_msg->type_and_len, 7, 6);
+    info->type = (enum device_message_type) get_bits(up_msg->type_and_len, 7, 6);
     info->msg_len = _msg_len;
 
     info->seq = up_msg->seq;

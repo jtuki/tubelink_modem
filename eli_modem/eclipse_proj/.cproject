@@ -19,46 +19,50 @@
 							<builder buildPath="${workspace_loc:/easylinkin_eclipse_proj}/Debug" id="cdt.managedbuild.tool.gnu.builder.mingw.base.1328906779" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug.359874093" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.474966927" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1674916802" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.mingw.base.887655869" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.mingw.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug.880139518" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.mingw.exe.debug">
-								<option id="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level.384894411" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-								<option id="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level.2040171744" name="Debug Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level.384894411" name="Optimization Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level.2040171744" name="Debug Level" superClass="gnu.cpp.compiler.mingw.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug.144585124" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.mingw.exe.debug">
-								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.388434353" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" valueType="enumerated"/>
-								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.460228684" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1319713158" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.388434353" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.460228684" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1319713158" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
 									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
+									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 								</option>
-								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os&quot;"/>
 								</option>
+								<option id="gnu.c.compiler.option.dialect.std.1482457408" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.c99" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1984943599" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug.1180142925" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.exe.debug">
@@ -70,6 +74,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug.722214017" name="MinGW C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.mingw.exe.debug"/>
 						</toolChain>
 					</folderInfo>
+					<sourceEntries>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -92,17 +99,17 @@
 							<builder buildPath="${workspace_loc:/easylinkin_eclipse_proj}/Release" id="cdt.managedbuild.tool.gnu.builder.mingw.base.462463201" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="cdt.managedbuild.tool.gnu.builder.mingw.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release.1320009226" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.mingw.exe.release">
 								<option id="gnu.both.asm.option.include.paths.1316782011" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1824191997" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -118,19 +125,22 @@
 									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
 									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
+									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.215447858" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src                                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps                                          &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components                                    &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal                                &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util                           &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin                         &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio                   &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal                               &quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc &quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/apps/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/bal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/lib_util/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2098444937" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -161,4 +171,13 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/easylinkin_eclipse_proj"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/easylinkin_eclipse_proj"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

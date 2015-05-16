@@ -1,19 +1,21 @@
 /***************************************************************************************************
-* @file name	eli_endnode_process.h
+* @file name	easylinkin_modem_process.c
 * @data   		2015/04/27
 * @auther   	chuanpengl
-* @module   	endnode processes
-* @brief 		endnode processes, include host if process,
+* @module   	easylinkin_modem processes
+* @brief 		processes of easylinkin_modem, include hostif process,
 ***************************************************************************************************/
-#ifndef __ELI_ENDNODE_PROCESS_H__
-#define __ELI_ENDNODE_PROCESS_H__
+
 /***************************************************************************************************
  * INCLUDES
  */
-
-
-#ifdef __cplusplus
-extern "C"{
+#include "easylinkin_modem_process.h"
+#include "hdk_user_config.h"
+#include "process_hostif.h"
+#if defined MODEM_FOR_END_DEVICE
+#include "end_device/mac_engine.h"
+#elif defined MODEM_FOR_GATEWAY
+#include "gateway/mac_engine.h"
 #endif
 
 /***************************************************************************************************
@@ -23,49 +25,47 @@ extern "C"{
 /***************************************************************************************************
  * MACROS
  */
-/* process priority define */
-#define PROC_HOSTIF_PRIORITY         (1)
 
-    
-    
-/* process signal define */
-#define PROC_HOSTIF_SIG_PERIOD        (BV(0))
-    
-    
-    
-    
-    
-#define customize_set_signal(dest_pid, signal, period_ms) \
-    if (t == NULL) { \
-        t = os_timer_create((dest_pid), (signal), period_ms); \
-        haddock_assert(t); \
-    } else { \
-        os_timer_reconfig(t, (dest_pid), (signal), period_ms); \
-    } \
-    os_timer_start(t);
 
 /***************************************************************************************************
  * TYPEDEFS
  */
-
-
+ 
+ 
 /***************************************************************************************************
  * CONSTANTS
  */
 
 
 /***************************************************************************************************
- * GLOBAL VARIABLES DECLEAR
+ * LOCAL FUNCTIONS DECLEAR
  */
 
 
 /***************************************************************************************************
- * GLOBAL FUNCTIONS DECLEAR
+ * GLOBAL VARIABLES
  */
+
+
 /***************************************************************************************************
- * @fn      os_processes_init_eli_endnode()
+ * STATIC VARIABLES
+ */
+
+
+/***************************************************************************************************
+ * EXTERNAL VARIABLES
+ */
+
+
+ 
+/***************************************************************************************************
+ *  GLOBAL FUNCTIONS IMPLEMENTATION
+ */
+ 
+/***************************************************************************************************
+ * @fn      os_processes_init_easylinkin_modem()
  *
- * @brief   eli_endnode processes init
+ * @brief   easylinkin_modem processes init
  *
  * @author	chuanpengl
  *
@@ -73,13 +73,22 @@ extern "C"{
  *
  * @return  none
  */
-void os_processes_init_eli_endnode(void);
-
-#ifdef __cplusplus
-}
+void os_processes_init_easylinkin_modem(void) {
+    proc_HostifInit();
+#if defined MODEM_FOR_END_DEVICE
+    device_mac_engine_init();
+#elif defined MODEM_FOR_GATEWAY
+    gateway_mac_engine_init();
 #endif
+}   /* os_processes_init_easylinkin_modem */
 
-#endif /* __ELI_ENDNODE_PROCESS_H__ */
+
+
+/***************************************************************************************************
+ * LOCAL FUNCTIONS IMPLEMENTATION
+ */
+ 
+
  
 /***************************************************************************************************
 * HISTORY LIST

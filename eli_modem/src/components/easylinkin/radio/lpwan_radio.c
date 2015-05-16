@@ -6,11 +6,16 @@
  * \author 
  */
 
-#include "kernel/hdk_memory.h"
 #include "haddock_types.h"
+#include "kernel/hdk_memory.h"
+#include "kernel/ipc.h"
+#include "kernel/process.h"
+
+#include "lib/assert.h"
+
 #include "radio_config.h"
 #include "lpwan_radio.h"
-#include "kernel/ipc.h"
+
 #include "end_device/mac_engine.h"
 
 #include "rf/common/rf_manager.h"
@@ -35,16 +40,12 @@ os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
  */
 static void lpwan_radio_event__(RF_EVT_e a_eEvt);
 
+static os_pid_t _lpwan_mac_process_id = PROCESS_ID_RESERVED;
 
-
-
-
-
-
-
-
-
-
+void lpwan_radio_register_mac_pid(os_pid_t pid)
+{
+    _lpwan_mac_process_id = pid;
+}
 
 /**
  * Try to send a frame through radio interface.
@@ -108,6 +109,7 @@ os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
 void lpwan_radio_init( void )
 {
     /* init rf module */
+    haddock_assert(_lpwan_mac_process_id != PROCESS_ID_RESERVED);
     Rf_Init(lpwan_radio_event__);
     
 } /* appLora_Init() */
@@ -149,17 +151,17 @@ void lpwan_radio_event__(RF_EVT_e a_eEvt)
         //Rf_ReceiveStart();
         break;
     case RF_EVT_RX_OK:
-        os_ipc_set_signal(gl_device_mac_engine_pid, SIGNAL_LPWAN_RADIO_RX_OK);
+        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_RX_OK);
         break;
     case RF_EVT_RX_TMO:
-        os_ipc_set_signal(gl_device_mac_engine_pid, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
+        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
         //lpwan_radio_tx("rx_tmo\r\n", strlen("rx_tmo\r\n"));
         break;
     case RF_EVT_TX_OK:
-        os_ipc_set_signal(gl_device_mac_engine_pid, SIGNAL_LPWAN_RADIO_TX_OK);
+        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_TX_OK);
         break;
     case RF_EVT_TX_TMO:
-        os_ipc_set_signal(gl_device_mac_engine_pid, SIGNAL_LPWAN_RADIO_TX_TIMEOUT);
+        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_TX_TIMEOUT);
         break;
     default:
         break;

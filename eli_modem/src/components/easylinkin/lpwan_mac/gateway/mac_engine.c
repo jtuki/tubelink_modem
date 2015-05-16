@@ -83,6 +83,7 @@ void gateway_mac_engine_init(void)
 
     os_ipc_set_signal(this->_pid, SIGNAL_GW_MAC_ENGINE_INIT_FINISHED);
 
+    lpwan_radio_register_mac_pid(gl_gateway_mac_engine_pid);
     /** initialize the radio interface */
     lpwan_radio_init();
 }

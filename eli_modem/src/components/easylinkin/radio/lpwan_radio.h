@@ -14,6 +14,7 @@ extern "C"
 #endif
 
 #include "haddock_types.h"
+#include "kernel/process.h"
 #include "radio_config.h"
 
 extern os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
@@ -26,6 +27,8 @@ extern os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 #define LPWAN_RADIO_ERR_READ_BUFFER_LEN_INVALID     -1
 
 #define LPWAN_RADIO_TX_MAX_LEN      128
+
+void lpwan_radio_register_mac_pid(os_pid_t pid);
 
 void lpwan_radio_init(void);
 void lpwan_radio_routine(void);

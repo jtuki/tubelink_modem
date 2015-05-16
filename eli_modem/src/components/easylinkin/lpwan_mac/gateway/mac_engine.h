@@ -16,6 +16,8 @@ extern "C"
 #include "lpwan_types.h"
 #include "lpwan_utils.h"
 #include "protocol_utils/parse_beacon.h"
+  
+#include "kernel/process.h"
 
 #include "lib/ringbuffer.h"
 
@@ -55,6 +57,8 @@ struct lpwan_gateway_mac_info {
 };
 
 extern os_pid_t gl_gateway_mac_engine_pid;
+
+void gateway_mac_engine_init(void);
 
 #ifdef __cplusplus
 }

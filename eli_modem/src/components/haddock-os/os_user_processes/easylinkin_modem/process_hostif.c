@@ -14,7 +14,7 @@
 #include "kernel/ipc.h"
 #include "kernel/sys_signal_defs.h"
 #include "lib/assert.h"
-#include "eli_endnode_process.h"
+#include "easylinkin_modem_process.h"
 
 #include "app_hostif.h"
 

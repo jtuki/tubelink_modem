@@ -157,6 +157,7 @@ void device_mac_engine_init(void)
     mac_state_transfer(DE_MAC_STATES_INITED);
     os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_INIT_FINISHED);
 
+    lpwan_radio_register_mac_pid(gl_device_mac_engine_pid);
     /** initialize the radio interface */
     lpwan_radio_init();
 }
@@ -741,6 +742,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         default:
             return 0;
         }
+        break;
     case DE_MAC_STATES_LEAVING:
         break;
     case DE_MAC_STATES_LEFT:
