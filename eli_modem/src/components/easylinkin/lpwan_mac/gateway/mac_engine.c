@@ -190,9 +190,9 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             gateway_mac_tx_buffer[0] += _len;
         }
 
-        /** transmit the beacon, and start the radio rx again to receive frames. @{ */
+        /** Transmit the beacon, and wait SIGNAL_LPWAN_RADIO_TX_OK to restart the radio
+         *  rx again to receive frames. @{ */
         lpwan_radio_tx(gateway_mac_tx_buffer+1, gateway_mac_tx_buffer[0]);
-        lpwan_radio_start_rx();
         /** @} */
 
         /** update the beacon information. @{ */
@@ -222,6 +222,11 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         /** @} */
 
         return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
+    }
+
+    if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
+        lpwan_radio_start_rx();
+        return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
     }
 
     if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {

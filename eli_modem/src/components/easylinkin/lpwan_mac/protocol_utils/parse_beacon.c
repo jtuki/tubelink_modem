@@ -164,7 +164,7 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
         }
     }
 
-    return 0;
+    return len;
 }
 
 
