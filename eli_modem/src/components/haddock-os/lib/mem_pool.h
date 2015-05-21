@@ -20,7 +20,7 @@ extern "C"
  * The structure of a memory pool is:
  *      struct mem_pool_hdr hdr;
  *      uint16 bv[]; (sizeof(bv) == (bv_num))
- *      uint16 bv_num; (bit-vector number, bv_num == (hdr.capacity/16)+1)
+ *      uint8  bv_num; (bit-vector number, bv_num == (hdr.capacity/16)+1)
  *      uint8 pool[];  (which contains a series of struct mem_pool_blk(s))
  */
 

@@ -63,7 +63,7 @@ static inline
 void *get_mem_pool_hdr(struct mem_pool_blk *blk)
 {
     os_uint8 *bv_num = (os_uint8*) ((char*)blk - \
-            (blk->alloc_id)*(sizeof(*blk) + blk->blk_size) - sizeof(os_uint8));
+            (blk->alloc_id)*(sizeof(struct mem_pool_blk) + blk->blk_size) - sizeof(os_uint8));
     return bv_num - sizeof(os_uint16)*(*bv_num) - sizeof(struct mem_pool_hdr);
 }
 

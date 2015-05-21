@@ -126,6 +126,7 @@ struct timer *__haddock_timer_create(os_pid_t pid,
 void os_timer_reconfig(struct timer *timer, os_pid_t pid,
                        signal_t signal, os_uint32 delta_ms)
 {
+    haddock_assert(timer);
     haddock_assert(is_signal(signal));
     haddock_assert(delta_ms > 0);
     haddock_assert(timer_not_started(timer)); // is stopped
@@ -174,11 +175,19 @@ int os_timer_start(struct timer *timer)
     struct list_head *i;
     os_boolean added = OS_FALSE;
     
+    os_uint8 _loop_cnter = 0;
+
+    struct time *t1 = & timer->timeout_value;
+    struct time *t2;
+
+    haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
     list_for_each(i, timer_list) {
-        if (time_tick_less_than(timer->timeout_value,
-                (list_entry(i, struct timer, hdr))->timeout_value)) {
+        haddock_assert(_loop_cnter++ < HDK_CFG_TIMER_MAX_NUM);
+        t2 = & (list_entry(i, struct timer, hdr))->timeout_value;
+        if (time_tick_less_than(*t1, *t2)) {
             list_add_tail(& timer->hdr, i); // i.prev -> timer -> i -> i.next
             added = OS_TRUE;
+            haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
             break;
         }
     }
@@ -186,14 +195,15 @@ int os_timer_start(struct timer *timer)
     if (!added) {
         list_add_tail(& timer->hdr, timer_list);
     }
-    
+
     return 0;
 }
 
 void os_timer_stop(struct timer *timer)
 {
-    if (timer_not_started(timer))
+    if (timer_not_started(timer)) {
         return;
+    }
     
     list_del_init(& timer->hdr);
 }
@@ -517,3 +527,20 @@ void haddock_get_time_tick_now(struct time *t)
         t->ms = haddock_time_tick_now.ms;
     );
 }
+
+os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
+                                                 os_size_t max_len)
+{
+    struct list_head *pos;
+    struct list_head *timer_list = is_absolute_timer_list ?
+                                   & haddock_atimer_list : & haddock_timer_list;
+    os_size_t i = 0;
+
+    list_for_each(pos, timer_list) {
+        ++i;
+        if (i > max_len)
+            return OS_TRUE;
+    }
+    return OS_FALSE;
+}
+

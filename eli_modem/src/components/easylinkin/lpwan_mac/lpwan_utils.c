@@ -7,7 +7,6 @@
  */
 
 #include "lpwan_utils.h"
-#include "app_hostif.h"
 
 os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower)
 {
@@ -28,7 +27,12 @@ short_addr_t short_modem_uuid(modem_uuid_t uuid)
     return (short_addr_t) (higher + lower);
 }
 
+#ifdef LPWAN_DEBUG
+#include "app_hostif.h"
+#include <stdio.h>
+
 void print_debug(char *debug_info, os_uint8 len)
 {
     hostIf_SendToHost((hostIfChar *) debug_info, (hostIfUint8) len);
 }
+#endif

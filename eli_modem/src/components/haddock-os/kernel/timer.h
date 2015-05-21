@@ -71,6 +71,9 @@ struct timer *__haddock_timer_create(os_pid_t pid,
                                      os_boolean is_absolute, os_boolean is_one_shot,
                                      signal_t signal, os_uint32 delta_ms);
 
+os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
+                                                 os_size_t max_len);
+
 #ifdef __cplusplus
 }
 #endif

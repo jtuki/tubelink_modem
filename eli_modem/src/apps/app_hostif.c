@@ -51,9 +51,7 @@ typedef struct
  */
 #define HOSTIF_UART_RX_BUF_SIZE     (64)
 #define HOSTIF_UART_TX_BUF_SIZE     (64)
-#define HOSTIF_UART_TX_MSG_MAXLEN   (32)
-
-
+#define HOSTIF_UART_TX_MSG_MAXLEN   (64) 
 
 
 /***************************************************************************************************
@@ -329,8 +327,6 @@ void hostIf_Run( void )
 void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length )
 {
     hostIfChar acBuf[16];
-    
-    
     
     if(a_pu8Data && (a_u8Length < HOSTIF_UART_TX_MSG_MAXLEN) )
     {

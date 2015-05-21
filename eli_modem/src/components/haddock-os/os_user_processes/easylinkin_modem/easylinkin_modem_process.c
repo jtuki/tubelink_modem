@@ -14,6 +14,7 @@
 #include "process_hostif.h"
 #if defined MODEM_FOR_END_DEVICE
 #include "end_device/mac_engine.h"
+#include "process_test_end_device_app.h"
 #elif defined MODEM_FOR_GATEWAY
 #include "gateway/mac_engine.h"
 #endif
@@ -77,6 +78,7 @@ void os_processes_init_easylinkin_modem(void) {
     proc_HostifInit();
 #if defined MODEM_FOR_END_DEVICE
     device_mac_engine_init();
+    proc_test_end_device_app_init();
 #elif defined MODEM_FOR_GATEWAY
     gateway_mac_engine_init();
 #endif

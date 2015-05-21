@@ -35,7 +35,7 @@ extern "C"
 /**< @} */
 
 /**< configurations @{ */
-#define GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM            4   // the maxium packed ack delay
+#define GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM            2   // the maxium packed ack delay
 #define GATEWAY_MAX_UPLINK_MSG_PER_BEACON_PERIOD        10  // the max uplink messages
                                                             // within a beacon period
 

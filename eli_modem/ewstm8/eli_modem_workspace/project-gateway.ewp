@@ -118,7 +118,7 @@
         </option>
         <option>
           <name>GenMathFunctionDescription</name>
-          <state></state>
+          <state>Default variants of cos, sin, tan, log, log10, pow, and exp.</state>
         </option>
       </data>
     </settings>
@@ -152,7 +152,7 @@
         <option>
           <name>IccOptStrategy</name>
           <version>0</version>
-          <state>2</state>
+          <state>0</state>
         </option>
         <option>
           <name>IccOptLevelSlave</name>
@@ -189,6 +189,7 @@
         </option>
         <option>
           <name>CCDefines</name>
+          <state>xLPWAN_DEBUG</state>
           <state>USE_STM8L1526_EVAL</state>
           <state>STM8L15X_MD</state>
           <state>__MCU_8051</state>
@@ -503,7 +504,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>project.hex</state>
+          <state>project-gateway.hex</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -1375,6 +1376,9 @@
       </group>
       <group>
         <name>lib</name>
+        <file>
+          <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.c</name>
+        </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.h</name>
         </file>

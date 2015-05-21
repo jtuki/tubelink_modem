@@ -20,6 +20,7 @@
 
 #include "lib/assert.h"
 
+static os_uint32 __kernel_main_loop_counter = 0;
 
 void main ()
 {
@@ -51,6 +52,8 @@ void main ()
     interrupt_state_t _state;
     
     while (OS_TRUE) {
+        __kernel_main_loop_counter += 1;
+        
         haddock_timer_update_routine();
         proc = schedule_next();
         if (proc) {

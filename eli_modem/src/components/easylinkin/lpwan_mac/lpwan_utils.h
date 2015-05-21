@@ -40,12 +40,12 @@ os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
 short_addr_t short_modem_uuid(modem_uuid_t uuid);
 
 #ifdef LPWAN_DEBUG
-#define print_debug(str, len)
-#define print_debug_str(str)
-#else
 void print_debug(char *debug_str, os_uint8 len);
 #define print_debug_str(str) \
     print_debug(str "\r\n", (os_uint8) (sizeof(str)-1+2))
+#else
+#define print_debug(str, len)
+#define print_debug_str(str)
 #endif
 
 #ifdef __cplusplus

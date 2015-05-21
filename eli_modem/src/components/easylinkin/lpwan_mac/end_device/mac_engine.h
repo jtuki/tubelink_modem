@@ -58,8 +58,8 @@ extern os_pid_t gl_device_mac_engine_pid;
 /**< the longest time to find beacon during joining process */
 #define DEVICE_JOIN_FIND_BEACON_TIMEOUT_MS          5000
 
-#define DEVICE_MAC_UPDATE_BEACON_IN_ADVANCE_MS      200
-#define DEVICE_MAC_WAIT_BEACON_TIMEOUT_MS           300
+#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       1000
+#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          2000
 
 #define DEVICE_MAC_RADIO_PERIODICAL_CHECK_INTERVAL  2   // check radio each 2ms
 
@@ -161,7 +161,8 @@ enum device_mac_states device_get_mac_states(void);
 #define DEVICE_SEND_MSG_ERR_INVALID_LEN             -1
 #define DEVICE_SEND_MSG_ERR_NOT_JOINED              -2
 #define DEVICE_SEND_MSG_ERR_PENDING_TX_BUFFER_FULL  -3
-os_int8 device_mac_send_msg(enum device_message_type type, os_uint8 msg[], os_uint8 len);
+#define DEVICE_SEND_MSG_ERR_FRAME_BUFFER_FULL       -4  // cannot allocate more frame buffer
+os_int8 device_mac_send_msg(enum device_message_type type, const os_uint8 msg[], os_uint8 len);
 
 #ifdef __cplusplus
 }

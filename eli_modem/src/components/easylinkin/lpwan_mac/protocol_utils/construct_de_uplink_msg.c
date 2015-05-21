@@ -24,6 +24,7 @@ void construct_device_uplink_msg(enum device_message_type type,
                                  void *buffer, os_uint8 buffer_len)
 {
     haddock_assert(msg_len < LPWAN_MAX_PAYLAOD_LEN);
+    haddock_assert(buffer_len > sizeof(struct device_uplink_msg) + msg_len);
 
     struct device_uplink_msg *up = (struct device_uplink_msg *) buffer;
 

@@ -137,12 +137,38 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
     if (signal & SIGNAL_GW_MAC_SEND_BEACON) {
         lpwan_radio_stop_rx();
-
+        
         /** restart the beacon timer @{ */
         os_timer_reconfig(beacon_timer, this->_pid,
                 SIGNAL_GW_MAC_SEND_BEACON,
                 1000 * mac_info.bcn_info.beacon_period_length);
         os_timer_start(beacon_timer);
+        /** @} */
+        
+        /** update the beacon information. @{ */
+        // class seq id
+        mac_info.bcn_info.beacon_class_seq_id += 1;
+        if (mac_info.bcn_info.beacon_class_seq_id > mac_info.bcn_info.beacon_classes_num) {
+            mac_info.bcn_info.beacon_class_seq_id = 1;
+        }
+        // beacon seq id
+        mac_info.bcn_info.beacon_seq_id += 1;
+        if (mac_info.bcn_info.beacon_seq_id >= BEACON_MAX_SEQ_NUM) {
+            mac_info.bcn_info.beacon_seq_id = 0;
+            // beacon group id
+            mac_info.bcn_info.beacon_group_seq_id += 1;
+            if (mac_info.bcn_info.beacon_group_seq_id > mac_info.bcn_info.beacon_groups_num) {
+                mac_info.bcn_info.beacon_group_seq_id = 0;
+            }
+        }
+        /** @} */
+
+        /** update the packed ack information. @{ */
+        mac_info.cur_packed_ack_delay_list_id += 1;
+        if (mac_info.cur_packed_ack_delay_list_id >
+            (os_int8) (mac_info.bcn_info.packed_ack_delay_num - 1)) {
+            mac_info.cur_packed_ack_delay_list_id = 0;
+        }
         /** @} */
 
         // construct the frame header
@@ -166,7 +192,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
         // construct the beacon header by @mac_info.bcn_info
         mac_info.bcn_info.has_packed_ack = OS_FALSE;
-        if (mac_info.cur_packed_ack_delay_list_id > 0) {
+        if (mac_info.cur_packed_ack_delay_list_id >= 0) {
             if (mac_info.packed_ack_delay_list[mac_info.cur_packed_ack_delay_list_id]->hdr.len > 0) {
                 mac_info.bcn_info.has_packed_ack = OS_TRUE;
             }
@@ -195,32 +221,6 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         lpwan_radio_tx(gateway_mac_tx_buffer+1, gateway_mac_tx_buffer[0]);
         /** @} */
 
-        /** update the beacon information. @{ */
-        // class seq id
-        mac_info.bcn_info.beacon_class_seq_id += 1;
-        if (mac_info.bcn_info.beacon_class_seq_id > mac_info.bcn_info.beacon_classes_num) {
-            mac_info.bcn_info.beacon_class_seq_id = 1;
-        }
-        // beacon seq id
-        mac_info.bcn_info.beacon_seq_id += 1;
-        if (mac_info.bcn_info.beacon_seq_id >= BEACON_MAX_SEQ_NUM) {
-            mac_info.bcn_info.beacon_seq_id = 0;
-            // beacon group id
-            mac_info.bcn_info.beacon_group_seq_id += 1;
-            if (mac_info.bcn_info.beacon_group_seq_id > mac_info.bcn_info.beacon_groups_num) {
-                mac_info.bcn_info.beacon_group_seq_id = 0;
-            }
-        }
-        /** @} */
-
-        /** update the packed ack information. @{ */
-        mac_info.cur_packed_ack_delay_list_id += 1;
-        if (mac_info.cur_packed_ack_delay_list_id >
-            (os_int8) (mac_info.bcn_info.packed_ack_delay_num - 1)) {
-            mac_info.cur_packed_ack_delay_list_id = 0;
-        }
-        /** @} */
-
         return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
     }
 
@@ -237,6 +237,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
         // we don't wait, just restart the radio's rx process
         lpwan_radio_start_rx();
+
         static os_uint8 *_rx_buf = gateway_mac_rx_buffer;
         static struct parsed_frame_hdr_info _f_hdr;
         static struct beacon_packed_ack _ack;
@@ -256,6 +257,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             || _f_hdr.src.type == ADDR_TYPE_MULTICAST_ADDRESS
             || _f_hdr.src.type == ADDR_TYPE_SHORTENED_MODEM_UUID)
         {
+            print_debug_str("gw: invalid frame!");
             goto gateway_mac_label_radio_rx_invalid_frame;
         }
 
@@ -276,22 +278,29 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         case FTYPE_DEVICE_MSG          :
             if (_f_hdr.src.type != ADDR_TYPE_SHORT_ADDRESS)
                 goto gateway_mac_label_radio_rx_invalid_frame;
+
+            print_debug_str("gw: seems to be sn msg.");
+
             _ack.hdr = 0x00;
             set_bits(_ack.hdr, 7, 7, OS_TRUE); // @is_join_ack
             set_bits(_ack.hdr, 2, 1, RADIO_TX_POWER_LEVELS_NUM-1); // @preferred_next_tx_power
             _ack.addr.short_addr = _f_hdr.src.addr.short_addr;
 
-            lpwan_parse_device_uplink_msg((struct device_uplink_msg *)(_rx_buf+1+FRAME_HDR_LEN_NORMAL),
-                                          _rx_buf[0]-FRAME_HDR_LEN_NORMAL,
-                                          &_msg_info);
+            if (0 == lpwan_parse_device_uplink_msg(
+                            (struct device_uplink_msg *)(_rx_buf+1+FRAME_HDR_LEN_NORMAL),
+                            _rx_buf[0]-FRAME_HDR_LEN_NORMAL,
+                            &_msg_info)) // check if is a valid uplink msg
+            {
+                print_debug_str("gw: get sn msg!");
+                _ack.confirmed_seq = _msg_info.seq;
 
-            _ack.confirmed_seq = _msg_info.seq;
+                expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
+                                               mac_info.bcn_info.packed_ack_delay_num)
+                                               % mac_info.bcn_info.packed_ack_delay_num;
+                rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
+                               &_ack, sizeof(struct beacon_packed_ack));
+            }
 
-            expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
-                                           mac_info.bcn_info.packed_ack_delay_num)
-                                           % mac_info.bcn_info.packed_ack_delay_num;
-            rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
-                           &_ack, sizeof(struct beacon_packed_ack));
 
             break;
         }
@@ -373,7 +382,7 @@ static os_int8 construct_gateway_beacon_packed_ack(void *buffer,
     }
     haddock_assert(rbuf->hdr.len == 0);
 
-    return sizeof(os_uint8) + (rbuf->hdr.blk_size * rbuf->hdr.len);
+    return sizeof(os_uint8) + (rbuf->hdr.blk_size * _buf[0]);
 }
 
 /**

@@ -14,6 +14,11 @@ extern "C"
 
 #include "kernel/kernel_config.h"
 #include "hdk_user_config.h"
+#include "app_hostif.h"
+
+#define S(x) #x
+#define S_(x) S(x)
+#define S_LINE__ S_(__LINE__)
 
 #define __should_never_fall_here() haddock_assert(OS_FALSE)
 
@@ -30,8 +35,9 @@ extern "C"
 #elif defined HDK_CFG_DEBUG && HDK_CFG_DEBUG == OS_TRUE
 // not on PC platform, debug mode enabled (simply use watchdog to implement assert).
 #define haddock_assert(condition) do { \
-    if (!(condition)) \
+    if (!(condition)) { \
         while (1) {} \
+    } \
 } while (0)
 #else
 #define haddock_assert(condition)
