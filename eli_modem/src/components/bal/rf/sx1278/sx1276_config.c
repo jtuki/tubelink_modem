@@ -9,7 +9,7 @@
 /***************************************************************************************************
  * INCLUDES
  */
-#include <string.h>
+
 #include "stm8l15x.h"
 #include "sx1276_config.h"
 #include "crc\crc.h"

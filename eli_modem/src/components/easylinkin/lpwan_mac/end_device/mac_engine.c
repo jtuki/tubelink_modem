@@ -14,6 +14,7 @@
 #include "lib/mem_pool.h"
 #include "lib/linked_list.h"
 #include "lib/hdk_utilities.h"
+#include "simple_log.h"
 
 #include "frame_defs/frame_defs.h"
 
@@ -28,6 +29,8 @@
 #include "protocol_utils/parse_beacon.h"
 #include "protocol_utils/construct_frame_hdr.h"
 #include "protocol_utils/construct_de_uplink_msg.h"
+
+#include "crc/crc.h"
 
 #include "mac_engine.h"
 
@@ -96,6 +99,7 @@ static void device_mac_srand(void);
 
 /**< When the MAC wake up, check the radio periodically. */
 static struct timer *radio_check_timer = NULL;
+os_boolean _has_check_radio = OS_FALSE;
 
 static void mac_engine_wakeup_init_callback(void);
 static os_int8 mac_engine_sleep_cleanup_callback(void);
@@ -113,8 +117,8 @@ static struct lpwan_addr _frame_src;
 /*---------------------------------------------------------------------------*/
 /**< debug related variables @{ */
 #define xLPWAN_MAC_DEBUG_ENABLE_MARK_RUNNING_LINE
-#define LPWAN_MAC_DEBUG_ENABLE_MARK_RUNNING_LINE_BLOCK
-#define LPWAN_MAC_DEBUG_ENABLE_MARK_LINE_TIMER_START
+#define xLPWAN_MAC_DEBUG_ENABLE_MARK_RUNNING_LINE_BLOCK
+#define xLPWAN_MAC_DEBUG_ENABLE_MARK_LINE_TIMER_START
 
 /**
  * Mark the current running line.
@@ -163,6 +167,26 @@ static os_size_t _debug_mark_line_timer_start;
 
 /**< @} */
 /*---------------------------------------------------------------------------*/
+/**< MAC related timers. @{ */
+
+static struct timer *_timeout_timer; /**< internal timeout timer
+                                              \sa joining_timer
+                                              \sa tx_timer
+                                              */
+static struct timer *update_beacon_timer; // try to track beacon periodically
+static struct timer *wait_beacon_timeout_timer; // wait beacon timeout
+
+/**
+ * \remark The two timers below use @_timeout_timer.
+ * Only one timer _should_ exist at any time.
+ *
+ * \sa _timeout_timer
+ */
+static struct timer *joining_timer;
+static struct timer *tx_timer;
+
+/**< @} */
+/*---------------------------------------------------------------------------*/
 
 os_pid_t gl_device_mac_engine_pid;
 haddock_process("device_mac_engine");
@@ -186,10 +210,28 @@ void device_mac_engine_init(void)
     (void) mac_engine_wakeup_init_callback;
     (void) mac_engine_sleep_cleanup_callback;
 #endif
-    
+
     /** initialize the @mac_info @{ */
     haddock_memset(& mac_info, 0, sizeof(mac_info));
-    
+
+    /**< initialize the MAC timers @{ */
+    _timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+                                    DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
+    haddock_assert(_timeout_timer);
+
+    update_beacon_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+                                    DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
+    haddock_assert(update_beacon_timer);
+
+    wait_beacon_timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+                                    DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
+    haddock_assert(wait_beacon_timeout_timer);
+
+    radio_check_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+                                    DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
+    haddock_assert(radio_check_timer);
+    /**< @} */
+
     _uplink_frame_pool = \
             mem_pool_create(LPWAN_DEVICE_MAC_UPLINK_BUFFER_MAX_NUM,
                             sizeof(struct tx_frame_buffer));
@@ -216,19 +258,15 @@ void device_mac_engine_init(void)
 
 static struct tx_frame_buffer *_alloc_tx_frame_buffer(void)
 {
-    print_debug_str("sn: _alloc_tx_frame_buffer @{");
     struct mem_pool_blk *blk = \
             mem_pool_alloc_blk(_uplink_frame_pool, sizeof(struct tx_frame_buffer));
-    print_debug_str("sn: @}");
     return (blk == NULL) ? NULL : ((struct tx_frame_buffer*) blk->blk);
 }
 
 static void _free_tx_frame_buffer(struct tx_frame_buffer *buffer)
 {
-    print_debug_str("sn: free frame buffer @{");
     struct mem_pool_blk *blk = find_mem_pool_blk(buffer);
     mem_pool_free_blk(blk);
-    print_debug_str("sn: @}");
 }
 
 /**
@@ -293,7 +331,7 @@ enum device_mac_states device_get_mac_states(void)
 static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 {
     haddock_assert(pid == this->_pid);
-    
+
     static struct parsed_frame_hdr_info             _frame_hdr_info;
     static struct parsed_beacon_info                _beacon_info;
     static struct parsed_beacon_packed_ack_to_me    _beacon_packed_ack;
@@ -301,44 +339,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
     static os_uint8 *rx_buf = device_mac_rx_buffer;
 
-    static struct timer *_timeout_timer = NULL; /**< internal timeout timer
-                                                  \sa joining_timer
-                                                  \sa tx_timer
-                                                  */
-    static struct timer *update_beacon_timer = NULL; // try to track beacon periodically
-    static struct timer *wait_beacon_timeout_timer = NULL; // wait beacon timeout
-
-    /**
-     * \remark The two timers below use @_timeout_timer.
-     * Only one timer _should_ exist at any time.
-     *
-     * \sa _timeout_timer
-     */
-    static struct timer *joining_timer = NULL;
-    static struct timer *tx_timer = NULL;
-
     static os_boolean _is_lost_beacon = OS_FALSE;
-
-    static os_boolean _run_first_time = OS_TRUE;
-    if (_run_first_time) {
-        _timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
-                                        DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-        haddock_assert(_timeout_timer);
-
-        update_beacon_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
-                                        DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-        haddock_assert(update_beacon_timer);
-
-        wait_beacon_timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
-                                        DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-        haddock_assert(wait_beacon_timeout_timer);
-
-        radio_check_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
-                                        DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-        haddock_assert(radio_check_timer);
-
-        _run_first_time = OS_FALSE;
-    }
 
     static os_uint8 _channel_backoff_num;
 
@@ -356,7 +357,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         /** \sa update_beacon_timer */
 
         haddock_assert(mac_info.is_beacon_synchronized);
-        _lpwan_debug_mark_running_line();
 
         mac_info.expected_beacon_seq_id += 1;
         if (mac_info.expected_beacon_seq_id == BEACON_MAX_SEQ_NUM) {
@@ -377,7 +377,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             static struct list_head *pos;
             static struct tx_frame_buffer *buf;
 
-            _lpwan_debug_mark_running_line_block();
             list_for_each(pos, & mac_info.wait_ack_frame_buffer_list) {
                 buf = list_entry(pos, struct tx_frame_buffer, hdr);
                 if (buf->expected_beacon_seq_id == mac_info.expected_beacon_seq_id) {
@@ -387,7 +386,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 }
             }
         } else if (mac_info.pending_list_len > 0) {
-            _lpwan_debug_mark_running_line_block();
             if (((os_uint16) mac_info.short_addr) % mac_info.expected_class_seq_id == 0) {
                 need_wait_beacon = OS_TRUE;
             }
@@ -398,42 +396,43 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
              * set signal:  SIGNAL_MAC_ENGINE_WAIT_BEACON
              * set timeout: SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT
              */
-            _lpwan_debug_mark_running_line_block();
             os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_WAIT_BEACON);
 
-            _lpwan_debug_mark_ling_timer_start();
             os_timer_reconfig(wait_beacon_timeout_timer, this->_pid,
                               SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT,
                               DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS);
             os_timer_start(wait_beacon_timeout_timer);
         }
 
-        _lpwan_debug_mark_running_line_block();
         /**
          * restart the beacon tracking timer @{
          */
         os_uint32 _delta = 1000 * _s_info->beacon_period_length;
-        _lpwan_debug_mark_running_line_block();
-        _lpwan_debug_mark_ling_timer_start();
         os_timer_reconfig(update_beacon_timer, this->_pid,
                           SIGNAL_MAC_ENGINE_UPDATE_BEACON, _delta);
-        _lpwan_debug_mark_running_line_block();
         os_timer_start(update_beacon_timer);
         /** @} */
 
-        _lpwan_debug_mark_running_line_block();
         return signal ^ SIGNAL_MAC_ENGINE_UPDATE_BEACON;
+    }
+
+    /*
+     * If HDK_CFG_POWER_SAVING_ENABLE is OS_FALSE, @_has_check_radio might be OS_FALSE.
+     * Otherwise, @_has_check_radio should always be OS_TRUE (process has been waken up).
+     */
+    if (! _has_check_radio) {
+        os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_CHECK_RADIO_TIMEOUT);
+        _has_check_radio = OS_TRUE;
     }
 
     if (signal & SIGNAL_MAC_ENGINE_CHECK_RADIO_TIMEOUT) {
         lpwan_radio_routine();
-        _lpwan_debug_mark_running_line();
 
-        _lpwan_debug_mark_ling_timer_start();
         os_timer_reconfig(radio_check_timer, this->_pid,
                           SIGNAL_MAC_ENGINE_CHECK_RADIO_TIMEOUT,
                           DEVICE_MAC_RADIO_PERIODICAL_CHECK_INTERVAL);
         os_timer_start(radio_check_timer);
+
         return signal ^ SIGNAL_MAC_ENGINE_CHECK_RADIO_TIMEOUT;
     }
 
@@ -444,9 +443,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     case DE_MAC_STATES_INITED:
         if (signal & SIGNAL_MAC_ENGINE_INIT_FINISHED) {
             // has just finished initialization
-            _lpwan_debug_mark_running_line();
-
-            _lpwan_debug_mark_ling_timer_start();
             haddock_assert(timer_not_started(_timeout_timer));
             joining_timer = _timeout_timer;
             os_timer_reconfig(joining_timer,
@@ -455,7 +451,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                               1000 * hdk_randr(LPWAN_MAC_JOIN_AFTER_INITED_MIN,
                                                LPWAN_MAC_JOIN_AFTER_INITED_MAX));
             os_timer_start(joining_timer);
-            print_debug_str("sn init finish: wait to start joining");
+            print_debug_str("sn init: wait to join");
 
             process_sleep();
             return signal ^ SIGNAL_MAC_ENGINE_INIT_FINISHED;
@@ -463,14 +459,12 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         else if (signal & SIGNAL_MAC_ENGINE_START_JOINING) {
             // start joining process
             mac_state_transfer(DE_MAC_STATES_JOINING);
-            mac_joining_state_transfer(DE_JOINING_STATES_WAIT_BEACON);
-            _lpwan_debug_mark_running_line();
+            mac_joining_state_transfer(DE_JOINING_STATES_WAITING_BEACON);
 
-            print_debug_str("sn joining: start to wait beacon");
+            print_debug_str("sn joining: waiting beacon");
             os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_WAIT_BEACON);
 
             /** \ref DEVICE_JOIN_FIND_BEACON_TIMEOUT_MS */
-            _lpwan_debug_mark_ling_timer_start();
             os_timer_reconfig(wait_beacon_timeout_timer, this->_pid,
                               SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT,
                               DEVICE_JOIN_FIND_BEACON_TIMEOUT_MS);
@@ -495,32 +489,47 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
          *      SIGNAL_LPWAN_RADIO_RX_TIMEOUT
          */
         if (signal & SIGNAL_MAC_ENGINE_WAIT_BEACON) {
-            _lpwan_debug_mark_running_line();
-
             lpwan_radio_stop_rx();
             lpwan_radio_start_rx();
 
             return signal ^ SIGNAL_MAC_ENGINE_WAIT_BEACON;
         }
+        else if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
+            os_int8 _len = rx_and_see_is_it_a_beacon(rx_buf,
+                                        1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
+                                        & _frame_hdr_info,
+                                        & _beacon_info,
+                                        & _beacon_packed_ack,
+                                        & _beacon_op2);
+            if (_len > 0) {
+                // valid beacon frame from gateway.
+                os_timer_stop(wait_beacon_timeout_timer);
+                os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
+            } else {
+                lpwan_radio_start_rx();
+            }
+            return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
+        }
+        else if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
+            // before @SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT, restart the rx process.
+            lpwan_radio_start_rx();
+            return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
+        }
         else if (signal & SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT) {
-            _lpwan_debug_mark_running_line();
-
             lpwan_radio_stop_rx();
 
-            print_debug_str("sn joining: wait beacon timeout");
+            print_debug_str("joining-beaconTimeout");
             // restart the joining process #mark#
             mac_state_transfer(DE_MAC_STATES_INITED);
-            mac_joining_state_transfer(DE_JOINING_STATES_WAIT_BEACON_TIMEOUT);
 
             haddock_assert(timer_not_started(wait_beacon_timeout_timer)); // todo
             os_timer_stop(wait_beacon_timeout_timer);
             os_timer_stop(update_beacon_timer);
             os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_INIT_FINISHED);
+
             return signal ^ SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT;
         }
         else if (signal & SIGNAL_MAC_ENGINE_BEACON_FOUND) {
-            _lpwan_debug_mark_running_line();
-
             print_debug_str("sn joining: beacon found!");
             /*
              * 1. if join allowed, store the beacon's information to mac_info,
@@ -536,7 +545,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 // set up the periodically timer to track beacon
                 os_uint32 _delta = 1000 * _beacon_info.beacon_period_length -
                                    DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS;
-                _lpwan_debug_mark_ling_timer_start();
                 os_timer_reconfig(update_beacon_timer, this->_pid,
                                   SIGNAL_MAC_ENGINE_UPDATE_BEACON, _delta);
                 os_timer_start(update_beacon_timer);
@@ -560,7 +568,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 lpwan_radio_stop_rx();
 
                 mac_state_transfer(DE_MAC_STATES_INITED);
-                
+
                 os_timer_stop(wait_beacon_timeout_timer);
                 os_timer_stop(update_beacon_timer);
                 os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_INIT_FINISHED);
@@ -568,7 +576,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_MAC_ENGINE_BEACON_FOUND;
         }
         else if (signal & SIGNAL_MAC_ENGINE_SEND_JOIN_REQUEST) {
-            _lpwan_debug_mark_running_line();
             /*
              * we simply generate short_addr from modem_uuid currently. #mark#
              */
@@ -577,7 +584,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             mac_info.tx_frame_seq_id = (os_uint8) hdk_randr(0, 128);
             mac_state_transfer(DE_MAC_STATES_JOINED);
             mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
-            
+
             print_debug_str("sn joined!");
 
             process_sleep();
@@ -586,29 +593,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         else if (signal & SIGNAL_MAC_ENGINE_WAIT_JOIN_RESPONSE_TIMEOUT) {
             // todo
             return signal ^ SIGNAL_MAC_ENGINE_WAIT_JOIN_RESPONSE_TIMEOUT;
-        }
-        else if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-            _lpwan_debug_mark_running_line();
-            os_int8 _len = rx_and_see_is_it_a_beacon(rx_buf,
-                                        1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
-                                        & _frame_hdr_info,
-                                        & _beacon_info,
-                                        & _beacon_packed_ack,
-                                        & _beacon_op2);
-            if (_len > 0) {
-                // valid beacon frame from gateway.
-                os_timer_stop(wait_beacon_timeout_timer);
-                os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
-            } else {
-                lpwan_radio_start_rx();
-            }
-            return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
-        }
-        else if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
-            _lpwan_debug_mark_running_line();
-            // before @SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT, restart the rx process.
-            lpwan_radio_start_rx();
-            return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
         }
         else {
             return 0;
@@ -623,8 +607,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         switch ((int) mac_info.joined_states) {
         case DE_JOINED_STATES_IDLE:
             if (signal & SIGNAL_MAC_ENGINE_WAIT_BEACON) {
-                _lpwan_debug_mark_running_line();
-
                 mac_joined_state_transfer(DE_JOINED_STATES_WAIT_BEACON);
                 print_debug_str("sn joined: start to track beacon!");
 
@@ -634,17 +616,14 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 return signal ^ SIGNAL_MAC_ENGINE_WAIT_BEACON;
             }
             else {
-                _lpwan_debug_mark_running_line();
                 return 0;
             }
         case DE_JOINED_STATES_WAIT_BEACON:
             if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
-                _lpwan_debug_mark_running_line();
                 lpwan_radio_start_rx();
                 return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
             }
             else if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-                _lpwan_debug_mark_running_line();
                 os_int8 _len = rx_and_see_is_it_a_beacon(rx_buf,
                                             1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
                                             & _frame_hdr_info,
@@ -657,12 +636,12 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
                     print_debug_str("sn joined: beacon found.");
                 }  else {
+                    print_debug_str("sn joined: rx ok but not beacon");
                     lpwan_radio_start_rx();
                 }
                 return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
             }
             else if (signal & SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT) {
-                _lpwan_debug_mark_running_line();
                 /*
                  * lost beacon of gateway, try to find beacon again.
                  */
@@ -687,7 +666,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 return signal ^ SIGNAL_MAC_ENGINE_WAIT_BEACON_TIMEOUT;
             }
             else if (signal & SIGNAL_MAC_ENGINE_BEACON_FOUND) {
-                _lpwan_debug_mark_running_line();
                 update_synced_beacon_info(& _frame_hdr_info,
                                           & _beacon_info,
                                           & _beacon_packed_ack,
@@ -705,7 +683,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
                     // check packed ack
                     if (_s_info->has_packed_ack && _s_ack->has_ack) {
-                        _lpwan_debug_mark_running_line();
                         list_for_each_safe(pos, n, & mac_info.wait_ack_frame_buffer_list) {
                             buffer = list_entry(pos, struct tx_frame_buffer, hdr);
                             if (buffer->expected_beacon_seq_id == _s_info->beacon_seq_id) {
@@ -738,10 +715,9 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                             }
                         }
                     } else if (mac_info.is_check_packed_ack == OS_TRUE) {
-                        _lpwan_debug_mark_running_line();
                         // we expect to receive packed ack, but not.
                         print_debug_str("sn: no ACK!");
-                        
+
                         list_for_each_safe(pos, n, & mac_info.wait_ack_frame_buffer_list) {
                             buffer = list_entry(pos, struct tx_frame_buffer, hdr);
                             if (buffer->expected_beacon_seq_id <= mac_info.expected_beacon_seq_id) {
@@ -761,7 +737,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
                     // check op1 and op2 todo
                     if (_s_info->has_op2) {}
-                    
+
                     /*
                      * Check tx.
                      * We use all the emergent and event and routine right now.
@@ -774,12 +750,10 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                         _delay = (_s_info->beacon_section_length_us *
                                  mac_info.allow_tx_info.allow_msg_emergent)
                                  / 1000;
-                        _lpwan_debug_mark_running_line();
 
                         if (_delay > 0) {
                             haddock_assert(timer_not_started(_timeout_timer));
                             tx_timer = _timeout_timer;
-                            _lpwan_debug_mark_ling_timer_start();
                             os_timer_reconfig(tx_timer, this->_pid,
                                               SIGNAL_MAC_ENGINE_SEND_FRAME, _delay);
                             os_timer_start(tx_timer);
@@ -797,7 +771,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     }
                 }
                 else {
-                    _lpwan_debug_mark_running_line();
                     // we regard it as lost beacon todo
                     print_debug_str("sn joined: beacon id mis-match");
                     os_timer_stop(update_beacon_timer);
@@ -810,7 +783,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             }
         case DE_JOINED_STATES_WAIT_BEACON_TIMEOUT:
             if (signal & SIGNAL_MAC_ENGINE_LOST_BEACON) {
-                _lpwan_debug_mark_running_line();
                 haddock_assert(_is_lost_beacon);
                 print_debug_str("sn joined: lost beacon ...");
 
@@ -838,19 +810,16 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
              * todo
              */
             if (signal & SIGNAL_MAC_ENGINE_SEND_FRAME) {
-                _lpwan_debug_mark_running_line();
-
                 static os_uint32 _span;
                 static os_uint32 _delay;
-                
+
                 _span = (_s_info->beacon_section_length_us *
                         (64 - mac_info.allow_tx_info.allow_msg_emergent))
                         / 1000;
-                _delay = hdk_randr(5, _span-50);
+                _delay = hdk_randr(5, _span-100);
 
                 haddock_assert(timer_not_started(_timeout_timer));
                 tx_timer = _timeout_timer;
-                _lpwan_debug_mark_ling_timer_start();
                 os_timer_reconfig(tx_timer, this->_pid,
                                   SIGNAL_MAC_ENGINE_SEND_FRAME_CCA,
                                   _delay);
@@ -863,23 +832,19 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 return signal ^ SIGNAL_MAC_ENGINE_SEND_FRAME;
             }
             else if (signal & SIGNAL_MAC_ENGINE_SEND_FRAME_CCA) {
-                _lpwan_debug_mark_running_line();
-
                 _channel_backoff_num = 0;
                 lpwan_radio_stop_rx();
                 lpwan_radio_start_rx();
                 return signal ^ SIGNAL_MAC_ENGINE_SEND_FRAME_CCA;
             }
             else if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
-                _lpwan_debug_mark_running_line();
-
                 static struct list_head *pos;
                 static struct tx_frame_buffer *buffer;
 
                 if (mac_info.pending_list_len == 0) {
                     return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
                 }
-                
+
                 pos = mac_info.pending_frame_buffer_list.next;
                 buffer = list_entry(pos, struct tx_frame_buffer, hdr);
 
@@ -894,51 +859,59 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 buffer->transmit_times += 1;
                 buffer->channel_backoff_num = _channel_backoff_num;
 
-                if (buffer->ftype == FTYPE_DEVICE_MSG) {
-                    _lpwan_debug_mark_running_line();
+                switch ((int) buffer->ftype) {
+                case FTYPE_DEVICE_MSG           :
                     update_device_tx_frame_msg(
                             (void *) & buffer->frame_buffer[FRAME_HDR_LEN_NORMAL],
                             buffer,
                             _s_info->beacon_group_seq_id,
                             _s_info->beacon_class_seq_id);
-
-                    lpwan_radio_tx(buffer->frame_buffer, buffer->len);
-                    print_debug_str("sn msg: radio_tx!");
-                } else {
-                    _lpwan_debug_mark_running_line();
+                    break;
+                case FTYPE_DEVICE_JOIN          :
+                case FTYPE_DEVICE_REJOIN        :
+                case FTYPE_DEVICE_DATA_REQUEST  :
+                case FTYPE_DEVICE_ACK           :
+                case FTYPE_DEVICE_CMD           :
                     /*
                      * todo we have only FTYPE_DEVICE_MSG currently.
                      */
+                    break;
+                default:
+                    __should_never_fall_here();
+                    break;
                 }
+
+                lpwan_radio_tx(buffer->frame_buffer, buffer->len);
+                print_debug_str("sn msg: radio_tx!");
 
                 list_move_tail(pos, & mac_info.wait_ack_frame_buffer_list);
                 mac_info.pending_list_len -= 1;
                 mac_info.wait_ack_list_len += 1;
 
-                mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
                 return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
             }
             else if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-                _lpwan_debug_mark_running_line();
-
                 // discard whatever received ... tx next time. todo
                 ++_channel_backoff_num;
 
+                mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
                 process_sleep();
                 return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
             }
             else if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
-                _lpwan_debug_mark_running_line();
+                print_debug_str("sn msg: tx ok!");
+                mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
                 process_sleep();
                 return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
             }
             else if (signal & SIGNAL_LPWAN_RADIO_TX_TIMEOUT) {
-                _lpwan_debug_mark_running_line();
+                // todo
+                print_debug_str("sn msg: tx timeout!");
+                mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
                 process_sleep();
                 return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
             }
             else {
-                _lpwan_debug_mark_running_line();
                 return 0;
             }
         default:
@@ -952,7 +925,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     case DE_MAC_STATES_FORCE_LEFT:
         break;
     default:
-        _lpwan_debug_mark_running_line();
         __should_never_fall_here();
     }
 
@@ -990,8 +962,6 @@ static os_int8 rx_and_see_is_it_a_beacon(os_uint8 *rx_buf, os_uint8 len,
 {
     static os_boolean _run_first_time = OS_TRUE;
     static struct parse_beacon_check_op2_ack_info check_info;
-
-    _lpwan_debug_mark_running_line();
 
     if (_run_first_time) {
         check_info.uuid = mac_info.uuid;
@@ -1031,8 +1001,6 @@ static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
                                       struct parsed_beacon_packed_ack_to_me *ack,
                                       struct parsed_beacon_op2_to_me *op2)
 {
-    _lpwan_debug_mark_running_line();
-
     mac_info.synced_beacon_info = *info;
     mac_info.synced_beacon_packed_ack_to_me = *ack;
     mac_info.synced_beacon_op2_to_me = *op2;
@@ -1117,8 +1085,6 @@ static void update_device_tx_frame_msg(struct device_uplink_msg *msg,
                                        os_uint8 beacon_group_seq_id,
                                        os_uint8 beacon_class_seq_id)
 {
-    _lpwan_debug_mark_running_line();
-
     haddock_assert(beacon_group_seq_id <= 15);
     haddock_assert(beacon_class_seq_id <= 15);
 
@@ -1154,12 +1120,14 @@ static void mac_engine_wakeup_init_callback(void)
     lpwan_radio_wakeup();
     // we start the lpwan_radio_routine() and the periodical timer @radio_check_timer
     os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_CHECK_RADIO_TIMEOUT);
+    _has_check_radio = OS_TRUE;
 }
 
 static os_int8 mac_engine_sleep_cleanup_callback(void)
 {
     lpwan_radio_sleep();
     os_timer_stop(radio_check_timer);
+    _has_check_radio = OS_FALSE;
 
     return 0;
 }
@@ -1169,7 +1137,17 @@ static os_int8 mac_engine_sleep_cleanup_callback(void)
 
 static void device_mac_get_uuid(modem_uuid_t *uuid)
 {
-    // todo
+    os_uint8 *_mcu_unique_id = (os_uint8 *) 0x4926;
+    // os_uint8 _crc = CRC_Calc(POLY_CRC8_CCITT, _mcu_unique_id, 12);
+
+    uuid->addr[0] = 0x10;
+    uuid->addr[1] = _mcu_unique_id[5];
+    uuid->addr[2] = _mcu_unique_id[4];
+    uuid->addr[3] = _mcu_unique_id[3];
+    uuid->addr[4] = _mcu_unique_id[2];
+    uuid->addr[5] = _mcu_unique_id[1];
+    uuid->addr[6] = _mcu_unique_id[0];
+    uuid->addr[7] = /*_crc*/ _mcu_unique_id[7];
 }
 
 /**

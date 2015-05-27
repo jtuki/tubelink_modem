@@ -61,7 +61,7 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
 
 #define LPWAN_MAX_PAYLAOD_LEN           20
 
-#define LPWAN_MAX_RETRANSMIT_NUM        3
+#define LPWAN_MAX_RETRANSMIT_NUM        2
 #define LPWAN_MAX_CHANNEL_BACKOFF_NUM   5
 
 /**< @} */

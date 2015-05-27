@@ -147,7 +147,7 @@
         </option>
         <option>
           <name>IccOptLevel</name>
-          <state>0</state>
+          <state>3</state>
         </option>
         <option>
           <name>IccOptStrategy</name>
@@ -156,12 +156,12 @@
         </option>
         <option>
           <name>IccOptLevelSlave</name>
-          <state>0</state>
+          <state>3</state>
         </option>
         <option>
           <name>IccOptAllowList</name>
           <version>0</version>
-          <state>000000</state>
+          <state>111111</state>
         </option>
         <option>
           <name>IccGenerateDebugInfo</name>
@@ -824,6 +824,12 @@
     <file>
       <name>$PROJ_DIR$\..\..\src\apps\app_hostif.h</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\src\apps\simple_log.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\src\apps\simple_log.h</name>
+    </file>
   </group>
   <group>
     <name>components</name>
@@ -1376,9 +1382,6 @@
       </group>
       <group>
         <name>lib</name>
-        <file>
-          <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.c</name>
-        </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.h</name>
         </file>

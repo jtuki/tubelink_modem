@@ -9,8 +9,8 @@
 /***************************************************************************************************
  * INCLUDES
  */
-#include <stdio.h>
-#include <string.h>
+
+#include "kernel/hdk_memory.h"
 #include "../common/rf_config.h"
 #include "sx1276_hal.h"
 #include "sx1276_spi.h"
@@ -134,7 +134,7 @@ typedef struct
  */
 
 /* SX1276 registers variable */
-static rf_uint8 SX1276Regs[0x70] = {0};
+static rf_uint8 SX1276Regs[0x70];
 
 tSX1276LR* SX1276LR;
 // Default settings
@@ -151,7 +151,7 @@ tLoRaSettings LoRaSettings =
     rf_true,             // RxSingleOn [0: Continuous, 1 Single]
     rf_true,            // FreqHopOn [0: OFF, 1: ON]
     4,                // HopPeriod Hops every frequency hopping period symbols
-    2000,              // TxPacketTimeout
+    100,              // TxPacketTimeout
     /* here, if in cad mode, rx timeout value may be need greater then sleep time */
     20,              // RxPacketTimeout
     128,              // PayloadLength (used for implicit header mode)
@@ -162,7 +162,7 @@ tLoRaSettings LoRaSettings =
 //static SX1278_IRQ_FLAGS_t gs_tIrqFlags = {0};
 
 static rf_uint8 gs_u8PacketSize = 0;
-static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE] = {0};
+static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE];
 
 static rf_uint32 gs_u32PacketTxTime = 0;
 
@@ -356,7 +356,7 @@ void Rf_SX1278_RxInit( void )
     SX1276WriteBuffer( REG_LR_DIOMAPPING1, &SX1276LR->RegDioMapping1, 2 );
 
     
-    memset( gs_au8PacketBuffer, 0, ( size_t )RF_BUFFER_SIZE );    /* clear buffer */
+    haddock_memset( gs_au8PacketBuffer, 0, ( os_size_t )RF_BUFFER_SIZE );    /* clear buffer */
     gs_u8PacketSize = 0;
     
     SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */ 
@@ -606,11 +606,11 @@ RF_P_RET_t Rf_SX1278_TxProcess( void )
 {
     RF_P_RET_t tRet = RF_P_RUNNING;
     
-    //if(gs_u32PacketTxTime > LoRaSettings.TxPacketTimeout)
+    if(gs_u32PacketTxTime++ > LoRaSettings.TxPacketTimeout)
     {
-        //tRet = RF_P_TX_TMO;
+        tRet = RF_P_TX_TMO;
     }
-  //  else
+    else
     {
         if( DIO0 == 1 ) // TxDone
         {
@@ -805,7 +805,7 @@ void SX1276FHSSChangeChannel_ISR(void)
 void SX1276LoRaSetTxPacket( const void *a_pvdBuffer, rf_uint8 a_u8Size )
 {
     gs_u8PacketSize = a_u8Size;
-    memcpy( ( void * )gs_au8PacketBuffer, a_pvdBuffer, gs_u8PacketSize ); 
+    haddock_memcpy( ( void * )gs_au8PacketBuffer, a_pvdBuffer, gs_u8PacketSize ); 
 }   /* SX1276LoRaSetTxPacket() */
 
 
@@ -858,7 +858,7 @@ void SX1276LoRaSetTxPacketSize( rf_uint8 a_u8Size )
 void SX1276LoRaGetRxPacket( const void *a_pvdBuffer, rf_uint8 *a_pu8Size )
 {
     *a_pu8Size = gs_u8PacketSize;
-    memcpy((void *)a_pvdBuffer,  ( void * )gs_au8PacketBuffer, gs_u8PacketSize );
+    haddock_memcpy((void *)a_pvdBuffer,  ( void * )gs_au8PacketBuffer, gs_u8PacketSize );
 }   /* SX1276LoRaGetRxPacket() */
 
 

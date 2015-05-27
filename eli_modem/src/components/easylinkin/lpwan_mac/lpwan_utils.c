@@ -26,13 +26,3 @@ short_addr_t short_modem_uuid(modem_uuid_t uuid)
     os_uint16 lower = uuid.addr[0];
     return (short_addr_t) (higher + lower);
 }
-
-#ifdef LPWAN_DEBUG
-#include "app_hostif.h"
-#include <stdio.h>
-
-void print_debug(char *debug_info, os_uint8 len)
-{
-    hostIf_SendToHost((hostIfChar *) debug_info, (hostIfUint8) len);
-}
-#endif

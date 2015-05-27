@@ -24,6 +24,8 @@
 #include "lib/ringbuffer.h"
 #include "simple_log.h"
 
+#include "crc/crc.h"
+
 #include "lpwan_config.h"
 #include "config_gateway.h"
 #include "mac_engine.h"
@@ -144,8 +146,98 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         return signal ^ SIGNAL_GW_MAC_ENGINE_CHECK_RADIO_TIMEOUT;
     }
 
+    if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
+        print_debug_str("tx ok");
+        _stat_total_tx_ok_frame_num += 1;
+        lpwan_radio_start_rx();
+        return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
+    }
+    
+    if (signal & SIGNAL_LPWAN_RADIO_TX_TIMEOUT) {
+        print_debug_str("tx timeout");
+        _stat_total_tx_timeout_frame_num += 1;
+        lpwan_radio_start_rx();
+        return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
+    }
+
+    if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
+        lpwan_radio_start_rx();
+        return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
+    }
+
+    if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
+        // we don't wait, just restart the radio's rx process
+        lpwan_radio_start_rx();
+
+        static os_uint8 *_rx_buf = gateway_mac_rx_buffer;
+        static struct parsed_frame_hdr_info _f_hdr;
+        static struct beacon_packed_ack _ack;
+        static struct parsed_device_uplink_msg_info _msg_info;
+        static os_int8 expected_packed_ack_list_id;
+
+        lpwan_radio_read(_rx_buf, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
+        if (_rx_buf[0] == 0
+            || 0 > lpwan_parse_frame_header((const struct frame_header *)(_rx_buf+1),
+                                             _rx_buf[0],
+                                             & _f_hdr)
+            // we only handle packets from end-device with valid destination address
+            || _f_hdr.frame_origin_type != DEVICE_END_DEVICE
+            || _f_hdr.dest.type != ADDR_TYPE_SHORT_ADDRESS
+            || _f_hdr.dest.addr.short_addr != mac_info.gateway_cluster_addr
+            // we only handle valid source address (short_addr_t and modem_uuid_t)
+            || _f_hdr.src.type == ADDR_TYPE_MULTICAST_ADDRESS
+            || _f_hdr.src.type == ADDR_TYPE_SHORTENED_MODEM_UUID)
+        {
+            print_debug_str("gw: invalid frame!");
+            goto gateway_mac_label_radio_rx_invalid_frame;
+        }
+
+        switch ((int) _f_hdr.info.de.frame_type) {
+        case FTYPE_DEVICE_JOIN         :
+        case FTYPE_DEVICE_REJOIN       :
+            if (_f_hdr.src.type != ADDR_TYPE_MODEM_UUID)
+                goto gateway_mac_label_radio_rx_invalid_frame;
+            // todo
+            break;
+        case FTYPE_DEVICE_DATA_REQUEST :
+        case FTYPE_DEVICE_ACK          :
+        case FTYPE_DEVICE_CMD          :
+            if (_f_hdr.src.type != ADDR_TYPE_SHORT_ADDRESS)
+                goto gateway_mac_label_radio_rx_invalid_frame;
+            // todo
+            break;
+        case FTYPE_DEVICE_MSG          :
+            if (_f_hdr.src.type != ADDR_TYPE_SHORT_ADDRESS)
+                goto gateway_mac_label_radio_rx_invalid_frame;
+
+            _ack.hdr = 0x00;
+            set_bits(_ack.hdr, 7, 7, OS_TRUE); // @is_join_ack
+            set_bits(_ack.hdr, 2, 1, RADIO_TX_POWER_LEVELS_NUM-1); // @preferred_next_tx_power
+            _ack.addr.short_addr = _f_hdr.src.addr.short_addr;
+
+            if (0 == lpwan_parse_device_uplink_msg(
+                            (struct device_uplink_msg *)(_rx_buf+1+FRAME_HDR_LEN_NORMAL),
+                            _rx_buf[0]-FRAME_HDR_LEN_NORMAL,
+                            &_msg_info)) // check if is a valid uplink msg
+            {
+                _ack.confirmed_seq = _msg_info.seq;
+
+                expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
+                                               mac_info.bcn_info.packed_ack_delay_num)
+                                               % mac_info.bcn_info.packed_ack_delay_num;
+                rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
+                               &_ack, sizeof(struct beacon_packed_ack));
+            }
+
+
+            break;
+        }
+
+gateway_mac_label_radio_rx_invalid_frame:
+        return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
+    }
+    
     if (signal & SIGNAL_GW_MAC_SEND_BEACON) {
-        print_debug_str("try to tx beacon");
         lpwan_radio_stop_rx();
         
         /** restart the beacon timer @{ */
@@ -230,102 +322,13 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
          *  rx again to receive frames. @{ */
         // haddock_assert(gateway_mac_tx_buffer[0] <= LPWAN_RADIO_TX_MAX_LEN);
         haddock_assert(0 == lpwan_radio_tx(gateway_mac_tx_buffer+1, (os_uint16) gateway_mac_tx_buffer[0]));
+        print_debug_str("gw: beacon(%d) %s",
+                        mac_info.bcn_info.beacon_seq_id,
+                        mac_info.bcn_info.has_packed_ack ? "+ACK":"");
         _stat_total_try_to_tx_frame_num += 1;
         /** @} */
 
         return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
-    }
-
-    if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
-        print_debug_str("tx ok");
-        _stat_total_tx_ok_frame_num += 1;
-        lpwan_radio_start_rx();
-        return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
-    }
-    
-    if (signal & SIGNAL_LPWAN_RADIO_TX_TIMEOUT) {
-        print_debug_str("tx timeout");
-        _stat_total_tx_timeout_frame_num += 1;
-        lpwan_radio_start_rx();
-        return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
-    }
-
-    if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
-        lpwan_radio_start_rx();
-        return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
-    }
-
-    if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-        print_debug_str("rx ok");
-        // we don't wait, just restart the radio's rx process
-        lpwan_radio_start_rx();
-
-        static os_uint8 *_rx_buf = gateway_mac_rx_buffer;
-        static struct parsed_frame_hdr_info _f_hdr;
-        static struct beacon_packed_ack _ack;
-        static struct parsed_device_uplink_msg_info _msg_info;
-        static os_int8 expected_packed_ack_list_id;
-
-        lpwan_radio_read(_rx_buf, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
-        if (_rx_buf[0] == 0
-            || 0 > lpwan_parse_frame_header((const struct frame_header *)(_rx_buf+1),
-                                             _rx_buf[0],
-                                             & _f_hdr)
-            // we only handle packets from end-device with valid destination address
-            || _f_hdr.frame_origin_type != DEVICE_END_DEVICE
-            || _f_hdr.dest.type != ADDR_TYPE_SHORT_ADDRESS
-            || _f_hdr.dest.addr.short_addr != mac_info.gateway_cluster_addr
-            // we only handle valid source address (short_addr_t and modem_uuid_t)
-            || _f_hdr.src.type == ADDR_TYPE_MULTICAST_ADDRESS
-            || _f_hdr.src.type == ADDR_TYPE_SHORTENED_MODEM_UUID)
-        {
-            print_debug_str("gw: invalid frame!");
-            goto gateway_mac_label_radio_rx_invalid_frame;
-        }
-
-        switch ((int) _f_hdr.info.de.frame_type) {
-        case FTYPE_DEVICE_JOIN         :
-        case FTYPE_DEVICE_REJOIN       :
-            if (_f_hdr.src.type != ADDR_TYPE_MODEM_UUID)
-                goto gateway_mac_label_radio_rx_invalid_frame;
-            // todo
-            break;
-        case FTYPE_DEVICE_DATA_REQUEST :
-        case FTYPE_DEVICE_ACK          :
-        case FTYPE_DEVICE_CMD          :
-            if (_f_hdr.src.type != ADDR_TYPE_SHORT_ADDRESS)
-                goto gateway_mac_label_radio_rx_invalid_frame;
-            // todo
-            break;
-        case FTYPE_DEVICE_MSG          :
-            if (_f_hdr.src.type != ADDR_TYPE_SHORT_ADDRESS)
-                goto gateway_mac_label_radio_rx_invalid_frame;
-
-            _ack.hdr = 0x00;
-            set_bits(_ack.hdr, 7, 7, OS_TRUE); // @is_join_ack
-            set_bits(_ack.hdr, 2, 1, RADIO_TX_POWER_LEVELS_NUM-1); // @preferred_next_tx_power
-            _ack.addr.short_addr = _f_hdr.src.addr.short_addr;
-
-            if (0 == lpwan_parse_device_uplink_msg(
-                            (struct device_uplink_msg *)(_rx_buf+1+FRAME_HDR_LEN_NORMAL),
-                            _rx_buf[0]-FRAME_HDR_LEN_NORMAL,
-                            &_msg_info)) // check if is a valid uplink msg
-            {
-                _ack.confirmed_seq = _msg_info.seq;
-
-                expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
-                                               mac_info.bcn_info.packed_ack_delay_num)
-                                               % mac_info.bcn_info.packed_ack_delay_num;
-                rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
-                               &_ack, sizeof(struct beacon_packed_ack));
-            }
-
-
-            break;
-        }
-
-gateway_mac_label_radio_rx_invalid_frame:
-        return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
     }
 
     print_debug_str("unknown signal");
@@ -410,7 +413,17 @@ static os_int8 construct_gateway_beacon_packed_ack(void *buffer,
  */
 static void gateway_mac_get_uuid(gateway_uuid_t *uuid)
 {
-    // todo
+    os_uint8 *_mcu_unique_id = (os_uint8 *) 0x4926;
+    // os_uint8 _crc = CRC_Calc(POLY_CRC8_CCITT, _mcu_unique_id, 12);
+
+    uuid->addr[0] = 0x10;
+    uuid->addr[1] = _mcu_unique_id[5];
+    uuid->addr[2] = _mcu_unique_id[4];
+    uuid->addr[3] = _mcu_unique_id[3];
+    uuid->addr[4] = _mcu_unique_id[2];
+    uuid->addr[5] = _mcu_unique_id[1];
+    uuid->addr[6] = _mcu_unique_id[0];
+    uuid->addr[7] = /*_crc*/ _mcu_unique_id[7];
 }
 
 /**

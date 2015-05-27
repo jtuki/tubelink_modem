@@ -10,7 +10,7 @@
 /***************************************************************************************************
  * INCLUDES
  */
-#include <stdio.h>
+
 #include "../common/rf_type.h"
 #include "../common/rf_config.h"
 

@@ -24,7 +24,7 @@ haddock_process("proc_test_end_device_app");
 
 static struct timer *period_uplink_msg_timer = NULL;
 
-#define UPLINK_PERIOD_DELAY_MS (1000 * hdk_randr(10, 30))
+#define UPLINK_PERIOD_DELAY_MS (1000 * hdk_randr(20, 30))
 
 void proc_test_end_device_app_init(void)
 {

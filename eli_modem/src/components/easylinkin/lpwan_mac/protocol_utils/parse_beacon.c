@@ -176,8 +176,8 @@ static void expected_beacon_length(const os_uint8 beacon[],
     const struct beacon_header *bcn_hdr = (const struct beacon_header *) beacon;
     const os_uint8 *bcn_info = bcn_hdr->info;  /**< \sa beacon_info_t */
 
-    os_boolean has_op2          = get_bits(bcn_info[0], 7, 7);
-    os_boolean has_packed_ack   = get_bits(bcn_info[0], 6, 6);
+    os_boolean has_op2          = get_bits(bcn_info[1], 7, 7);
+    os_boolean has_packed_ack   = get_bits(bcn_info[1], 6, 6);
 
     offsets->offset_op2_hdr = offsets->offset_packed_ack_num = 0;
 

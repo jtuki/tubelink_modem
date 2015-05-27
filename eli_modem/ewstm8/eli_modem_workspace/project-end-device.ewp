@@ -152,7 +152,7 @@
         <option>
           <name>IccOptStrategy</name>
           <version>0</version>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccOptLevelSlave</name>
@@ -189,7 +189,7 @@
         </option>
         <option>
           <name>CCDefines</name>
-          <state>xLPWAN_DEBUG</state>
+          <state>LPWAN_DEBUG</state>
           <state>USE_STM8L1526_EVAL</state>
           <state>STM8L15X_MD</state>
           <state>__MCU_8051</state>
@@ -824,6 +824,12 @@
     <file>
       <name>$PROJ_DIR$\..\..\src\apps\app_hostif.h</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\src\apps\simple_log.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\src\apps\simple_log.h</name>
+    </file>
   </group>
   <group>
     <name>components</name>
@@ -1244,9 +1250,6 @@
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.c</name>
           </file>
           <file>
-            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.h</name>
-          </file>
-          <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parsed_common_defs.h</name>
           </file>
         </group>
@@ -1264,6 +1267,9 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\lpwan_utils.h</name>
+        </file>
+        <file>
+          <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.h</name>
         </file>
       </group>
       <group>
@@ -1376,9 +1382,6 @@
       </group>
       <group>
         <name>lib</name>
-        <file>
-          <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.c</name>
-        </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.h</name>
         </file>

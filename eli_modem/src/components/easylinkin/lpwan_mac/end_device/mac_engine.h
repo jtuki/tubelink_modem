@@ -58,8 +58,8 @@ extern os_pid_t gl_device_mac_engine_pid;
 /**< the longest time to find beacon during joining process */
 #define DEVICE_JOIN_FIND_BEACON_TIMEOUT_MS          5000
 
-#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       1000
-#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          2000
+#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       100
+#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
 
 #define DEVICE_MAC_RADIO_PERIODICAL_CHECK_INTERVAL  2   // check radio each 2ms
 
@@ -81,12 +81,15 @@ enum device_mac_states {
 };
 
 enum device_mac_joining_states {
-    DE_JOINING_STATES_WAIT_BEACON = 0,
-    DE_JOINING_STATES_WAIT_BEACON_TIMEOUT,
-    DE_JOINING_STATES_JOIN_REQUEST,     /**< if received beacon and allow joining,
-                                             the states change to @join_request */
+    DE_JOINING_STATES_DELAY_TO_WAIT_BEACON = 0, /**< delay some time to wait beacon */
+    DE_JOINING_STATES_WAITING_BEACON,   /**< Is waiting beacon.
+                                             If found beacon, change to state @DE_JOINING_STATES_BEACON_FOUND;
+                                             else, change to state @DE_JOINING_STATES_DELAY_TO_WAIT_BEACON. */
+    DE_JOINING_STATES_BEACON_FOUND,     /**< Beacon found!
+                                             If allow joining, try to join the network;
+                                             else, change to state @DE_JOINING_STATES_DELAY_TO_WAIT_BEACON.
+                                             todo (the end-device can try to track beacons of different channels) */
     DE_JOINING_STATES_WAIT_JOIN_RESPONSE,
-    DE_JOINING_STATES_WAIT_JOIN_RESPONSE_TIMEOUT,
 };
 
 enum device_mac_joined_states {

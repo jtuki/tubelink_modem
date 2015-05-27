@@ -43,6 +43,9 @@ static void _haddock_time_shift(struct time *t,
                                 const struct time *delta, os_boolean is_add);
 /** @} */
 
+static os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
+                                                        os_size_t max_len);
+
 int haddock_timer_module_init(void)
 {
     list_head_init(& haddock_timer_list);
@@ -180,14 +183,14 @@ int os_timer_start(struct timer *timer)
     struct time *t1 = & timer->timeout_value;
     struct time *t2;
 
-    haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
+    // haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
     list_for_each(i, timer_list) {
         haddock_assert(_loop_cnter++ < HDK_CFG_TIMER_MAX_NUM);
         t2 = & (list_entry(i, struct timer, hdr))->timeout_value;
         if (time_tick_less_than(*t1, *t2)) {
             list_add_tail(& timer->hdr, i); // i.prev -> timer -> i -> i.next
             added = OS_TRUE;
-            haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
+            // haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
             break;
         }
     }
@@ -528,9 +531,10 @@ void haddock_get_time_tick_now(struct time *t)
     );
 }
 
-os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
-                                                 os_size_t max_len)
+static os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
+                                                        os_size_t max_len)
 {
+#ifdef HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP
     struct list_head *pos;
     struct list_head *timer_list = is_absolute_timer_list ?
                                    & haddock_atimer_list : & haddock_timer_list;
@@ -542,5 +546,10 @@ os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_li
             return OS_TRUE;
     }
     return OS_FALSE;
+#else
+    (void) is_absolute_timer_list;
+    (void) max_len;
+    return OS_FALSE;
+#endif
 }
 

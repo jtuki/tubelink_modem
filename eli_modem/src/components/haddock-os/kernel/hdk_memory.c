@@ -11,6 +11,13 @@
 #include "lib/assert.h"
 #include "lib/hdk_utilities.h"
 
+#ifdef HADDOCK_DEBUG_OS_MALLOC_USAGE
+static os_uint32 _hdk_malloc_usage = 0;
+#define _update_hdk_malloc_usage(len) do {_hdk_malloc_usage += (len);} while (0)
+#else
+#define _update_hdk_malloc_usage(len)
+#endif
+
 static os_uint8 __haddock_memory_allocation[HDK_CFG_MEMORY_FOR_MALLOC];
 
 struct __memory_blk {
@@ -51,6 +58,7 @@ void *haddock_malloc(os_size_t size)
             blk->hdr &= 0xFF000000;
             blk->hdr |= size;
             found = OS_TRUE;
+            _update_hdk_malloc_usage(sizeof(struct __memory_blk) + size);
             break;
         }
     }

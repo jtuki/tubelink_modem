@@ -9,8 +9,7 @@
 /***************************************************************************************************
  * INCLUDES
  */
-#include <stdio.h>
-#include <string.h>
+
 #include "stm8l15x.h"
 #include "rf_manager.h"
 #include "rf_config.h"

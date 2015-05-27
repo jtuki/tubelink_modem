@@ -52,15 +52,21 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Memory allocation related configuration.
  */
 
+/**< \sa _update_hdk_malloc_usage() in \file hdk_memory.h */
+#define HADDOCK_DEBUG_OS_MALLOC_USAGE
+
 /** memory reserevd for allocation, in bytes. 
  * \sa haddock_malloc() */
-#define HDK_CFG_MEMORY_FOR_MALLOC       800
+#define HDK_CFG_MEMORY_FOR_MALLOC       600
 
 /******************************************************************************
  * Timer related configuration.
  */
 
-#define HDK_CFG_TIMER_MAX_NUM           7
+/**< \sa haddock_debug_os_timer_list_have_loop() */
+#define HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP
+
+#define HDK_CFG_TIMER_MAX_NUM           10
 
 /** 15ms. \sa haddock_timer_update_routine() */
 #define HDK_CFG_TIMER_SCHEDULE_THRESHOLD 15

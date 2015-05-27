@@ -48,6 +48,7 @@
 									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
 									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
+									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
@@ -128,6 +129,7 @@
 									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
 									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
+									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.215447858" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
