@@ -80,6 +80,8 @@ os_int32 hdk_rand(void)
 os_uint32 hdk_randr(os_uint32 min, os_uint32 max)
 {
     haddock_assert(is_srand);
+    if (min > max)
+        return min;
     return (os_uint32)hdk_rand() % (max - min + 1) + min;
 }
 

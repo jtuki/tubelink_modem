@@ -13,10 +13,6 @@ extern "C"
 {
 #endif
 
-/**
- * setup the priority. todo
- */
-#define PRIORITY_DEVICE_MAC_ENGINE     0
 
 #ifdef __cplusplus
 }

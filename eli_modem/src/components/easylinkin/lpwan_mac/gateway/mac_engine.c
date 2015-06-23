@@ -69,10 +69,10 @@ static os_uint8 gateway_mac_tx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 
 static struct lpwan_gateway_mac_info mac_info;
 
-void gateway_mac_engine_init(void)
+void gateway_mac_engine_init(os_uint8 priority)
 {
     struct process *proc_mac_engine = process_create(gateway_mac_engine_entry,
-                                                     PRIORITY_GATEWAY_MAC_ENGINE);
+                                                     priority);
     haddock_assert(proc_mac_engine);
 
     gl_gateway_mac_engine_pid = proc_mac_engine->_pid;
@@ -94,7 +94,7 @@ void gateway_mac_engine_init(void)
 
     os_ipc_set_signal(this->_pid, SIGNAL_GW_MAC_ENGINE_INIT_FINISHED);
 
-    lpwan_radio_register_mac_pid(gl_gateway_mac_engine_pid);
+    lpwan_radio_register_radio_controller_pid(gl_gateway_mac_engine_pid);
     /** initialize the radio interface */
     lpwan_radio_init();
 }
@@ -106,6 +106,8 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     static os_boolean _run_first_time = OS_TRUE;
     static struct timer *beacon_timer = NULL;
     static struct timer *radio_check_timer = NULL;
+
+    static os_uint8 _frame_cnter_per_period;
 
     if (_run_first_time) {
         beacon_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
@@ -147,14 +149,14 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     }
 
     if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
-        print_debug_str("tx ok");
+        print_log(LOG_INFO, "tx ok");
         _stat_total_tx_ok_frame_num += 1;
         lpwan_radio_start_rx();
         return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
     }
     
     if (signal & SIGNAL_LPWAN_RADIO_TX_TIMEOUT) {
-        print_debug_str("tx timeout");
+        print_log(LOG_ERROR, "tx timeout");
         _stat_total_tx_timeout_frame_num += 1;
         lpwan_radio_start_rx();
         return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
@@ -166,8 +168,6 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     }
 
     if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-        // we don't wait, just restart the radio's rx process
-        lpwan_radio_start_rx();
 
         static os_uint8 *_rx_buf = gateway_mac_rx_buffer;
         static struct parsed_frame_hdr_info _f_hdr;
@@ -176,6 +176,9 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         static os_int8 expected_packed_ack_list_id;
 
         lpwan_radio_read(_rx_buf, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
+        // we don't wait, just restart the radio's rx process
+        lpwan_radio_start_rx();
+
         if (_rx_buf[0] == 0
             || 0 > lpwan_parse_frame_header((const struct frame_header *)(_rx_buf+1),
                                              _rx_buf[0],
@@ -188,7 +191,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             || _f_hdr.src.type == ADDR_TYPE_MULTICAST_ADDRESS
             || _f_hdr.src.type == ADDR_TYPE_SHORTENED_MODEM_UUID)
         {
-            print_debug_str("gw: invalid frame!");
+            print_log(LOG_WARNING, "gw: invalid frame!");
             goto gateway_mac_label_radio_rx_invalid_frame;
         }
 
@@ -211,7 +214,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 goto gateway_mac_label_radio_rx_invalid_frame;
 
             _ack.hdr = 0x00;
-            set_bits(_ack.hdr, 7, 7, OS_TRUE); // @is_join_ack
+            set_bits(_ack.hdr, 7, 7, OS_FALSE); // @is_join_ack
             set_bits(_ack.hdr, 2, 1, RADIO_TX_POWER_LEVELS_NUM-1); // @preferred_next_tx_power
             _ack.addr.short_addr = _f_hdr.src.addr.short_addr;
 
@@ -220,8 +223,9 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                             _rx_buf[0]-FRAME_HDR_LEN_NORMAL,
                             &_msg_info)) // check if is a valid uplink msg
             {
+                _frame_cnter_per_period += 1;
+                print_log(LOG_INFO, "gw: rx (%04x)", (os_uint16) _f_hdr.src.addr.short_addr);
                 _ack.confirmed_seq = _msg_info.seq;
-
                 expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
                                                mac_info.bcn_info.packed_ack_delay_num)
                                                % mac_info.bcn_info.packed_ack_delay_num;
@@ -239,6 +243,7 @@ gateway_mac_label_radio_rx_invalid_frame:
     
     if (signal & SIGNAL_GW_MAC_SEND_BEACON) {
         lpwan_radio_stop_rx();
+        _frame_cnter_per_period = 0;
         
         /** restart the beacon timer @{ */
         os_timer_reconfig(beacon_timer, this->_pid,
@@ -309,7 +314,9 @@ gateway_mac_label_radio_rx_invalid_frame:
         // construct the beacon's op2 part. todo
 
         // construct the beacon's packed ack part by @mac_info.packed_ack_delay_list
+        os_uint8 _packed_ack_num = 0;
         if (mac_info.bcn_info.has_packed_ack == OS_TRUE) {
+            _packed_ack_num = mac_info.packed_ack_delay_list[mac_info.cur_packed_ack_delay_list_id]->hdr.len;
             _len = construct_gateway_beacon_packed_ack(
                         gateway_mac_tx_buffer + 1 + gateway_mac_tx_buffer[0],
                         LPWAN_RADIO_RX_BUFFER_MAX_LEN - 1 - gateway_mac_tx_buffer[0],
@@ -322,16 +329,19 @@ gateway_mac_label_radio_rx_invalid_frame:
          *  rx again to receive frames. @{ */
         // haddock_assert(gateway_mac_tx_buffer[0] <= LPWAN_RADIO_TX_MAX_LEN);
         haddock_assert(0 == lpwan_radio_tx(gateway_mac_tx_buffer+1, (os_uint16) gateway_mac_tx_buffer[0]));
-        print_debug_str("gw: beacon(%d) %s",
-                        mac_info.bcn_info.beacon_seq_id,
-                        mac_info.bcn_info.has_packed_ack ? "+ACK":"");
+        if (mac_info.bcn_info.has_packed_ack == OS_TRUE) {
+            print_log(LOG_INFO, "gw: beacon(%d) %s %d",
+                      mac_info.bcn_info.beacon_seq_id, "+ACK", _packed_ack_num);
+        } else {
+            print_log(LOG_INFO, "gw: beacon(%d)", mac_info.bcn_info.beacon_seq_id);
+        }
         _stat_total_try_to_tx_frame_num += 1;
         /** @} */
 
         return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
     }
 
-    print_debug_str("unknown signal");
+    print_log(LOG_ERROR, "unknown signal");
     // discard unkown signals.
     return 0;
 }

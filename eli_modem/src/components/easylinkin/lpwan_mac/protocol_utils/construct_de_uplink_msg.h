@@ -16,6 +16,8 @@ extern "C"
 #include "frame_defs/common_defs.h"
 #include "lpwan_types.h"
 
+extern const char *device_msg_type_string[3];
+
 void construct_device_uplink_msg(enum device_message_type type,
                                  const os_uint8 msg[], os_uint8 msg_len,
                                  void *buffer, os_uint8 buffer_len);

@@ -23,10 +23,6 @@ extern "C"{
 /***************************************************************************************************
  * MACROS
  */
-/* process priority define */
-#define PROC_HOSTIF_PRIORITY         (1)
-
-    
     
 /* process signal define */
 #define PROC_HOSTIF_SIG_PERIOD        (BV(0))

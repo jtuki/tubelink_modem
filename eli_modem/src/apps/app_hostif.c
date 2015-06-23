@@ -22,7 +22,7 @@
 #include "app_config.h"
 
 #include <string.h>
-#include <stdio.h>
+// #include <stdio.h>
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -323,7 +323,7 @@ void hostIf_Run( void )
  */
 void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length )
 {
-    hostIfChar acBuf[16];
+    // hostIfChar acBuf[16];
     
     if(a_pu8Data && (a_u8Length < HOSTIF_UART_TX_MSG_MAXLEN) )
     {
@@ -360,7 +360,8 @@ void hostIf_UartCallBack__ (hostIfUint8 a_u8port, hostIfUint8 a_u8event)
         case HAL_UART_RX_ABOUT_FULL:
         break;
         case HAL_UART_RX_TIMEOUT:
-        hostIf_AtParse__(acBuf, halUart_Read(&gs_tHostIfUart, acBuf, sizeof(acBuf)));
+            // jt todo - to save ROM space ...
+            // hostIf_AtParse__(acBuf, halUart_Read(&gs_tHostIfUart, acBuf, sizeof(acBuf)));
         
         break;
         default:

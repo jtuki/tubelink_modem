@@ -13,6 +13,7 @@
 #include "hdk_user_config.h"
 #include "process_hostif.h"
 #if defined MODEM_FOR_END_DEVICE
+#include "radio_controller/radio_controller.h"
 #include "end_device/mac_engine.h"
 #include "process_test_end_device_app.h"
 #elif defined MODEM_FOR_GATEWAY
@@ -75,21 +76,28 @@
  * @return  none
  */
 void os_processes_init_easylinkin_modem(void) {
-    proc_HostifInit();
+    os_uint8 priority = 0;
 #if defined MODEM_FOR_END_DEVICE
-    device_mac_engine_init();
-    proc_test_end_device_app_init();
+    /** same priority of radio controller and mac engine, init radio controller first */
+    radio_controller_init(priority);
+    device_mac_engine_init(priority++);
+    proc_HostifInit(priority++);
+    
+#ifdef LPWAN_DEBUG_ONLY_TRACK_BEACON
+#else
+    proc_test_end_device_app_init(priority++);
+#endif // LPWAN_DEBUG_ONLY_TRACK_BEACON
+    
 #elif defined MODEM_FOR_GATEWAY
-    gateway_mac_engine_init();
+    gateway_mac_engine_init(priority++);
+    proc_HostifInit(priority++);
 #endif
 }   /* os_processes_init_easylinkin_modem */
-
 
 
 /***************************************************************************************************
  * LOCAL FUNCTIONS IMPLEMENTATION
  */
- 
 
  
 /***************************************************************************************************

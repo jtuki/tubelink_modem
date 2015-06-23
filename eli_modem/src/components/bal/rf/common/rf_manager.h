@@ -33,7 +33,7 @@
  */
 
 /* rf state define  */
-typedef enum
+typedef enum rf_state
 {
     RF_STANDBY = 0,         /* rf stand by state */
     RF_RX = 1,              /* rf receive state */
@@ -353,7 +353,8 @@ extern RF_RET_t Rf_SetAirBaud( rf_uint32 a_u32AirBadu);
  */
 extern rf_uint32 Rf_GetAirBaud( void );
 
-
+extern rf_int8 Rf_GetPacketSnr( void );
+extern double Rf_GetPacketRssi( void );
 
 /***************************************************************************************************
  * @fn      Rf_SetWorkState()
@@ -500,6 +501,8 @@ extern rf_uint16 Rf_GetConfigPreamble(rf_bool a_bWakeupMode);
  */
 void Rf_SetPreambleLengthPara(rf_uint16 a_u16length);
 
+
+enum rf_state Rf_GetCurState(void);
 
 
 #endif /* __RF_MANAGER_H__ */

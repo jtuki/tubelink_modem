@@ -53,7 +53,7 @@ extern "C"{
  *
  * @return  none
  */
-void proc_HostifInit(void);
+void proc_HostifInit(os_uint8 priority);
 
 
 

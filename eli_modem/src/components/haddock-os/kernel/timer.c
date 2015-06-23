@@ -46,6 +46,11 @@ static void _haddock_time_shift(struct time *t,
 static os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
                                                         os_size_t max_len);
 
+/**
+ * For system resource profiling (how many timers are used).
+ */
+static os_uint8 __haddock_timer_max_num = 0;
+
 int haddock_timer_module_init(void)
 {
     list_head_init(& haddock_timer_list);
@@ -88,7 +93,7 @@ void haddock_timer_set_out_of_sync_callback(timer_out_of_sync_callback_t f)
  * 
  * \remark Once the timer is created, either absolute or not, the @is_absolute
  *         property _should_ not be modified.
- * \sa os_timer_reconfig()
+ * \sa __os_timer_reconfig()
  *
  * \remark if set @is_one_shot, the timer will be automatically destroyed after
  *      the timer has been evoked.
@@ -114,11 +119,10 @@ struct timer *__haddock_timer_create(os_pid_t pid,
     timer->timeout_value.is_absolute = is_absolute;
     __haddock_calc_timeout_value(delta_ms, & timer->timeout_value);
     
+    __haddock_timer_max_num += 1;
+    
     return timer;
 }
-
-#define timer_started(timer)      (! list_empty(& (timer)->hdr))
-#define timer_not_started(timer)  (list_empty(& (timer)->hdr))
 
 /**
  * \note make sure the @timer has been stopped but not destroyed.
@@ -126,9 +130,13 @@ struct timer *__haddock_timer_create(os_pid_t pid,
  * \remark This interface cannot modify the timer->timeout_value.is_absolute.
  * \sa __haddock_timer_create()
  */
-void os_timer_reconfig(struct timer *timer, os_pid_t pid,
-                       signal_t signal, os_uint32 delta_ms)
+void __os_timer_reconfig(const char* _cur_file, os_uint32 _cur_line,
+                         struct timer *timer, os_pid_t pid,
+                         signal_t signal, os_uint32 delta_ms)
 {
+    __haddock_call_function_file = _cur_file;
+    __haddock_call_function_line = _cur_line;
+
     haddock_assert(timer);
     haddock_assert(is_signal(signal));
     haddock_assert(delta_ms > 0);
@@ -529,6 +537,24 @@ void haddock_get_time_tick_now(struct time *t)
         t->s = haddock_time_tick_now.s;
         t->ms = haddock_time_tick_now.ms;
     );
+}
+
+struct timer *haddock_get_next_timer(void)
+{
+    if (! list_empty(& haddock_timer_list)) {
+        return list_entry(haddock_timer_list.next, struct timer, hdr);
+    } else {
+        return NULL;
+    }
+}
+
+struct timer *haddock_get_next_atimer(void)
+{
+    if (! list_empty(& haddock_atimer_list)) {
+        return list_entry(haddock_atimer_list.next, struct timer, hdr);
+    } else {
+        return NULL;
+    }
 }
 
 static os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,

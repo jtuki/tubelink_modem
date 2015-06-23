@@ -83,11 +83,11 @@
         </option>
         <option>
           <name>GenStackSize</name>
-          <state>0xa0</state>
+          <state>0x100</state>
         </option>
         <option>
           <name>GenHeapSize</name>
-          <state>0x30</state>
+          <state>0x10</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -152,7 +152,7 @@
         <option>
           <name>IccOptStrategy</name>
           <version>0</version>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>IccOptLevelSlave</name>
@@ -190,6 +190,7 @@
         <option>
           <name>CCDefines</name>
           <state>LPWAN_DEBUG</state>
+          <state>xLPWAN_DEBUG_ONLY_TRACK_BEACON</state>
           <state>USE_STM8L1526_EVAL</state>
           <state>STM8L15X_MD</state>
           <state>__MCU_8051</state>
@@ -1250,7 +1251,19 @@
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.c</name>
           </file>
           <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.h</name>
+          </file>
+          <file>
             <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parsed_common_defs.h</name>
+          </file>
+        </group>
+        <group>
+          <name>radio_controller</name>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\radio_controller\radio_controller.c</name>
+          </file>
+          <file>
+            <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\radio_controller\radio_controller.h</name>
           </file>
         </group>
         <file>
@@ -1267,9 +1280,6 @@
         </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\lpwan_utils.h</name>
-        </file>
-        <file>
-          <name>$PROJ_DIR$\..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_gw_join_response.h</name>
         </file>
       </group>
       <group>
@@ -1382,6 +1392,9 @@
       </group>
       <group>
         <name>lib</name>
+        <file>
+          <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.c</name>
+        </file>
         <file>
           <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.h</name>
         </file>

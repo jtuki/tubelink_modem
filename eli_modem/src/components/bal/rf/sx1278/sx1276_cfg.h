@@ -43,11 +43,4 @@
 
 #define TICK_RATE_MS( ms )                          ( ms )
 
-
-
-#define false               FALSE
-#define true                TRUE
-
-
-
 #endif

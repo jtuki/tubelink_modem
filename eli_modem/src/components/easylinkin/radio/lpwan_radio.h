@@ -28,7 +28,7 @@ extern os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 
 #define LPWAN_RADIO_TX_MAX_LEN      128
 
-void lpwan_radio_register_mac_pid(os_pid_t pid);
+void lpwan_radio_register_radio_controller_pid(os_pid_t pid);
 
 void lpwan_radio_init(void);
 void lpwan_radio_routine(void);

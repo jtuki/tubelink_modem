@@ -1383,6 +1383,9 @@
       <group>
         <name>lib</name>
         <file>
+          <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.c</name>
+        </file>
+        <file>
           <name>$PROJ_DIR$\..\..\src\components\haddock-os\lib\assert.h</name>
         </file>
         <file>

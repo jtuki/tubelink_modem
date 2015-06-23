@@ -13,7 +13,6 @@ extern "C"
 {
 #endif
 
-#define PRIORITY_GATEWAY_MAC_ENGINE     0
 
 #ifdef __cplusplus
 }

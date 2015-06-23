@@ -10,9 +10,12 @@
  * INCLUDES
  */
 
+#include "kernel/hdk_memory.h"
+
 #include "stm8l15x.h"
 #include "rf_manager.h"
 #include "rf_config.h"
+
 //#include "app_dtu.h"
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -133,6 +136,14 @@ void Rf_Init( Rf_Event a_hEvt )
 }/* RF_Init() */
 
 
+
+/**
+ * Get current rf-manager's state.
+ */
+enum rf_state Rf_GetCurState(void)
+{
+    return gs_tRfState;
+}
 
 /***************************************************************************************************
  * @fn      Rf_WakeUpInit()
@@ -375,7 +386,7 @@ RF_RET_t Rf_Send( rf_char *a_pcData, rf_uint16 a_u16Len )
             a_u16Len = 128;
         }
         
-        memcpy(Rf_P_GetTxBufferAddress(), a_pcData, a_u16Len);
+        haddock_memcpy(Rf_P_GetTxBufferAddress(), a_pcData, a_u16Len);
         Rf_P_SetTxPacketSize(a_u16Len);
         
         Rf_SetStateRequset(RF_TX, 0);
@@ -404,7 +415,7 @@ rf_uint16 Rf_Get( rf_char *a_pcData, rf_uint16 a_u16Len )
     if(a_pcData)
     {
         u16Ret = Rf_P_GetRxPacketSize();
-        memcpy(a_pcData, Rf_P_GetRxBufferAddress(), u16Ret);
+        haddock_memcpy(a_pcData, Rf_P_GetRxBufferAddress(), u16Ret);
         Rf_SetStateRequset(RF_STANDBY, 0);
     }
     return u16Ret;
@@ -512,6 +523,7 @@ rf_uint8 Rf_GetRssi( void )
  */
 RF_RET_t Rf_SetPower( rf_uint8 a_u8PowerVal )
 {
+    Rf_P_SetRFPower( (rf_int8)(a_u8PowerVal & 0x7F) );
     return RF_RET_OK;
 }/* Rf_SetPower() */
 
@@ -639,6 +651,14 @@ rf_uint32 Rf_GetAirBaud( void )
     return 0;
 }/* Rf_GetAirBaud() */
 
+
+rf_int8 Rf_GetPacketSnr( void ){
+    return SX1276LoRaGetPacketSnr();
+}
+
+double Rf_GetPacketRssi( void ){
+    return SX1276LoRaGetPacketRssi();
+}
 
 /***************************************************************************************************
  * @fn      Rf_SetWorkState()

@@ -12,11 +12,11 @@
 #include "kernel/process.h"
 
 #include "lib/assert.h"
+#include "simple_log.h"
 
 #include "radio_config.h"
 #include "lpwan_radio.h"
-
-#include "end_device/mac_engine.h"
+#include "radio_controller/radio_controller.h"
 
 #include "rf/common/rf_manager.h"
 
@@ -25,7 +25,7 @@
  */
 os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 
-
+static os_boolean _radio_is_rx = OS_FALSE;
 
 /***************************************************************************************************
  * @fn      lpwan_radio_event__()
@@ -40,11 +40,11 @@ os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
  */
 static void lpwan_radio_event__(RF_EVT_e a_eEvt);
 
-static os_pid_t _lpwan_mac_process_id = PROCESS_ID_RESERVED;
+static os_pid_t _lpwan_radio_controller_proc_id = PROCESS_ID_RESERVED;
 
-void lpwan_radio_register_mac_pid(os_pid_t pid)
+void lpwan_radio_register_radio_controller_pid(os_pid_t pid)
 {
-    _lpwan_mac_process_id = pid;
+    _lpwan_radio_controller_proc_id = pid;
 }
 
 /**
@@ -53,6 +53,8 @@ void lpwan_radio_register_mac_pid(os_pid_t pid)
  */
 os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
 {
+    haddock_assert(Rf_GetCurState() == RF_STANDBY);
+    print_log(LOG_INFO, "RTx");
     if (len > LPWAN_RADIO_TX_MAX_LEN)
         return LPWAN_RADIO_ERR_TX_LEN_INVALID;
     
@@ -66,7 +68,11 @@ os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
  */
 os_int8 lpwan_radio_start_rx(void)
 {
-    // todo if radio is during rx, return LPWAN_RADIO_ERR_READ_BUFFER_LEN_INVALID
+    haddock_assert(Rf_GetCurState() == RF_STANDBY);
+    if (! _radio_is_rx) {
+        print_log(LOG_INFO, "RRxStart");
+        _radio_is_rx = OS_TRUE;
+    }
     Rf_ReceiveStart();
     return 0;
 }
@@ -74,6 +80,8 @@ os_int8 lpwan_radio_start_rx(void)
 os_int8 lpwan_radio_stop_rx(void)
 {
     Rf_Stop();
+    print_log(LOG_INFO, "RRxStop");
+    _radio_is_rx = OS_FALSE;
     return 0;
 }
 
@@ -84,6 +92,7 @@ os_int8 lpwan_radio_stop_rx(void)
  */
 os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
 {
+    print_log(LOG_INFO, "RRead");
     lpwan_radio_rx_buffer[0] = (os_uint8)Rf_Get((rf_char*)&lpwan_radio_rx_buffer[1], LPWAN_RADIO_RX_BUFFER_MAX_LEN);
     if (1+lpwan_radio_rx_buffer[0] > len) {
         buffer[0] = 0;
@@ -109,7 +118,6 @@ os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
 void lpwan_radio_init( void )
 {
     /* init rf module */
-    haddock_assert(_lpwan_mac_process_id != PROCESS_ID_RESERVED);
     Rf_Init(lpwan_radio_event__);
     
 } /* appLora_Init() */
@@ -145,23 +153,27 @@ void lpwan_radio_routine( void )
  */
 void lpwan_radio_event__(RF_EVT_e a_eEvt)
 {
+    haddock_assert(_lpwan_radio_controller_proc_id != PROCESS_ID_RESERVED);
+
     switch( a_eEvt )
     {
     case RF_EVT_IDLE:
         //Rf_ReceiveStart();
         break;
     case RF_EVT_RX_OK:
-        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_RX_OK);
+        os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_OK);
         break;
     case RF_EVT_RX_TMO:
-        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
-        //lpwan_radio_tx("rx_tmo\r\n", strlen("rx_tmo\r\n"));
+        os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
+        break;
+    case RF_EVT_RX_CRCERR:
+        os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_CRC_ERROR);
         break;
     case RF_EVT_TX_OK:
-        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_TX_OK);
+        os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_TX_OK);
         break;
     case RF_EVT_TX_TMO:
-        os_ipc_set_signal(_lpwan_mac_process_id, SIGNAL_LPWAN_RADIO_TX_TIMEOUT);
+        os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_TX_TIMEOUT);
         break;
     default:
         break;

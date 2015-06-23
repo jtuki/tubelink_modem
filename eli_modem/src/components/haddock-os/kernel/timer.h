@@ -18,6 +18,9 @@ extern "C"
 #include "kernel/ipc.h"
 #include "kernel/process.h"
 
+#define timer_started(timer)      (! list_empty(& (timer)->hdr))
+#define timer_not_started(timer)  (list_empty(& (timer)->hdr))
+
 struct time {
     os_uint32 s;
     os_uint16 ms;
@@ -57,8 +60,12 @@ struct time *haddock_check_next_timeout(void);
 #define os_timer_create_one_shot(pid, signal, delta_ms) \
     __haddock_timer_create((pid), OS_FALSE, OS_TRUE, (signal), (delta_ms))
 
-void os_timer_reconfig(struct timer *timer, os_pid_t pid,
-                       signal_t signal, os_uint32 delta_ms);
+#define os_timer_reconfig(timer, pid, signal, delta_ms) \
+     __os_timer_reconfig("", __LINE__, (timer), (pid), (signal), (delta_ms))
+
+void __os_timer_reconfig(const char* _cur_file, os_uint32 _cur_line,
+                         struct timer *timer, os_pid_t pid,
+                         signal_t signal, os_uint32 delta_ms);
     
 int os_timer_start(struct timer *timer);
 void os_timer_stop(struct timer *timer);
@@ -70,6 +77,9 @@ void __haddock_increment_time_tick_now(os_uint16 delta_ms);
 struct timer *__haddock_timer_create(os_pid_t pid,
                                      os_boolean is_absolute, os_boolean is_one_shot,
                                      signal_t signal, os_uint32 delta_ms);
+
+struct timer *haddock_get_next_timer(void);
+struct timer *haddock_get_next_atimer(void);
 
 #ifdef __cplusplus
 }

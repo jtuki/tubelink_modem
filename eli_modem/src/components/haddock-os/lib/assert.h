@@ -15,6 +15,7 @@ extern "C"
 #include "kernel/kernel_config.h"
 #include "hdk_user_config.h"
 #include "app_hostif.h"
+#include "simple_log.h"
 
 #define S(x) #x
 #define S_(x) S(x)
@@ -36,9 +37,13 @@ extern "C"
 // not on PC platform, debug mode enabled (simply use watchdog to implement assert).
 #define haddock_assert(condition) do { \
     if (!(condition)) { \
+        print_log(LOG_ERROR, "assert fail: %d", __LINE__); \
         while (1) {} \
     } \
 } while (0)
+
+extern os_uint32   __haddock_call_function_line;
+extern const char *__haddock_call_function_file;
 #else
 #define haddock_assert(condition)
 #endif

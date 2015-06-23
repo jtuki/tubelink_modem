@@ -17,9 +17,7 @@ extern "C"
 
 #define SIGNAL_USER_APP_UPLINK_MSG_PERIODICALLY BV(0)
 
-#define PROC_PRIORITY_TEST_USER_APP 2
-
-void proc_test_end_device_app_init(void);
+void proc_test_end_device_app_init(os_uint8 priority);
 
 #ifdef __cplusplus
 }

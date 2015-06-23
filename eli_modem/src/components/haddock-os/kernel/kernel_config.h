@@ -14,7 +14,9 @@
  * Boolean value configuration.
  */
 
+/** Enable the debugging mode for OS and other upper layer stack/apps. */
 #define HDK_CFG_DEBUG                   OS_TRUE
+
 #define HDK_CFG_PROC_WITH_NAME          OS_FALSE
 #define HDK_CFG_PROC_ENABLE_IPC_MSG     OS_FALSE
 #define HDK_CFG_DEFAULT_SCHEDULER       OS_TRUE /* refer to kernel/scheduler.c */
@@ -25,14 +27,14 @@
 
 /**< Maximum process number. (max number is 32) 
  * \sa haddock_allow_power_conserve_bv_t */
-#define HDK_CFG_PROC_MAX_NUM            3
+#define HDK_CFG_PROC_MAX_NUM            5
 
 /**< Maximum message queue size for each process. */
 #define HDK_CFG_PROC_MAX_MSG_QUEUE_SIZE 5
 
 /**< Higher the value is, nicer the process is (with low priority). 
      Priority is within range [0,7). */
-#define HDK_CFG_PROC_PRIORITY_NUM       3
+#define HDK_CFG_PROC_PRIORITY_NUM       5
 
 /**
  * The struct ipc_msg pool size.
@@ -66,7 +68,7 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
 /**< \sa haddock_debug_os_timer_list_have_loop() */
 #define HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP
 
-#define HDK_CFG_TIMER_MAX_NUM           10
+#define HDK_CFG_TIMER_MAX_NUM           7
 
 /** 15ms. \sa haddock_timer_update_routine() */
 #define HDK_CFG_TIMER_SCHEDULE_THRESHOLD 15
@@ -80,7 +82,7 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Power saving related configuration.
  */
 
-#define HDK_CFG_POWER_SAVING_ENABLE     OS_TRUE
+#define HDK_CFG_POWER_SAVING_ENABLE     OS_FALSE
 
 /** sleep if the next timer's timeout value exeeds @threshold ms. 
  * \sa haddock_power_conserve_routine() */

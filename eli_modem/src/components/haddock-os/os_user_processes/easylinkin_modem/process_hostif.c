@@ -89,9 +89,9 @@ haddock_process("process_1");
  *
  * @return  none
  */
-void proc_HostifInit(void)
+void proc_HostifInit(os_uint8 priority)
 {
-    struct process *ptProcHostIf = process_create(proc_HostifEntry__, PROC_HOSTIF_PRIORITY);
+    struct process *ptProcHostIf = process_create(proc_HostifEntry__, priority);
     g_procHostifPid = ptProcHostIf->_pid;
     hostIf_Init();
     os_ipc_set_signal(this->_pid, PROC_HOSTIF_SIG_PERIOD); // start the set-signal loop
@@ -124,12 +124,12 @@ signal_bv_t proc_HostifEntry__(os_pid_t a_nPid, signal_bv_t a_bvSig)
     }
     
     if (a_bvSig & PROC_HOSTIF_SIG_PERIOD) {
-        customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 10);
+        customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 15);
         
         hostIf_Run();
         
 
-        //process_sleep();
+        process_sleep();
         bvSignal = a_bvSig ^ PROC_HOSTIF_SIG_PERIOD;
     }
     

@@ -48,7 +48,11 @@
 #define Rf_P_GetRxPacketSize        SX1276LoRaGetRxPacketSize
 #define Rf_P_UpdateTxPacketTime     Rf_Sx1276_UpdateTxPacketTime
 #define Rf_P_SetPreambleLengthPara  Rf_Sx1276_SetPreambleLengthPara
-     
+#define Rf_P_SetRFPower             SX1276LoRaSetRFPower
+
+#define Rf_P_GetPacketSnr           SX1276LoRaGetPacketSnr
+#define Rf_P_GetPacketRssi         SX1276LoRaGetPacketRssi
+
 #define Rf_Cfg_Init                 Sx1276_Cfg_Init
 #define Rf_Cfg_Process              Sx1276_Cfg_Process
 #define Rf_Cfg_GetBufferAddr        Sx1276_Cfg_GetBufferAddr
@@ -443,7 +447,22 @@ extern void Rf_P_UpdateTxPacketTime(void);
  */
 extern void Rf_P_SetPreambleLengthPara(rf_uint16 a_u16length);
 
+/***************************************************************************************************
+ * @fn      SX1276LoRaSetRFPower()
+ *
+ * @brief   set LoRa RF power
+ *
+ * @author	chuanpengl
+ *
+ * @param   a_i8Power  - power value
+ *
+ * @return  none
+ */
+void SX1276LoRaSetRFPower( rf_int8 a_i8Power );
 
+extern rf_int8 Rf_P_GetPacketSnr( void );
+
+extern double Rf_P_GetPacketRssi( void );
 
 /***************************************************************************************************
  * @fn      Rf_Cfg_Init()

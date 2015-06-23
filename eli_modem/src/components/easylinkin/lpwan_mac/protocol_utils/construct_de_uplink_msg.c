@@ -13,6 +13,11 @@
 #include "lpwan_config.h"
 
 /**
+ * \sa enum device_message_type
+ */
+const char *device_msg_type_string[3] = {"m_r", "m_e", "m_em"};
+
+/**
  * We only deal with @type_and_len and @msg in stuct device_uplink_msg.
  * All other parts will be updated in other function.
  * todo (we don't care @is_need_ack and @contain_multicast_ack etc.)

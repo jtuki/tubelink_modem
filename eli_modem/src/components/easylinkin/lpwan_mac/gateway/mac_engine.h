@@ -25,13 +25,14 @@ extern "C"
 /** radio related signals */
 #define SIGNAL_LPWAN_RADIO_RX_TIMEOUT                   BV(0)
 #define SIGNAL_LPWAN_RADIO_RX_OK                        BV(1)
-#define SIGNAL_LPWAN_RADIO_TX_TIMEOUT                   BV(2)
-#define SIGNAL_LPWAN_RADIO_TX_OK                        BV(3)
+#define SIGNAL_LPWAN_RADIO_RX_CRC_ERROR                 BV(2)
+#define SIGNAL_LPWAN_RADIO_TX_TIMEOUT                   BV(3)
+#define SIGNAL_LPWAN_RADIO_TX_OK                        BV(4)
 
-#define SIGNAL_GW_MAC_ENGINE_INIT_FINISHED              BV(4)
-#define SIGNAL_GW_MAC_SEND_BEACON                       BV(5)
+#define SIGNAL_GW_MAC_ENGINE_INIT_FINISHED              BV(6)
+#define SIGNAL_GW_MAC_SEND_BEACON                       BV(7)
 
-#define SIGNAL_GW_MAC_ENGINE_CHECK_RADIO_TIMEOUT        BV(6)
+#define SIGNAL_GW_MAC_ENGINE_CHECK_RADIO_TIMEOUT        BV(8)
 /**< @} */
 
 /**< configurations @{ */
@@ -58,7 +59,7 @@ struct lpwan_gateway_mac_info {
 
 extern os_pid_t gl_gateway_mac_engine_pid;
 
-void gateway_mac_engine_init(void);
+void gateway_mac_engine_init(os_uint8 priority);
 
 #ifdef __cplusplus
 }

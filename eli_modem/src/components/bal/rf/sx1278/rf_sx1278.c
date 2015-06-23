@@ -27,6 +27,14 @@
 #define XTAL_FREQ                                   32000000
 #define FREQ_STEP                                   61.03515625
 
+#define RSSI_OFFSET_LF                              -155.0
+#define RSSI_OFFSET_HF                              -150.0
+
+#define NOISE_ABSOLUTE_ZERO                         -174.0
+
+#define NOISE_FIGURE_LF                                4.0
+#define NOISE_FIGURE_HF                                6.0 
+
 #define HOPPING_FREQUENCIES(IDX)    (HoppingFrequenciesDelta[IDX] + LoRaSettings.RFFrequency)
 #define GET_TICK_COUNT()                            systick_Get()
 #define TICK_RATE_MS( ms )                          ( ms )
@@ -34,10 +42,95 @@
  * CONSTANTS
  */
 /*!
+ * Precomputed signal bandwidth log values
+ * Used to compute the Packet RSSI value.
+ */
+const double SignalBwLog[] =
+{
+    3.8927900303521316335038277369285,  // 7.8 kHz
+    4.0177301567005500940384239336392,  // 10.4 kHz
+    4.193820026016112828717566631653,   // 15.6 kHz
+    4.31875866931372901183597627752391, // 20.8 kHz
+    4.4948500216800940239313055263775,  // 31.2 kHz
+    4.6197891057238405255051280399961,  // 41.6 kHz
+    4.795880017344075219145044421102,   // 62.5 kHz
+    5.0969100130080564143587833158265,  // 125 kHz
+    5.397940008672037609572522210551,   // 250 kHz
+    5.6989700043360188047862611052755   // 500 kHz
+};
+
+const double RssiOffsetLF[] =
+{   // These values need to be specify in the Lab
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+    -155.0,
+};
+
+/*!
  * Frequency hopping frequencies table
  */
 static const rf_int32 HoppingFrequenciesDelta[] =
 {
+#if 0
+    23500000,
+    16500000,
+    6500000,
+    17500000,
+    17500000,
+    9000000,
+    3000000,
+    16000000,
+    12500000,
+    26000000,
+    25000000,
+    9500000,
+    13000000,
+    18500000,
+    18500000,
+    2500000,
+    11500000,
+    26500000,
+    2500000,
+    22000000,
+    24000000,
+    3500000,
+    13000000,
+    22000000,
+    26000000,
+    10000000,
+    20000000,
+    22500000,
+    11000000,
+    22000000,
+    9500000,
+    26000000,
+    22000000,
+    18000000,
+    25500000,
+    8000000,
+    17500000,
+    26500000,
+    8500000,
+    16000000,
+    5500000,
+    16000000,
+    3000000,
+    5000000,
+    15000000,
+    13000000,
+    7000000,
+    10000000,
+    26500000,
+    25500000,
+    11000000
+#else
     50000>>1,
     100000>>1,
     150000>>1,
@@ -101,6 +194,7 @@ static const rf_int32 HoppingFrequenciesDelta[] =
 	600000>>1,
 	500000>>1,
 	400000>>1
+#endif
 
 };
 
@@ -155,7 +249,7 @@ tLoRaSettings LoRaSettings =
     /* here, if in cad mode, rx timeout value may be need greater then sleep time */
     20,              // RxPacketTimeout
     128,              // PayloadLength (used for implicit header mode)
-    12,              /* preamble length */
+    24,              /* preamble length */
 };
 
 
@@ -164,8 +258,11 @@ tLoRaSettings LoRaSettings =
 static rf_uint8 gs_u8PacketSize = 0;
 static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE];
 
-static rf_uint32 gs_u32PacketTxTime = 0;
+static int8_t RxPacketSnrEstimate;
+static double RxPacketRssiValue;
 
+static rf_uint32 gs_u32PacketTxTime = 0;
+static rf_uint32 gs_u32RoutineTmo = 0;
 /***************************************************************************************************
  * EXTERNAL VARIABLES
  */
@@ -416,7 +513,7 @@ RF_P_RET_t Rf_SX1278_RxProcess( void )
         SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXTIMEOUT  );
         SX1276LoRaSetOpMode( RFLR_OPMODE_STANDBY ); /* goto standby mode */
         tRet = RF_P_RX_TMO;
-    }
+    } 
     /* if rx done interrupt */
     else if( DIO0 == 1 ) // RxDone
     {
@@ -440,6 +537,33 @@ RF_P_RET_t Rf_SX1278_RxProcess( void )
         }
         else
         {
+            {
+                uint8_t rxSnrEstimate;
+                SX1276Read( REG_LR_PKTSNRVALUE, &rxSnrEstimate );
+                if( rxSnrEstimate & 0x80 ) // The SNR sign bit is 1
+                {
+                    // Invert and divide by 4
+                    RxPacketSnrEstimate = ( ( ~rxSnrEstimate + 1 ) & 0xFF ) >> 2;
+                    RxPacketSnrEstimate = -RxPacketSnrEstimate;
+                }
+                else
+                {
+                    // Divide by 4
+                    RxPacketSnrEstimate = ( rxSnrEstimate & 0xFF ) >> 2;
+                }
+            }
+
+
+            if( RxPacketSnrEstimate < 0 )
+            {
+                RxPacketRssiValue = NOISE_ABSOLUTE_ZERO + 10.0 * SignalBwLog[LoRaSettings.SignalBw] + NOISE_FIGURE_LF + ( double )RxPacketSnrEstimate;
+            }
+            else
+            {
+                SX1276Read( REG_LR_PKTRSSIVALUE, &SX1276LR->RegPktRssiValue );
+                RxPacketRssiValue = RssiOffsetLF[LoRaSettings.SignalBw] + ( double )SX1276LR->RegPktRssiValue;
+            }
+                
             /* Rx single mode */
             if( LoRaSettings.RxSingleOn == rf_true )
             {
@@ -554,14 +678,14 @@ void Rf_RX1278_TxInit( void )
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_RFO );
         SX1276LoRaSetPa20dBm( rf_false );
-        LoRaSettings.Power = 14;
+        //LoRaSettings.Power = 14;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     }
     else
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_PABOOST );
         SX1276LoRaSetPa20dBm( rf_true );
-        LoRaSettings.Power = 20;
+        //LoRaSettings.Power = 20;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     } 
     
@@ -1764,7 +1888,7 @@ void SX1276LoRaSetNbTrigPeaks( rf_uint8 a_u8Value )
  *
  * @return  return get value
  */
-static rf_uint8 SX1276LoRaGetNbTrigPeaks( void )
+rf_uint8 SX1276LoRaGetNbTrigPeaks( void )
 {
     SX1276Read( 0x31, &SX1276LR->RegTestReserved31 );
     return ( SX1276LR->RegTestReserved31 & 0x07 );
@@ -1797,7 +1921,7 @@ void SX1276LoRaSetOpMode( rf_uint8 a_u8OpMode )
     SX1276Write( REG_LR_OPMODE, SX1276LR->RegOpMode );
 }
 
-
+// extern uint32_t time_tick_get(void);
 /***************************************************************************************************
  * @fn      SX1276Reset()
  *
@@ -1900,7 +2024,15 @@ void Rf_Sx1276_SetPreambleLengthPara(rf_uint16 a_u16length)
     LoRaSettings.u16PreambleLength = a_u16length;
 }   /* Rf_Sx1276_SetPreambleLengthPara() */
 
+rf_int8 SX1276LoRaGetPacketSnr( void )
+{
+    return RxPacketSnrEstimate;
+}
 
+double SX1276LoRaGetPacketRssi( void )
+{
+    return RxPacketRssiValue;
+}
 /***************************************************************************************************
 * HISTORY LIST
 * 2. Modify Hal_SpiInit by author @ data

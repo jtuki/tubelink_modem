@@ -42,3 +42,4 @@ eli_modem/ewstm8/eli_modem_workspace/settings/
 *.pdf
 # @}
 eli_modem/eclipse_proj/.settings/
+*.ewd
