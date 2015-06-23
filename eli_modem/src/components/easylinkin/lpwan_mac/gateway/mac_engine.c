@@ -426,14 +426,18 @@ static void gateway_mac_get_uuid(gateway_uuid_t *uuid)
     os_uint8 *_mcu_unique_id = (os_uint8 *) 0x4926;
     // os_uint8 _crc = CRC_Calc(POLY_CRC8_CCITT, _mcu_unique_id, 12);
 
-    uuid->addr[0] = 0x10;
-    uuid->addr[1] = _mcu_unique_id[5];
-    uuid->addr[2] = _mcu_unique_id[4];
-    uuid->addr[3] = _mcu_unique_id[3];
-    uuid->addr[4] = _mcu_unique_id[2];
-    uuid->addr[5] = _mcu_unique_id[1];
-    uuid->addr[6] = _mcu_unique_id[0];
-    uuid->addr[7] = /*_crc*/ _mcu_unique_id[7];
+    uuid->addr[0] = _mcu_unique_id[11];
+    uuid->addr[1] = _mcu_unique_id[10];
+    uuid->addr[2] = _mcu_unique_id[9];
+    uuid->addr[3] = _mcu_unique_id[8];
+    uuid->addr[4] = _mcu_unique_id[7];
+    uuid->addr[5] = _mcu_unique_id[6];
+    uuid->addr[6] = _mcu_unique_id[5];
+    uuid->addr[7] = _mcu_unique_id[4];
+    uuid->addr[8] = _mcu_unique_id[3];
+    uuid->addr[9] = _mcu_unique_id[2];
+    uuid->addr[10] = _mcu_unique_id[1];
+    uuid->addr[11] = _mcu_unique_id[0];
 }
 
 /**

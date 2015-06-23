@@ -24,7 +24,7 @@ extern "C"
 /**
  * Gateway's join response.
  *
- * \remark Destination are modem_uuid_t (8 bytes long).
+ * \remark Destination are modem_uuid_t (12 bytes long).
  * \sa struct frame_header
  *
  * \remark @rejoinToken is a non-zero random 16-bits value, designed for the

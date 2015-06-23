@@ -35,11 +35,11 @@ typedef os_uint16 multicast_addr_t;
 typedef os_uint32 app_id_t; /**< \sa multicast_addr_t */
 
 typedef struct {
-    os_uint8 addr[8];
+    os_uint8 addr[12];
 } modem_uuid_t;
 
 typedef struct {
-    os_uint8 addr[8];
+    os_uint8 addr[12];
 } gateway_uuid_t;
 
 typedef os_uint16 short_modem_uuid_t; /**< used for ack \sa short_modem_uuid */
@@ -58,7 +58,7 @@ enum _device_type {
 
 enum _address_type {
     ADDRESS_TYPE_SHORT = 0,     /**< 2 bytes. \sa short_addr_t, multicast_addr_t */
-    ADDRESS_TYPE_UUID,          /**< 8 bytes. \sa modem_uuid_t */
+    ADDRESS_TYPE_UUID,          /**< 12 bytes. \sa modem_uuid_t */
     _address_type_invalid = 2,
 };
 
@@ -68,7 +68,7 @@ enum _address_type {
  * Only destination address might be multicast address.
  * For most message sent by gateway, the @src is the gateway's cluster id.
  *
- * As for join confirmed, the destination address are 8 bytes
+ * As for join confirmed, the destination address are 12 bytes
  * modem_uuid_t.
  *
  * \sa struct frame_header::hdr::frame_type
@@ -84,7 +84,7 @@ enum frame_type_gw {
 };
 
 /**
- * As for join and rejoin, the source address are modem_uuid_t (8 bytes long).
+ * As for join and rejoin, the source address are modem_uuid_t (12 bytes long).
  * All the destination address _should_ be 2 bytes short_addr_t.
  *
  * \remark It's not allowed to send directly to other end-devices using

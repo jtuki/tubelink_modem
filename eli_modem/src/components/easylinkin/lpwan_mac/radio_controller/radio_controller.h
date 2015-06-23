@@ -39,7 +39,7 @@ extern "C"
 #define SIGNAL_LPWAN_RADIO_COMBINED_ALL                 ((os_uint32) 0x1F)
 #define SIGNAL_LPWAN_RADIO_RX_TIMEOUT                   BV(0)
 #define SIGNAL_LPWAN_RADIO_RX_OK                        BV(1)
-#define SIGNAL_LPWAN_RADIO_RX_CRC_ERROR                  BV(2)
+#define SIGNAL_LPWAN_RADIO_RX_CRC_ERROR                 BV(2)
 #define SIGNAL_LPWAN_RADIO_TX_TIMEOUT                   BV(3)
 #define SIGNAL_LPWAN_RADIO_TX_OK                        BV(4)
 

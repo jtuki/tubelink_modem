@@ -37,7 +37,7 @@ os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower);
 os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
                               os_uint8 low, os_uint8 lowest);
 
-short_addr_t short_modem_uuid(modem_uuid_t uuid);
+short_modem_uuid_t short_modem_uuid(modem_uuid_t *uuid);
 
 #ifdef __cplusplus
 }
