@@ -457,15 +457,10 @@ void Rf_SX1278_RxInit( void )
     gs_u8PacketSize = 0;
     
     SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */ 
-    if(LoRaSettings.u16PreambleLength + 5 > 0x3FF)
-    {
-        SX1276LoRaSetSymbTimeout((0x3FF) );   /* set timeout value */
-    }
-    else
-    {
-        SX1276LoRaSetSymbTimeout((LoRaSettings.u16PreambleLength + 5) );   /* set timeout value */
-    }
-    
+
+    /**< jt - set timeout value. refer to lora sx1276's datasheet Page40 */
+    SX1276LoRaSetSymbTimeout(2 + 5); // the next 5 is for extra 4.25 symbols.
+
     /* goto receive mode */
     if( LoRaSettings.RxSingleOn == rf_true ) /* Rx single mode */
     {
@@ -2042,3 +2037,4 @@ double SX1276LoRaGetPacketRssi( void )
 *  	context: here write modified history
 *
 ***************************************************************************************************/
+
