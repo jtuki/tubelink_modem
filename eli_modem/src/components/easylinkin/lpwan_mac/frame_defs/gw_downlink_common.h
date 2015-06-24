@@ -26,11 +26,8 @@ extern "C"
  * bits 1: is_need_ack? (need immediately MAC-layer acknowledgement)
  * bits 1: is_data_pending?
  * bits 1: is_send_immediately?
- * bits 3: wait_after
- *  \remark Wait after @wait_after beacon periods.
- *          If set 0, the modem should wait until previously specified
- *          downlink OP2 period. Else, delay @pollAfter beacon period
- *          to receive message (OP2).
+ * bits 3: poll_after
+ *  \remark Delay @poll_after beacon period to poll pending downlink messages.
  *          No use if @is_send_immediately is set.
  */
 typedef os_uint8 gw_downlink_common_hdr_t;

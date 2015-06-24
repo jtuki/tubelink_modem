@@ -311,8 +311,6 @@ gateway_mac_label_radio_rx_invalid_frame:
         haddock_assert(_len > 0);
         gateway_mac_tx_buffer[0] += _len;
 
-        // construct the beacon's op2 part. todo
-
         // construct the beacon's packed ack part by @mac_info.packed_ack_delay_list
         os_uint8 _packed_ack_num = 0;
         if (mac_info.bcn_info.has_packed_ack == OS_TRUE) {
@@ -363,9 +361,7 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info.nearby_channels = 0x00;
     /**< @} */
 
-    info->bcn_info.has_op2 = OS_FALSE;
     info->bcn_info.has_packed_ack = OS_FALSE;
-    info->bcn_info.is_cf3_only_cmd = OS_FALSE;
 
     info->bcn_info.packed_ack_delay_num = GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM;
 
@@ -381,17 +377,14 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info.beacon_class_seq_id = 1; // range [1, @beacon_classes_num]
 
     /*
-     * sum(ratio_xxx) == 64
-     * As to the default BEACON_PERIOD_2S, each section is 2000/64 (i.e. 31.25ms).
+     * sum(ratio_xxx) == 128
+     * As to the default BEACON_PERIOD_2S, each section is 2000/128 (i.e. 15.625ms).
+     *
+     * todo
      */
-    info->bcn_info.ratio.ratio_beacon   = 3;
-    info->bcn_info.ratio.ratio_op1      = 0;
-    info->bcn_info.ratio.ratio_op2      = 0;
-    info->bcn_info.ratio.ratio_cf1      = 10;
-    info->bcn_info.ratio.ratio_cf2      = 40;
-    info->bcn_info.ratio.ratio_cf3      = 11;
-
-    // todo currently we don't care the packed ack and op2 section.
+    info->bcn_info.ratio.ratio_beacon       = 6;
+    info->bcn_info.ratio.ratio_downlink_msg = 0;
+    info->bcn_info.ratio.ratio_uplink_msg   = 122;
 }
 
 /**

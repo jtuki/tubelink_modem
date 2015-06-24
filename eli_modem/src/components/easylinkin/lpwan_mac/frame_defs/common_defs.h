@@ -110,8 +110,6 @@ enum frame_type_end_device {
 enum _beacon_period_section {
     _beacon_period_section_none = 0,
     BEACON_SECTION_BEACON = 0,
-    BEACON_SECTION_OP1,
-    BEACON_SECTION_OP2,
     BEACON_SECTION_ALL,
     _beacon_section_invalid = 4,
 };
@@ -125,13 +123,11 @@ enum device_message_type {
 
 enum cmd_id_end_device {
     MODEM_CMD_ID_LEAVE          = 0,
-    MODEM_CMD_ID_RESERVE_INFO   = 1,    /**< \sa GW_CMD_ID_RESERVE_INFO */
     _cmd_id_end_device_invalid  = 16,
 };
 
 enum cmd_id_gw {
     GW_CMD_ID_FORCE_LEAVE       = 0,
-    GW_CMD_ID_RESERVE_INFO      = 1,    /**< \sa MODEM_CMD_ID_RESERVE_INFO */
     _gw_cmd_id_invalid          = 16,
 };
 

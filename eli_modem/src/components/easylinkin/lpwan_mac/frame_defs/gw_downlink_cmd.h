@@ -20,79 +20,11 @@ extern "C"
 #pragma pack(1)
 #endif
 
-/*---------------------------------------------------------------------------*/
-/**< gateway cmd: reserve information @{ */
-
 __LPWAN struct gw_downlink_cmd_common {
     gw_downlink_common_hdr_t hdr;
     os_uint8 seq;
 };
 
-/**
- * bits 4: cmd_id   \sa GW_CMD_ID_RESERVE_INFO
- * bits 1: is_contain_op1?
- * bits 1: is_contain_op2?
- * bits 1: is_contain_multicast_info?
- * bits 1: _reserved
- */
-typedef os_uint8 gw_cmd_reserve_info_hdr_t;
-
-/**
- * bits 2: type (op1 or op2 or multicast? \sa enum _gw_reserve_details_type)
- * bits 2:
- *         reserve_info_type    \sa enum _gw_reserve_info_type
- * bits 1: _reserved
- * bits 3:
- *      (if @reserve_info_type is GW_RESERVE_DENIED)
- *         denied_reason    \sa enum _gw_reserve_denied_reason
- *      (else)
- *         beacon_channel   \sa lpwan_radio_channels_list
- */
-typedef os_uint8 gw_cmd_reserve_details_hdr_t;
-
-__LPWAN struct gw_cmd_reserve_info {
-    gw_cmd_reserve_info_hdr_t hdr;
-    union {
-        struct {
-            gw_cmd_reserve_details_hdr_t hdr;
-        } denied, multicast_not_found;
-        struct {
-            gw_cmd_reserve_details_hdr_t hdr;
-            os_int8 beacon_seq;
-            os_uint16 beacon_group_bit_vector; /**< \sa enum _beacon_max_groups_num */
-        } canceled, confirmed, transfer, multicast_found;
-    } details;
-};
-
-enum _gw_reserve_details_type {
-    GW_RESERVE_DETAILS_OP1 = 0,
-    GW_RESERVE_DETAILS_OP2,
-    GW_RESERVE_DETAILS_MULTICAST,
-    _gw_reserve_details_type_invalid = 4,
-};
-
-enum _gw_reserve_info_type {
-    /**< for op1 and op2 @{ */
-    GW_RESERVE_CONFIRMED   = 0,
-    GW_RESERVE_CANCELED    = 1,
-    GW_RESERVE_DENIED      = 2,
-    GW_RESERVE_TRANSFER    = 3, /**< for future multi-channel support */
-    _gw_reserve_info_type_op12_invalid = 4,
-    /**< @} */
-    /**< for multicast @{ */
-    GW_RESERVE_MULTICAST_FOUND = 0,
-    GW_RESERVE_MULTICAST_NOT_FOUND,
-    _gw_reserve_info_type_multicast_invalid = 4,
-    /**< @} */
-};
-
-enum _gw_reserve_denied_reason {
-    GW_RESERVE_DENIED_OUT_OF_FEE = 0,
-    GW_RESERVE_DENIED_CANCEL_FIRST,
-    _gw_reserve_denied_reason_invalid = 8,
-};
-
-/**< @} */
 /*---------------------------------------------------------------------------*/
 /**< gateway cmd: force leave @{ */
 
@@ -109,10 +41,9 @@ __LPWAN struct gw_cmd_force_leave {
  *
  * @GW_FORCE_LEAVE_REASON_OUT_OF_FEE
  *      The modem has run out of subscription fee. If a modem receives this
- *      command, it is not allowed to send any emergent/event message, and all
- *      the reserved OP1/2 sections are freed; and the modem _should_ poll the
- *      gateway for downlink join confirmed message with @JOIN_CONFIRMED_PAID
- *      is set (when the subscription fee is paid).
+ *      command, it is not allowed to send any emergent/event message; and the
+ *      modem _should_ poll the gateway for downlink join confirmed message with
+ *      @JOIN_CONFIRMED_PAID is set (when the subscription fee is paid).
  *      \sa enum _join_confirmed_info
  *
  * @GW_FORCE_LEAVE_REASON_OUT_OF_FEE_LEAVE

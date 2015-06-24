@@ -24,11 +24,7 @@ extern "C"
 /**
  * Beacon structure:
  *      1. struct beacon_header hdr;
- *      2. (has pending msg/cmd in op2? \sa @has_op2; @beacon_period_section_ratio_t)
- *      [optional] beacon_op2_hdr_t hdr;
- *      [optional] uint8 op2_msg_num;
- *      [optional] struct beacon_op2_msg op2_msg[@op2_msg_num];
- *      3. (has packed ack to notify? \sa @has_packed_ack)
+ *      2. [optional] (has packed ack to notify? \sa @has_packed_ack)
  *      [optional] uint8 packed_ack_num;
  *      [optional] struct beacon_packed_ack packed_ack[@packed_ack_num];
  * @{
@@ -42,12 +38,11 @@ extern "C"
  *      bits 2: beacon_groups_num (~ constant) \sa enum _beacon_max_groups_num
  *      bits 4: beacon_classes_num (var, but nearly constant, at most 16 classes)
  * byte 2:
- *      bits 1: has_op2? (var)
+ *      bits 1: _reserved
  *      bits 1: has_packed_ack? (var)
- *      bits 1: is_cf3_only_cmd? (var)
  *      bits 1: is_server_connected? (var)
  *      bits 1: is_join_allowed? (var)
- *      bits 3: _reserved
+ *      bits 4: _reserved
  * byte 3:
  *      bits 3: packed_ack_delay_num (~ constant, range [0,7])
  *      bits 2: occupied_capacity (var) \sa enum _gateway_occupied_capacity
@@ -72,19 +67,19 @@ typedef os_uint8 beacon_info_t[4];
  */
 typedef os_uint8 beacon_seq_t[2];
 
+#define BEACON_PERIOD_SECTIONS_NUM      128
+
 /**
- * bits 4: ratio_beacon
- * bits 4: ratio_op1
- * bits 4: ratio_op2
- * bits 4: ratio_cf1
- * bits 4: ratio_cf2
- * bits 4: ratio_cf3
+ * byte 1: ratio_beacon (contain packed ACK)
+ * byte 2: ratio_downlink_msg
+ * byte 3: ratio_uplink_msg (\sa DEVICE_MAC_MIN_CF_RATIO)
  * 
- * \remark We segment the beacon period into 64 sections. 
+ * \remark We segment the beacon period into 128 sections.
  *         If beacon period is 2 seconds (i.e. 2000ms), and each second means 
- *         32k (32*1024=32768) clock ticks, so each section is 512 ticks (31.25ms).
- * \remark beacon + op1/2 + cf1/2/3 = 32;
- *         i.e. beacon * 2 is the actual beacon ratio length.
+ *         32k (32*1024=32768) clock ticks, so each section is 512 ticks (15.625ms).
+ * \remark beacon + downlink + uplink = 128;
+ *
+ * \sa BEACON_PERIOD_SECTIONS_NUM
  */
 typedef os_uint8 beacon_period_section_ratio_t[3];
 
@@ -118,28 +113,6 @@ __LPWAN struct beacon_packed_ack {
     } addr;
 };
 
-/**
- * bits 1: is_op2_more_pending?
- * bits 7: next_delta_beacon_seq_num
- */
-typedef os_uint8 beacon_op2_hdr_t;
-
-/**
- * bits 1: is_more_pending? \sa beacon_op2_hdr_t::is_op2_more_pending
- * bits 1: is_multicast? 
- * bits 3: _reserved
- * bits 3: estimation_down_time
- */
-typedef os_uint8 beacon_op2_msg_hdr_t;
-
-__LPWAN struct beacon_op2_msg {
-    beacon_op2_msg_hdr_t hdr;
-    union {
-        short_addr_t short_addr;
-        multicast_addr_t multi_addr;
-    } addr;
-};
-
 /** @} */
 /*---------------------------------------------------------------------------*/
 
@@ -166,7 +139,6 @@ enum _beacon_period {
  *         So, we introduce "beacon group".
  *
  * \sa beacon_info_t::beacon_groups_num
- * \sa struct gw_cmd_reserve_op12_confirmed
  */
 enum _beacon_max_groups_num {
     BEACON_MAX_GROUP_15 = 0, /**< groupID range from 0~15  \sa BEACON_PERIOD_2S */

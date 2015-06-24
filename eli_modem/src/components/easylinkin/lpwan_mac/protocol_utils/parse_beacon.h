@@ -26,25 +26,21 @@ struct parsed_beacon_info {
     
     os_uint8 packed_ack_delay_num;
     
-    os_boolean has_op2;
     os_boolean has_packed_ack;
-    os_boolean is_cf3_only_cmd;
     
     os_int8 allowable_max_tx_power;
     
     /**
      * \remark The length of each section differs according to
      *         @beacon_period_length.
-     * \remark sum(ratio_xxx) == 64
+     * \remark sum(ratio_xxx) == 128 (BEACON_PERIOD_SECTIONS_NUM)
      * \sa beacon_period_section_ratio_t
+     * \sa BEACON_PERIOD_SECTIONS_NUM
      */
     struct {
         os_uint8 ratio_beacon;
-        os_uint8 ratio_op1;
-        os_uint8 ratio_op2;
-        os_uint8 ratio_cf1;
-        os_uint8 ratio_cf2;
-        os_uint8 ratio_cf3;
+        os_uint8 ratio_downlink_msg;
+        os_uint8 ratio_uplink_msg;      /**< \sa DEVICE_MAC_MIN_CF_RATIO */
     } ratio;
     
     enum _beacon_period _beacon_period_length;
@@ -68,11 +64,6 @@ struct parsed_beacon_info {
 
     short_addr_t gateway_cluster_addr;
 
-    // op2 related information
-    os_boolean is_op2_more_pending;
-    os_int8 next_delta_beacon_seq_num;
-    os_uint8 op2_msg_num;
-
     // packed ack related information
     os_uint8 packed_ack_num;
 };
@@ -94,25 +85,7 @@ struct parsed_beacon_packed_ack_to_me {
     os_uint8 preferred_next_tx_power;
 };
 
-/**
- * \sa struct parsed_beacon_info::has_op2 
- */
-struct parsed_beacon_op2_to_me {
-    os_boolean has_multicast_reserve;
-    os_boolean has_unicast_reserve;
-    
-    os_uint8 total_multi_estimation_down_time;    
-    os_uint8 total_uni_estimation_down_time;
-    
-    /**
-     * \sa struct parsed_beacon_info::is_op2_more_pending
-     * \sa struct parsed_beacon_info::next_delta_beacon_seq_num
-     */
-    os_boolean is_more_pending;
-};
-
-struct parse_beacon_check_op2_ack_info {
-    os_boolean is_check_op2;
+struct parse_beacon_check_info {
     os_boolean is_check_packed_ack;
     short_addr_t short_addr;
     modem_uuid_t uuid;
@@ -120,10 +93,9 @@ struct parse_beacon_check_op2_ack_info {
 };
 
 __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
-                                    struct parse_beacon_check_op2_ack_info *check_info,
+                                    struct parse_beacon_check_info *check_info,
                                     struct parsed_beacon_info *info,
-                                    struct parsed_beacon_packed_ack_to_me *ack,
-                                    struct parsed_beacon_op2_to_me *op2);
+                                    struct parsed_beacon_packed_ack_to_me *ack);
 
 /** \sa enum _beacon_period */
 extern const os_uint8 _beacon_period_length_list[4];

@@ -66,13 +66,11 @@ static struct mem_pool_hdr *_uplink_frame_pool;
 #define DE_MAC_SHORT_ADDR_INVALID   0x0000
 static struct lpwan_device_mac_info mac_info;
 
-/** 3 alias(es) */
+/** 2 alias(es) */
 struct parsed_beacon_info
     *_s_info = & mac_info.synced_beacon_info;
 static struct parsed_beacon_packed_ack_to_me
     *_s_ack = & mac_info.synced_beacon_packed_ack_to_me;
-static struct parsed_beacon_op2_to_me
-    *_s_op2 = & mac_info.synced_beacon_op2_to_me;
 
 /**< @} */
 /*---------------------------------------------------------------------------*/
@@ -93,13 +91,11 @@ static void device_mac_check_packed_ack(os_boolean is_need_check_ack,
 static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
                     struct parsed_frame_hdr_info *frame_hdr_info,
                     struct parsed_beacon_info *beacon_info,
-                    struct parsed_beacon_packed_ack_to_me *beacon_packed_ack,
-                    struct parsed_beacon_op2_to_me *beacon_op2);
+                    struct parsed_beacon_packed_ack_to_me *beacon_packed_ack);
 
 static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
                                       struct parsed_beacon_info *info,
-                                      struct parsed_beacon_packed_ack_to_me *ack,
-                                      struct parsed_beacon_op2_to_me *op2);
+                                      struct parsed_beacon_packed_ack_to_me *ack);
 
 static inline os_int8 get_expected_beacon_seq_id(os_int8 cur_seq_id,
                                                  os_int8 packed_ack_delay_num);
@@ -255,7 +251,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     static struct parsed_frame_hdr_info             _frame_hdr_info;
     static struct parsed_beacon_info                _beacon_info;
     static struct parsed_beacon_packed_ack_to_me    _beacon_packed_ack;
-    static struct parsed_beacon_op2_to_me           _beacon_op2;
 
     /** Is lost beacon now? (joined states) */
     static os_boolean _is_lost_beacon = OS_FALSE;
@@ -264,9 +259,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
     static struct {
         struct tx_frame_buffer *tx_frame;
     } _cur_tx_frame_info;
-
-    // we don't use it currently
-    (void) _s_op2;
 
     if (signal & SIGNAL_MAC_ENGINE_UPDATE_BEACON_INFO) {
         haddock_assert(!_is_lost_beacon && mac_info.is_beacon_synchronized);
@@ -285,8 +277,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                                         1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
                                         & _frame_hdr_info,
                                         & _beacon_info,
-                                        & _beacon_packed_ack,
-                                        & _beacon_op2);
+                                        & _beacon_packed_ack);
             if (_len > 0) {
                 // valid beacon frame from gateway.
                 radio_controller_rx_stop();
@@ -382,8 +373,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
                 update_synced_beacon_info(& _frame_hdr_info,
                                           & _beacon_info,
-                                          & _beacon_packed_ack,
-                                          & _beacon_op2);
+                                          & _beacon_packed_ack);
 
                 if (_is_lost_beacon) {
                     // has joined previously, no need to send join request again.
@@ -440,8 +430,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             if (signal & SIGNAL_MAC_ENGINE_BEACON_FOUND) {
                 update_synced_beacon_info(& _frame_hdr_info,
                                           & _beacon_info,
-                                          & _beacon_packed_ack,
-                                          & _beacon_op2);
+                                          & _beacon_packed_ack);
 
                 if (_s_info->beacon_seq_id == mac_info.expected_beacon_seq_id
                     && _s_info->beacon_classes_num == mac_info.expected_beacon_classes_num
@@ -460,28 +449,30 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     device_mac_check_packed_ack(mac_info.is_check_packed_ack,
                                                 _s_info->has_packed_ack,
                                                 _s_ack->has_ack);
-                    // check op1 and op2 todo
-                    if (_s_info->has_op2) {}
+
+                    // check downlink messages todo
 
                     if ((! list_empty(& mac_info.pending_frame_buffer_list))
-                        && mac_info.allow_tx_info.allow_msg_emergent >= 0)
+                        && _s_info->ratio.ratio_uplink_msg > DEVICE_MAC_MIN_CF_RATIO)
                     {
                         static os_uint32 _delay;
-                        _delay = (_s_info->beacon_section_length_us *
-                                 mac_info.allow_tx_info.allow_msg_emergent)
+                        _delay = (_s_info->beacon_section_length_us * _s_info->ratio.ratio_downlink_msg)
                                  / 1000;
-                        _delay = (_delay == 0)? 2:_delay;
-
-                        haddock_assert(timer_not_started(_timeout_timer));
-                        tx_timer = _timeout_timer;
-                        os_timer_reconfig(tx_timer, this->_pid,
-                                          SIGNAL_MAC_ENGINE_SEND_FRAME, _delay);
-                        os_timer_start(tx_timer);
 
                         mac_joined_state_transfer(DE_JOINED_STATES_TX_FRAME);
 
-                        if (_delay >= DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS) {
-                            process_sleep();
+                        if (_delay == 0) {
+                            os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_SEND_FRAME);
+                        } else {
+                            haddock_assert(timer_not_started(_timeout_timer));
+                            tx_timer = _timeout_timer;
+                            os_timer_reconfig(tx_timer, this->_pid,
+                                              SIGNAL_MAC_ENGINE_SEND_FRAME, _delay);
+                            os_timer_start(tx_timer);
+
+                            if (_delay >= DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS) {
+                                process_sleep();
+                            }
                         }
                     } else {
                         mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
@@ -549,7 +540,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
              */
             if (signal & SIGNAL_MAC_ENGINE_SEND_FRAME) {
                 static os_uint32 _span;
-                static os_uint32 _delay;
+                static os_uint32 _try_tx_duration;
 
                 if (mac_info.pending_list_len == 0) {
                     mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
@@ -597,16 +588,15 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     break;
                 }
 
-                _span = (_s_info->beacon_section_length_us *
-                        (64 - 3 - mac_info.allow_tx_info.allow_msg_emergent))
-                        / 1000;
-                _delay = hdk_randr(RADIO_CONTROLLER_MIN_TRY_TX_DURATION,
-                                   _span-200); // to avoid conflict todo
+                os_uint8 _n_slots = _s_info->ratio.ratio_uplink_msg;
+                _span = (_s_info->beacon_section_length_us * (_n_slots)) / 1000;
+                _try_tx_duration = hdk_randr(RADIO_CONTROLLER_MIN_TRY_TX_DURATION,
+                                             _span-100); // to avoid conflict todo
 
                 radio_controller_tx(_cur_tx_frame_info.tx_frame->frame,
-                                    _cur_tx_frame_info.tx_frame->len, _delay);
+                                    _cur_tx_frame_info.tx_frame->len, _try_tx_duration);
 
-                if (_delay >= DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS) {
+                if (_try_tx_duration >= DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS) {
                     process_sleep();
                 }
 
@@ -697,11 +687,10 @@ static inline void mac_joined_state_transfer(enum device_mac_joined_states state
 static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
                     struct parsed_frame_hdr_info *frame_hdr_info,
                     struct parsed_beacon_info *beacon_info,
-                    struct parsed_beacon_packed_ack_to_me *beacon_packed_ack,
-                    struct parsed_beacon_op2_to_me *beacon_op2)
+                    struct parsed_beacon_packed_ack_to_me *beacon_packed_ack)
 {
     static os_boolean _run_first_time = OS_TRUE;
-    static struct parse_beacon_check_op2_ack_info check_info;
+    static struct parse_beacon_check_info check_info;
 
     if (_run_first_time) {
         check_info.uuid = mac_info.uuid;
@@ -709,7 +698,6 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
         _run_first_time = OS_FALSE;
     }
 
-    check_info.is_check_op2 = mac_info.is_check_op2;
     check_info.is_check_packed_ack = mac_info.is_check_packed_ack;
     check_info.short_addr = mac_info.short_addr;
 
@@ -725,8 +713,7 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
             _len = lpwan_parse_beacon(rx_buf+1+_len, rx_buf[0]-_len,
                                       & check_info,
                                       beacon_info,
-                                      beacon_packed_ack,
-                                      beacon_op2);
+                                      beacon_packed_ack);
         } else {
             _len = -1;
         }
@@ -736,12 +723,10 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
 
 static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
                                       struct parsed_beacon_info *info,
-                                      struct parsed_beacon_packed_ack_to_me *ack,
-                                      struct parsed_beacon_op2_to_me *op2)
+                                      struct parsed_beacon_packed_ack_to_me *ack)
 {
     mac_info.synced_beacon_info = *info;
     mac_info.synced_beacon_packed_ack_to_me = *ack;
-    mac_info.synced_beacon_op2_to_me = *op2;
 
     haddock_get_time_tick_now(& mac_info.beacon_sync_time);
 
@@ -754,53 +739,6 @@ static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
     // todo
     mac_info.gateway_cluster_addr = f_hdr->src.addr.short_addr;
     mac_info.synced_beacon_info.gateway_cluster_addr = mac_info.gateway_cluster_addr;
-
-    struct allow_tx_info *_tx_info = & mac_info.allow_tx_info;
-    if (mac_info.mac_engine_states >= DE_MAC_STATES_JOINED) {
-
-        _tx_info->allow_msg_emergent = \
-                info->ratio.ratio_op1 +
-                info->ratio.ratio_op2;
-
-        if (((os_uint16) mac_info.short_addr) % info->beacon_class_seq_id != 0) {
-            _tx_info->allow_tx_cf23 = OS_FALSE;
-        } else {
-            _tx_info->allow_tx_cf23 = OS_TRUE;
-
-            _tx_info->allow_msg_event    = -1;
-            _tx_info->allow_msg_routine  = -1;
-            _tx_info->allow_cmd          = -1;
-            /**
-             * \sa beacon_period_section_ratio_t
-             * todo
-             * we don't account into the info->ratio.ratio_beacon currently.
-             */
-            if (info->ratio.ratio_cf2 > 0) {
-                _tx_info->allow_msg_event = \
-                        info->ratio.ratio_op1 +
-                        info->ratio.ratio_op2 +
-                        info->ratio.ratio_cf1;
-            }
-            if (!info->is_cf3_only_cmd && info->ratio.ratio_cf3 > 0) {
-                _tx_info->allow_msg_routine = \
-                        info->ratio.ratio_op1 +
-                        info->ratio.ratio_op2 +
-                        info->ratio.ratio_cf1 +
-                        info->ratio.ratio_cf2;
-            }
-
-            if (info->is_cf3_only_cmd) {
-                if (_tx_info->allow_msg_event > 0)
-                    _tx_info->allow_cmd = _tx_info->allow_msg_event;
-                else if (info->ratio.ratio_cf3 > 0)
-                    _tx_info->allow_cmd = \
-                        info->ratio.ratio_op1 +
-                        info->ratio.ratio_op2 +
-                        info->ratio.ratio_cf1 +
-                        info->ratio.ratio_cf2;
-            }
-        }
-    }
 }
 
 static inline os_int8 get_expected_beacon_seq_id(os_int8 cur_seq_id,
@@ -929,7 +867,6 @@ static void device_update_beacon_info(os_uint32 next_update_delta)
     }
 
     mac_info.is_check_packed_ack = OS_FALSE;
-    mac_info.is_check_op2 = OS_FALSE;
 
     os_boolean need_track_beacon = OS_FALSE;
 

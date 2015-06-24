@@ -31,11 +31,9 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
     /** @} */
 
     /** bcn_info[1] @{ */
-    set_bits(info[1], 7, 7, bcn_info->has_op2);
     set_bits(info[1], 6, 6, bcn_info->has_packed_ack);
-    set_bits(info[1], 5, 5, bcn_info->is_cf3_only_cmd);
-    set_bits(info[1], 4, 4, bcn_info->is_server_connected);
-    set_bits(info[1], 3, 3, bcn_info->is_join_allowed);
+    set_bits(info[1], 5, 5, bcn_info->is_server_connected);
+    set_bits(info[1], 4, 4, bcn_info->is_join_allowed);
     /** @} */
 
     /** bcn_info[2] @{ */
@@ -51,12 +49,9 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
     // construct the @period_ratio
     os_uint8 *bcn_ratio = bcn_hdr->period_ratio;
 
-    set_bits(bcn_ratio[0], 7, 4, bcn_info->ratio.ratio_beacon);
-    set_bits(bcn_ratio[0], 3, 0, bcn_info->ratio.ratio_op1);
-    set_bits(bcn_ratio[1], 7, 4, bcn_info->ratio.ratio_op2);
-    set_bits(bcn_ratio[1], 3, 0, bcn_info->ratio.ratio_cf1);
-    set_bits(bcn_ratio[2], 7, 4, bcn_info->ratio.ratio_cf2);
-    set_bits(bcn_ratio[2], 3, 0, bcn_info->ratio.ratio_cf3);
+    set_bits(bcn_ratio[0], 7, 0, bcn_info->ratio.ratio_beacon);
+    set_bits(bcn_ratio[1], 7, 0, bcn_info->ratio.ratio_downlink_msg);
+    set_bits(bcn_ratio[2], 7, 0, bcn_info->ratio.ratio_uplink_msg);
 
     // construct the @seq
     os_uint8 *bcn_seq_id = bcn_hdr->seq;

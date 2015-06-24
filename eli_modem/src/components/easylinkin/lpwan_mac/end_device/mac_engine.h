@@ -73,6 +73,8 @@ extern struct parsed_beacon_info *_s_info;
 /**< If the MAC will be idle for at least 12ms, we put MAC into low-power mode. */
 #define DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS       12
 
+#define DEVICE_MAC_MIN_CF_RATIO                     8
+
 enum device_mac_states {
     DE_MAC_STATES_DEFAULT = 0,
     DE_MAC_STATES_INITED,     /**< nothing */
@@ -113,17 +115,6 @@ enum device_mac_joined_states {
     DE_JOINED_STATES_RX_FRAME,
 };
 
-/**
- * \sa mac_info.synced_beacon_info.ratio
- */
-struct allow_tx_info {
-    os_boolean allow_tx_cf23;  /**< allow tx event, routine, or cmd? */
-    os_int8 allow_msg_emergent;
-    os_int8 allow_msg_event;
-    os_int8 allow_msg_routine;
-    os_int8 allow_cmd;
-};
-
 struct lpwan_device_mac_info {
     /** state machine transitions */
     enum device_mac_states          mac_engine_states;
@@ -144,9 +135,8 @@ struct lpwan_device_mac_info {
 
     short_addr_t gateway_cluster_addr;
 
-    /** Set if need to check packed ACK and OP2 section. */
+    /** Set if need to check packed ACK. */
     os_boolean is_check_packed_ack; /**< check packed ack in beacon? */
-    os_boolean is_check_op2;        /**< todo */
 
     /** beacon sync information */
     os_boolean is_beacon_synchronized;  /**< if lost beacon, set to OS_FALSE */
@@ -165,12 +155,6 @@ struct lpwan_device_mac_info {
      */
     struct parsed_beacon_info               synced_beacon_info;
     struct parsed_beacon_packed_ack_to_me   synced_beacon_packed_ack_to_me;
-    struct parsed_beacon_op2_to_me          synced_beacon_op2_to_me;
-    struct allow_tx_info allow_tx_info;
-
-    /**
-     * todo we don't handle the reserve information etc. now.
-     */
 };
 
 void device_mac_engine_init(os_uint8 priority);
