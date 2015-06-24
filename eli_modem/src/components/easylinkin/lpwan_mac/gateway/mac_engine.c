@@ -167,6 +167,12 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
     }
 
+    if (signal & SIGNAL_LPWAN_RADIO_RX_CRC_ERROR) {
+        lpwan_radio_start_rx();
+        print_log(LOG_WARNING, "rx crc error");
+        return signal ^ SIGNAL_LPWAN_RADIO_RX_CRC_ERROR;
+    }
+
     if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
 
         static os_uint8 *_rx_buf = gateway_mac_rx_buffer;
