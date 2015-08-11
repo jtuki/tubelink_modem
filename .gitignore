@@ -51,3 +51,7 @@ eli_modem/eclipse_proj/.settings/
 *.axf
 *.lst
 *.TMP
+*.uvguix.*
+*.uvgui.*
+*.uvoptx
+*.htm

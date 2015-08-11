@@ -22,6 +22,16 @@ extern "C"
 #include "lib/ringbuffer.h"
 
 /**< signals @{ */
+
+/** radio controller related signals */
+#define SIGNAL_RLC_TX_OK                                BV(20)
+#define SIGNAL_RLC_TX_TIMEOUT                           BV(21)
+#define SIGNAL_RLC_TX_CCA_FAILED                        BV(22)
+#define SIGNAL_RLC_TX_CCA_CRC_FAIL                      BV(23)
+#define SIGNAL_RLC_RX_DURATION_TIMEOUT                  BV(24)
+#define SIGNAL_RLC_RX_OK                                BV(25)
+    
+    
 /** radio related signals */
 #define SIGNAL_LPWAN_RADIO_RX_TIMEOUT                   BV(0)
 #define SIGNAL_LPWAN_RADIO_RX_OK                        BV(1)
