@@ -14,8 +14,17 @@
  * Boolean value configuration.
  */
 
-/** Enable the debugging mode for OS and other upper layer stack/apps. */
-#define HDK_CFG_DEBUG                   OS_TRUE
+/** Enable the assert function for OS and other upper layer stack/apps. */
+#define HDK_CFG_ASSERT_ENABLED                  OS_TRUE
+
+#define HADDOCK_DEBUG_OS_VERIFY_IPC_MSG_PARAMS  OS_TRUE
+#define HADDOCK_DEBUG_OS_POWER_MANAGER          OS_TRUE
+
+/**< \sa _update_hdk_malloc_usage() in \file hdk_memory.h */
+#define HADDOCK_DEBUG_OS_MALLOC_USAGE           OS_TRUE
+
+/**< \sa haddock_debug_os_timer_list_have_loop() */
+#define HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP       OS_TRUE
 
 #define HDK_CFG_PROC_WITH_NAME          OS_FALSE
 #define HDK_CFG_PROC_ENABLE_IPC_MSG     OS_FALSE
@@ -54,9 +63,6 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Memory allocation related configuration.
  */
 
-/**< \sa _update_hdk_malloc_usage() in \file hdk_memory.h */
-#define HADDOCK_DEBUG_OS_MALLOC_USAGE
-
 /** memory reserevd for allocation, in bytes. 
  * \sa haddock_malloc() */
 #define HDK_CFG_MEMORY_FOR_MALLOC       600
@@ -65,10 +71,7 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Timer related configuration.
  */
 
-/**< \sa haddock_debug_os_timer_list_have_loop() */
-#define HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP
-
-#define HDK_CFG_TIMER_MAX_NUM           7
+#define HDK_CFG_TIMER_MAX_NUM                   7
 
 /** 15ms. \sa haddock_timer_update_routine() */
 #define HDK_CFG_TIMER_SCHEDULE_THRESHOLD 15

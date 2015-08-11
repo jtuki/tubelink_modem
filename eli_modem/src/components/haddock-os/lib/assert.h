@@ -33,8 +33,9 @@ extern "C"
         exit(-1); \
     } \
 } while (0)
-#elif defined HDK_CFG_DEBUG && HDK_CFG_DEBUG == OS_TRUE
-// not on PC platform, debug mode enabled (simply use watchdog to implement assert).
+// not on PC platform
+#elif defined HDK_CFG_ASSERT_ENABLED && HDK_CFG_ASSERT_ENABLED == OS_TRUE
+// debug mode enabled (simply use watchdog to implement assert).
 #define haddock_assert(condition) do { \
     if (!(condition)) { \
         print_log(LOG_ERROR, "assert fail: %d", __LINE__); \

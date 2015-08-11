@@ -43,3 +43,11 @@ eli_modem/ewstm8/eli_modem_workspace/settings/
 # @}
 eli_modem/eclipse_proj/.settings/
 *.ewd
+*.crf
+*.d
+*.lnp
+*.map
+*.sct
+*.axf
+*.lst
+*.TMP

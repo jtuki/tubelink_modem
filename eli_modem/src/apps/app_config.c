@@ -10,7 +10,7 @@
  * INCLUDES
  */
 #include "app_config.h"
-#include "crc/crc.h"
+#include "lib_util/crc/crc.h"
 
 #include <assert.h>
 
@@ -120,6 +120,8 @@ void cfg_GetMac( cfgChar *a_pcData, cfgUint8 a_u8Length )
 {
     CFG_ASSERT((void*)0 != a_pcData);
     CFG_ASSERT(CFG_MAC_LENGTH == a_u8Length);
+    
+    (void) gs_tMacAndSn;
 #if 0
     sprintf(a_pcData, "%02x%02x%02x%02x%02x%02x", \
         gs_tMacAndSn.acMac[0], \

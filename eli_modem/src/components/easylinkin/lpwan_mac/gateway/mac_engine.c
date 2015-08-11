@@ -24,7 +24,7 @@
 #include "lib/ringbuffer.h"
 #include "simple_log.h"
 
-#include "crc/crc.h"
+#include "lib_util/crc/crc.h"
 
 #include "lpwan_config.h"
 #include "config_gateway.h"

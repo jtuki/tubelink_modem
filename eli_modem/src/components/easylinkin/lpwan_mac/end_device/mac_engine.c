@@ -31,7 +31,7 @@
 #include "protocol_utils/construct_frame_hdr.h"
 #include "protocol_utils/construct_de_uplink_msg.h"
 
-#include "crc/crc.h"
+#include "lib_util/crc/crc.h"
 
 #include "mac_engine.h"
 

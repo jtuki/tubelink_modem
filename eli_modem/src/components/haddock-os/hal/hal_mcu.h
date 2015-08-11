@@ -32,6 +32,8 @@ extern "C"
 #include "stm32f103/hal_stm32f103.h"
 #elif defined HDK_USER_CFG_HAL_ELI_MODEM_STM8L151 && HDK_USER_CFG_HAL_ELI_MODEM_STM8L151 == OS_TRUE
 #include "stm8l151/hal_stm8l151.h"
+#elif defined HDK_USER_CFG_HAL_ELI_MODEM_STM32L051 && HDK_USER_CFG_HAL_ELI_MODEM_STM32L051 == OS_TRUE
+#include "stm32l051/hal_stm32l051.h"
 #endif
 
 

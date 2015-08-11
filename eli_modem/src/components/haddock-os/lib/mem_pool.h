@@ -23,18 +23,17 @@ extern "C"
  *      uint8  bv_num; (bit-vector number, bv_num == (hdr.capacity/16)+1)
  *      uint8 pool[];  (which contains a series of struct mem_pool_blk(s))
  */
-
 struct mem_pool_hdr {
     os_size_t capacity;
     os_size_t blk_size;
     os_size_t size;
-    os_uint16 bv[0];
+    os_uint16 bv[];
 };
 
 struct mem_pool_blk {
     os_size_t blk_size;
     os_size_t alloc_id;    /**< The block id allocated. range [0, @capacity) */
-    os_uint8 blk[0];        /**< The block size is @blk_size. */
+    os_uint8 blk[];        /**< The block size is @blk_size. */
 };
 
 struct mem_pool_hdr *mem_pool_create(os_uint16 capacity, os_uint16 blk_size);

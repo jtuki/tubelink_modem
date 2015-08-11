@@ -21,7 +21,7 @@
 #ifndef __SX1276_LORA_H__
 #define __SX1276_LORA_H__
 
-#include "../common/rf_type.h"
+#include "../rf_type.h"
 
 /*!
  * SX1276 LoRa General parameters definition
@@ -48,8 +48,8 @@ typedef struct sLoRaSettings
 /*!
  * RF packet definition
  */
-#define RF_BUFFER_SIZE_MAX                          64
-#define RF_BUFFER_SIZE                              64
+#define RF_BUFFER_SIZE_MAX                          256
+#define RF_BUFFER_SIZE                              256
 
 /*!
  * RF state machine

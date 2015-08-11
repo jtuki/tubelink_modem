@@ -1,16 +1,22 @@
 /***************************************************************************************************
-* @file name	file name.c
-* @data   		2014/09/01
-* @auther   	author name
-* @module   	module name
-* @brief 		file description
+ * Copyright (c) 2015-2020 Intelligent Network System Ltd. All Rights Reserved. 
+ * 
+ * This software is the confidential and proprietary information of Founder. You shall not disclose
+ * such Confidential Information and shall use it only in accordance with the terms of the 
+ * agreements you entered into with Founder. 
+***************************************************************************************************/
+/***************************************************************************************************
+* @file name    file name.c
+* @data         2014/09/01
+* @auther       chuanpengl
+* @module       module name
+* @brief        file description
 ***************************************************************************************************/
 
 /***************************************************************************************************
  * INCLUDES
  */
-#include <stdio.h>
-#include "hal_spi.h"
+
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -61,7 +67,7 @@
  *
  * @brief   Initial SPI Driver
  *
- * @author	author name
+ * @author  chuanpengl
  *
  * @param   none
  *
@@ -84,6 +90,6 @@ void Hal_SpiInit( void )
 /***************************************************************************************************
 * HISTORY LIST
 * 1. Create File by author @ data
-*  	context: here write modified history
+*   context: here write modified history
 *
 ***************************************************************************************************/

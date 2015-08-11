@@ -37,7 +37,7 @@ void haddock_power_conserve_routine(void)
     static struct time *next_timeout;
     static os_uint32 next_timeout_ms;
     static interrupt_state_t _state;
-#if defined HDK_CFG_DEBUG && (HDK_CFG_DEBUG == OS_TRUE)
+#if defined HADDOCK_DEBUG_OS_POWER_MANAGER && (HADDOCK_DEBUG_OS_POWER_MANAGER == OS_TRUE)
     static struct timer *_next_timer;
     static struct timer *_next_atimer;
 #endif
@@ -48,7 +48,7 @@ void haddock_power_conserve_routine(void)
         goto __power_conserve_not_sleep;
     else {
         next_timeout = haddock_check_next_timeout();
-#if defined HDK_CFG_DEBUG && (HDK_CFG_DEBUG == OS_TRUE)
+#if defined HADDOCK_DEBUG_OS_POWER_MANAGER && (HADDOCK_DEBUG_OS_POWER_MANAGER == OS_TRUE)
         _next_timer  = haddock_get_next_timer();
         _next_atimer = haddock_get_next_atimer();
 #endif

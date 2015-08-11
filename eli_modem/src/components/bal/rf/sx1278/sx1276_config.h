@@ -10,9 +10,9 @@
 /***************************************************************************************************
  * INCLUDES
  */
-
-#include "../common/rf_type.h"
-#include "../common/rf_config.h"
+#include <stdio.h>
+#include "rf\rf_type.h"
+#include "../rf_config.h"
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -170,38 +170,15 @@ extern rf_uint16 Sx1276_Cfg_GetWakeupTime( void );
  */
 extern rf_uint16 Sx1276_Cfg_GetPreamble(rf_bool a_bWakeupMode);
 
-/***************************************************************************************************
- * @fn      Sx1276_Cfg_GetPreambleTime()
- *
- * @brief   get config get preamble
- *
- * @author	chuanpengl
- *
- * @param   a_bWakeupMode  - rf_true = wakeup mode
- *                         - rf_false = normal mode
- *
- * @return  none
- */
-rf_uint16 Sx1276_Cfg_GetPreambleTime(rf_bool a_bWakeupMode);
 
-/***************************************************************************************************
- * @fn      Sx1276_Cfg_GetSymbolTime()
- *
- * @brief   get config get preamble
- *
- * @author	chuanpengl
- *
- * @param   a_bWakeupMode  - rf_true = wakeup mode
- *                         - rf_false = normal mode
- *
- * @return  none
- */
-rf_uint16 Sx1276_Cfg_GetSymbolTime(void);
 
 #endif /* __SX1276_CONFIG_H__ */
  
 /***************************************************************************************************
 * HISTORY LIST
+* 2. Modify Hal_SpiInit by author @ data
+*  	context: modified context
+*
 * 1. Create File by author @ data
 *  	context: here write modified history
 *

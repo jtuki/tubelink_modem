@@ -36,7 +36,8 @@ extern "C"
  */
 // #define HDK_USER_CFG_HAL_PC                     OS_TRUE
 // #define HDK_USER_CFG_HAL_ELI_MODEM_STM32F103    OS_TRUE
-#define HDK_USER_CFG_HAL_ELI_MODEM_STM8L151     OS_TRUE
+//#define HDK_USER_CFG_HAL_ELI_MODEM_STM8L151     OS_TRUE
+#define HDK_USER_CFG_HAL_ELI_MODEM_STM32L051     OS_TRUE
 
 
 #ifdef __cplusplus

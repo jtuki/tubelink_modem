@@ -6,21 +6,21 @@
  * ts you entered into with Founder. 
 ***************************************************************************************************/
 /***************************************************************************************************
-* @file name	app_hostif.c
-* @data   		2015/04/13
-* @auther   	chuanpengl
-* @module   	host interface
-* @brief 		interface for host connect
+* @file name    app_hostif.c
+* @data         2015/04/13
+* @auther       chuanpengl
+* @module       host interface
+* @brief        interface for host connect
 ***************************************************************************************************/
 
 /***************************************************************************************************
  * INCLUDES
  */
 #include "app_hostif.h"
-#include "uart\hal_uart.h"
+#include "uart/uart.h"
 //#include "os.h"
 #include "app_config.h"
-
+#include "hal/hal_mcu.h"
 #include <string.h>
 // #include <stdio.h>
 
@@ -34,6 +34,9 @@
 #define ATCMD_IS_HEX(value)     (((value <= '9' && value >= '0') || (value <= 'F' && value >= 'A')\
      || (value <= 'f' && value >= 'a')) ? 1 : 0)
 
+// jt added, to avoid compile warnings.
+#define halUart_Write(a,b,c)
+
 /***************************************************************************************************
  * TYPEDEFS
  */
@@ -44,7 +47,8 @@ typedef struct
     atResponse_Hdl hAtResp;
 }atCmd_t;
 
-
+FIFO_DEF(dtuTxFifo_t, HOSTIF_UART_TX_BUF_SIZE)
+FIFO_DEF(dtuRxFifo_t, HOSTIF_UART_RX_BUF_SIZE)
 
 /***************************************************************************************************
  * CONSTANTS
@@ -55,18 +59,6 @@ typedef struct
  * LOCAL FUNCTIONS DECLEAR
  */
 
-/***************************************************************************************************
- * @fn      hostIf_UartCallBack__()
- *
- * @brief   host interface task
- *
- * @author	chuanpengl
- *
- * @param   none
- *
- * @return  none
- */
-static void hostIf_UartCallBack__ (hostIfUint8 a_u8port, hostIfUint8 a_u8event);
 
 /***************************************************************************************************
  * @fn      hostIf_AtParse__()
@@ -200,6 +192,59 @@ static void hostIf_AtResponseVer__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length)
 static void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length);
 
 /***************************************************************************************************
+ * @fn      hostIf_UartInit__()
+ *
+ * @brief   uart interface init, dtu will communicate with host through this interface
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static void hostIf_UartInit__( uartHandle_t *a_ptUart );
+
+
+/***************************************************************************************************
+ * @fn      hostIf_UartDeInit__()
+ *
+ * @brief   uart interface deinit
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static void hostIf_UartDeInit__( uartHandle_t *a_ptUart );
+
+/***************************************************************************************************
+ * @fn      hostIf_SendByteWithIt__()
+ *
+ * @brief   uart interface deinit
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static uartBool hostIf_SendByteWithIt__( uartU8 a_u8Byte );
+
+/***************************************************************************************************
+ * @fn      hostIf_UartEvent__()
+ *
+ * @brief   host uart event
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static uartU8 hostIf_UartEvent__ (  uartHandle_t *a_ptUart, uartU8 a_u8Evt );
+
+/***************************************************************************************************
  * GLOBAL VARIABLES
  */
 
@@ -207,27 +252,25 @@ static void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Lengt
 /***************************************************************************************************
  * STATIC VARIABLES
  */
-static halUartChar gs_au8RxBuf[HOSTIF_UART_RX_BUF_SIZE];
-static halUartChar gs_au8TxBuf[HOSTIF_UART_TX_BUF_SIZE];
 
-static halUartCfg_t gs_tHostIfUart = 
+UART_HandleTypeDef UartHandle;
+dtuTxFifo_t gs_tUartTxFifo;
+dtuRxFifo_t gs_tUartRxFifo;
+/* the two byte below is used for receive and send cach */
+hostIfUint8 gs_u8ReceiveByte = 0;
+hostIfUint8 gs_u8SendByte = 0;
+
+uartHandle_t gs_tHostIfUart = 
 {
-    HAL_UART_PORT_0,        /* port */
-    halUartFalse,           /* configured */
-    HAL_UART_BR_115200,       /* baudRate */
-    (halUartBool)HAL_UART_FLOW_OFF,      
-                            /* flowControl */
-    0,                      /* flowControlThreshold */
-    10,                      /* idleTimeout = 3ms */
-    {0, 0, HOSTIF_UART_RX_BUF_SIZE, gs_au8RxBuf},
-                            /* rx */
-    {0, 0, HOSTIF_UART_TX_BUF_SIZE, gs_au8TxBuf},
-                            /* tx */
-    halUartTrue,            /* intEnable */
-    0,                      /* rxChRvdTime */
-    /* callBackFunc */
+    .phUart = &UartHandle,                   /* this will be cast to type hal_uart use */
+    .ptTxFifo = (fifoBase_t*)&gs_tUartTxFifo,
+    .ptRxFifo = (fifoBase_t*)&gs_tUartRxFifo,
+    .hInit = hostIf_UartInit__,
+    .hDeInit = hostIf_UartDeInit__,
+    .hSendByteWithIt = hostIf_SendByteWithIt__,     /* transmit byte handle */
+    .hGetTick = (uart_GetTickHdl) systick_Get,       /* get tick */
+    .hEvt = hostIf_UartEvent__             /* event export */
 };
-
 
 
 const static atCmd_t gsc_atAtCmd[] = 
@@ -287,8 +330,7 @@ const static atCmd_t gsc_atAtCmdW[] =
  */
 void hostIf_Init( void )
 {
-    halUart_InitCfg(&gs_tHostIfUart);
-    halUart_Init(&gs_tHostIfUart, hostIf_UartCallBack__);
+    uart_Init( &gs_tHostIfUart );
 
 } /* hostIf_Init() */
 
@@ -306,7 +348,7 @@ void hostIf_Init( void )
  */
 void hostIf_Run( void )
 {
-    halUart_Poll(&gs_tHostIfUart);
+    uart_Poll( &gs_tHostIfUart );
 } /* hostIf_Run() */
 
 
@@ -329,7 +371,7 @@ void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length )
     {
         //sprintf((char*)acBuf, "%s%02x,", "+Read:", a_u8Length);
         //halUart_Write(&gs_tHostIfUart, acBuf, strlen((char const *)acBuf));
-        halUart_Write(&gs_tHostIfUart, a_pu8Data, a_u8Length);
+        uart_SendBytes(&gs_tHostIfUart, (hostIfUint8*)a_pu8Data, a_u8Length);
         //halUart_Write(&gs_tHostIfUart, "\r\n", 2);
         
     }
@@ -339,35 +381,7 @@ void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length )
 /***************************************************************************************************
  * LOCAL FUNCTIONS IMPLEMENTATION
  */
-/***************************************************************************************************
- * @fn      hostIf_UartCallBack__()
- *
- * @brief   host interface task
- *
- * @author	chuanpengl
- *
- * @param   none
- *
- * @return  none
- */
-void hostIf_UartCallBack__ (hostIfUint8 a_u8port, hostIfUint8 a_u8event)
-{
-    hostIfChar acBuf[32];
-    switch(a_u8event)
-    {
-        case HAL_UART_RX_FULL:
-        break;
-        case HAL_UART_RX_ABOUT_FULL:
-        break;
-        case HAL_UART_RX_TIMEOUT:
-            // jt todo - to save ROM space ...
-            // hostIf_AtParse__(acBuf, halUart_Read(&gs_tHostIfUart, acBuf, sizeof(acBuf)));
-        
-        break;
-        default:
-        break;
-    }
-}   /* hostIf_UartCallBack__() */
+
 
 
 /***************************************************************************************************
@@ -431,7 +445,6 @@ void hostIf_AtParse__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length)
     }
 
 }   /* hostIf_AtParse__() */
-
 
 /***************************************************************************************************
  * @fn      hostIf_AtParseCmd__()
@@ -724,6 +737,181 @@ void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length)
         }
     }
 }   /* hostIf_AtResponseWrite__() */
+
+
+
+/***************************************************************************************************
+ * @fn      hostIf_UartInit__()
+ *
+ * @brief   uart interface init, dtu will communicate with host through this interface
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void hostIf_UartInit__( uartHandle_t *a_ptUart )
+{
+    UART_HandleTypeDef *ptUart = (UART_HandleTypeDef*)a_ptUart->phUart;
+
+    GPIO_InitTypeDef  GPIO_InitStruct;
+
+    /* Enable GPIO TX/RX clock */
+    __GPIOA_CLK_ENABLE();
+    
+    /* UART TX GPIO pin configuration  */
+    GPIO_InitStruct.Pin       = GPIO_PIN_2;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_PULLUP;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+    GPIO_InitStruct.Alternate = GPIO_AF4_USART2;
+
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* UART RX GPIO pin configuration  */
+    GPIO_InitStruct.Pin = GPIO_PIN_3;
+    GPIO_InitStruct.Alternate = GPIO_AF4_USART2;
+
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* Enable USART2 clock */
+    __USART2_CLK_ENABLE(); 
+    
+    ptUart->Instance = USART2;
+    
+    ptUart->Init.BaudRate   = 9600;
+    ptUart->Init.WordLength = UART_WORDLENGTH_8B;
+    ptUart->Init.StopBits   = UART_STOPBITS_1;
+    ptUart->Init.Parity     = UART_PARITY_NONE;
+    ptUart->Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+    ptUart->Init.Mode       = UART_MODE_TX_RX;
+    ptUart->Init.OverSampling = UART_OVERSAMPLING_16;
+    ptUart->Init.OneBitSampling = UART_ONEBIT_SAMPLING_DISABLED;
+
+    while(HAL_UART_Init(&UartHandle) != HAL_OK)
+    {
+        ;/* if usart 2 init failed, loop until reset */
+    }
+    
+    /* NVIC for USART1 */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
+    
+    HAL_UART_Receive_IT(&UartHandle, &gs_u8ReceiveByte, 1);
+}
+
+/***************************************************************************************************
+ * @fn      hostIf_UartDeInit__()
+ *
+ * @brief   uart interface deinit
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void hostIf_UartDeInit__( uartHandle_t *a_ptUart )
+{
+    ;
+}
+
+/***************************************************************************************************
+ * @fn      hostIf_SendByteWithIt__()
+ *
+ * @brief   uart interface deinit
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+uartBool hostIf_SendByteWithIt__( uartU8 a_u8Byte )
+{
+    gs_u8SendByte = a_u8Byte;
+    HAL_UART_Transmit_IT(&UartHandle, &gs_u8SendByte, 1);
+    return uartTrue;
+}
+
+/***************************************************************************************************
+ * @fn      hostIf_UartEvent__()
+ *
+ * @brief   host uart event
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+uartU8 hostIf_UartEvent__ (  uartHandle_t *a_ptUart, uartU8 a_u8Evt )
+{
+    hostIfUint8 au8Buf[256];
+    hostIfUint8 u8ReceiveLength = 0;
+    
+    if( UART_EVT_RX_TIMEOUT == (a_u8Evt & UART_EVT_RX_TIMEOUT) ){
+        u8ReceiveLength = uart_GetReceiveLength( a_ptUart );
+        uart_ReceiveBytes( a_ptUart, au8Buf, u8ReceiveLength );
+        //hostIf_AtParse__(acBuf, halUart_Read(&gs_tHostIfUart, acBuf, sizeof(acBuf)));
+    }else{
+        if( UART_EVT_RX_FIFO_FULL == (a_u8Evt & UART_EVT_RX_FIFO_FULL) ){
+            u8ReceiveLength = uart_GetReceiveLength( a_ptUart );
+            uart_ReceiveBytes( a_ptUart, au8Buf, u8ReceiveLength );
+        }
+        
+        if( UART_EVT_RX_FIFO_HFULL == (a_u8Evt & UART_EVT_RX_FIFO_HFULL) ){
+            ;/* do nothing */
+        }
+    }
+    
+    if( UART_EVT_TX_FIFO_EMPTY == (a_u8Evt & UART_EVT_TX_FIFO_EMPTY) ){
+        ;
+    }
+
+    return 0;
+}   /* hostIf_UartCallBack__() */
+
+/***************************************************************************************************
+ * @fn      HAL_UART_TxCpltCallback()
+ *
+ * @brief   dtu uart tx cplt callback, this is weak in uart driver, so this should not modify
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if( USART2 == huart->Instance ){
+        if( uartTrue == uart_GetSendByte( &gs_tHostIfUart, &gs_u8SendByte )){
+            HAL_UART_Transmit_IT(&UartHandle, &gs_u8SendByte, 1);
+        }
+    }
+}
+
+/***************************************************************************************************
+ * @fn      HAL_UART_RxCpltCallback()
+ *
+ * @brief   dtu uart tx cplt callback, this is weak in uart driver, so this should not modify
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if( USART2 == huart->Instance ){
+        uart_SetReceiveByte( &gs_tHostIfUart, gs_u8ReceiveByte );
+        HAL_UART_Receive_IT(&UartHandle, &gs_u8ReceiveByte, 1);
+    }
+
+}
 
 /***************************************************************************************************
 * HISTORY LIST

@@ -6,11 +6,11 @@
  * ts you entered into with Founder. 
 ***************************************************************************************************/
 /***************************************************************************************************
-* @file name	app_hostif.h
-* @data   		2015/04/13
-* @auther   	chuanpengl
-* @module   	host interface
-* @brief 		interface for host connect
+* @file name    app_hostif.h
+* @data         2015/04/13
+* @auther       chuanpengl
+* @module       host interface
+* @brief        interface for host connect
 ***************************************************************************************************/
 
 #ifndef APP_HOSTIF_INCLUDE__
@@ -106,6 +106,6 @@ void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length );
 /***************************************************************************************************
 * HISTORY LIST
 * 1. Create File by author @ data
-*  	context: here write modified history
+*   context: here write modified history
 *
 ***************************************************************************************************/

@@ -18,7 +18,7 @@
 #include "lpwan_radio.h"
 #include "radio_controller/radio_controller.h"
 
-#include "rf/common/rf_manager.h"
+#include "sx1278/rf_manager.h"
 
 /**
  * \note The first byte contain the length of the rx frame length.
@@ -32,7 +32,7 @@ static os_boolean _radio_is_rx = OS_FALSE;
  *
  * @brief   lpwan radio events
  *
- * @author	chuanpengl
+ * @author  chuanpengl
  *
  * @param   none
  *
@@ -58,7 +58,7 @@ os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
     if (len > LPWAN_RADIO_TX_MAX_LEN)
         return LPWAN_RADIO_ERR_TX_LEN_INVALID;
     
-    Rf_Send((rf_char*)frame, len);
+    Rf_Send((rfChar*)frame, len);
     return 0;
 }
 
@@ -93,7 +93,7 @@ os_int8 lpwan_radio_stop_rx(void)
 os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
 {
     print_log(LOG_INFO, "RRead");
-    lpwan_radio_rx_buffer[0] = (os_uint8)Rf_Get((rf_char*)&lpwan_radio_rx_buffer[1], LPWAN_RADIO_RX_BUFFER_MAX_LEN);
+    lpwan_radio_rx_buffer[0] = (os_uint8)Rf_Get((rfChar*)&lpwan_radio_rx_buffer[1], LPWAN_RADIO_RX_BUFFER_MAX_LEN);
     if (1+lpwan_radio_rx_buffer[0] > len) {
         buffer[0] = 0;
         return LPWAN_RADIO_ERR_READ_BUFFER_LEN_INVALID;

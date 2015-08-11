@@ -28,7 +28,7 @@ __LPWAN struct device_uplink_msg {
      * bits 6: len  \sa LPWAN_MAX_PAYLAOD_LEN
      */
     os_uint8 type_and_len;
-    os_uint8 msg[0];
+    os_uint8 msg[];
 };
 
 #ifdef __GNUC__

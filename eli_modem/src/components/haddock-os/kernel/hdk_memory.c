@@ -11,7 +11,7 @@
 #include "lib/assert.h"
 #include "lib/hdk_utilities.h"
 
-#ifdef HADDOCK_DEBUG_OS_MALLOC_USAGE
+#if defined(HADDOCK_DEBUG_OS_MALLOC_USAGE) && HADDOCK_DEBUG_OS_MALLOC_USAGE == OS_TRUE
 static os_uint32 _hdk_malloc_usage = 0;
 #define _update_hdk_malloc_usage(len) do {_hdk_malloc_usage += (len);} while (0)
 #else
@@ -27,7 +27,7 @@ struct __memory_blk {
      * 24 bits: blk_len
      */
     os_uint32 hdr;
-    os_uint8 blk[0];
+    os_uint8 blk[];
 };
 
 #define MAX_MEMORY_BLK_SIZE     ((((os_uint32)1)<<24)-1-sizeof(struct __memory_blk))

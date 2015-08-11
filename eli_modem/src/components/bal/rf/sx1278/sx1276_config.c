@@ -9,12 +9,12 @@
 /***************************************************************************************************
  * INCLUDES
  */
-
+#include <string.h>
 #include "stm8l15x.h"
 #include "sx1276_config.h"
-#include "crc\crc.h"
+#include "utilities\crc\crc.h"
 #include "sx1276_lora.h"
-#if 0
+
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
  */
@@ -591,7 +591,7 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
                 }
                 
                 /* write crc data */
-                FLASH_ProgramByte(eeprom_start_add+i, CRC_Calc(POLY_CRC8_CCITT, (rf_uint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH));
+                FLASH_ProgramByte(eeprom_start_add+i, crc8bit((rf_uint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH));
                 FLASH_WaitForLastOperation(FLASH_MemType_Data);
 
                 while (FLASH_GetFlagStatus(FLASH_FLAG_HVOFF) == RESET)
@@ -634,7 +634,7 @@ void Sx1276_Cfg_ReadPara__(void)
     
     
     /* if crc value is right, update configure data */
-    if((0 == CRC_Calc(POLY_CRC8_CCITT, u8ReadData, LORA_CONFIG_DATA_LENGTH+1)) && (0x24 == u8ReadData[0]) && (0x0E == u8ReadData[1]))
+    if((0 == crc8bit(u8ReadData, LORA_CONFIG_DATA_LENGTH+1)) && (0x24 == u8ReadData[0]) && (0x0E == u8ReadData[1]))
     {
         memcpy((rf_uint8*)&gs_tLoRaCfg, u8ReadData, LORA_CONFIG_DATA_LENGTH);
     }
@@ -643,7 +643,7 @@ void Sx1276_Cfg_ReadPara__(void)
     {
     }
 }
-#endif
+
 
 /***************************************************************************************************
 * HISTORY LIST

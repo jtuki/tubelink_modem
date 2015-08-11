@@ -22,7 +22,7 @@
 
 static os_uint32 __kernel_main_loop_counter = 0;
 
-void main ()
+int main ()
 {
     // hardware related initialization.
     haddock_hal_init();
@@ -91,4 +91,6 @@ void main ()
         }
 #endif
     }
+    
+    return 0;
 }

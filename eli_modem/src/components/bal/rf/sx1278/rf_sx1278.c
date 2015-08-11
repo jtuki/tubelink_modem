@@ -9,13 +9,12 @@
 /***************************************************************************************************
  * INCLUDES
  */
-
-#include "kernel/hdk_memory.h"
-#include "../common/rf_config.h"
+#include <stdio.h>
+#include <string.h>
+#include "../rf_config.h"
 #include "sx1276_hal.h"
 #include "sx1276_spi.h"
 #include "sx1276_lora.h"
-#include "systick/hal_systick.h"
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -36,7 +35,7 @@
 #define NOISE_FIGURE_HF                                6.0 
 
 #define HOPPING_FREQUENCIES(IDX)    (HoppingFrequenciesDelta[IDX] + LoRaSettings.RFFrequency)
-#define GET_TICK_COUNT()                            systick_Get()
+#define GET_TICK_COUNT()                            time_tick_get()
 #define TICK_RATE_MS( ms )                          ( ms )
 /***************************************************************************************************
  * CONSTANTS
@@ -228,35 +227,35 @@ typedef struct
  */
 
 /* SX1276 registers variable */
-static rf_uint8 SX1276Regs[0x70];
+static rf_uint8 SX1276Regs[0x70] = {0};
 
 tSX1276LR* SX1276LR;
 // Default settings
 tLoRaSettings LoRaSettings =
 {
-    430000000,        // RFFrequency
+    424000000,        // RFFrequency
     20,               // Power
-    8,                // SignalBw [0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
+    9,                // SignalBw [0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
                       // 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]
     7,                // SpreadingFactor [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096  chips]
-    3,                // ErrorCoding [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
+    2,                // ErrorCoding [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
     rf_true,             // CrcOn [0: OFF, 1: ON]
     rf_false,            // ImplicitHeaderOn [0: OFF, 1: ON]
     rf_true,             // RxSingleOn [0: Continuous, 1 Single]
     rf_true,            // FreqHopOn [0: OFF, 1: ON]
     4,                // HopPeriod Hops every frequency hopping period symbols
-    100,              // TxPacketTimeout
+    2000,              // TxPacketTimeout
     /* here, if in cad mode, rx timeout value may be need greater then sleep time */
     20,              // RxPacketTimeout
     128,              // PayloadLength (used for implicit header mode)
-    24,              /* preamble length */
+    /*12*/128,              /* preamble length */
 };
 
 
 //static SX1278_IRQ_FLAGS_t gs_tIrqFlags = {0};
 
 static rf_uint8 gs_u8PacketSize = 0;
-static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE];
+static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE] = {0};
 
 static int8_t RxPacketSnrEstimate;
 static double RxPacketRssiValue;
@@ -389,21 +388,6 @@ void Rf_SX1278_WakeUpInit( void )
     sx1276_spi_init();
 }   /* Rf_SX1278_WakeUpInit() */
 
-/***************************************************************************************************
- * @fn      Rf_SX1278_Stop()
- *
- * @brief   stop Rf, rf goto standby state
- *
- * @author	chuanpengl
- *
- * @param   none
- *
- * @return  none
- */
-void Rf_SX1278_Stop( void )
-{
-    SX1276LoRaSetOpMode( RFLR_OPMODE_STANDBY );
-}   /* Rf_SX1278_Stop() */
 
 /***************************************************************************************************
  * @fn      Rf_SX1278_RxInit()
@@ -453,14 +437,19 @@ void Rf_SX1278_RxInit( void )
     SX1276WriteBuffer( REG_LR_DIOMAPPING1, &SX1276LR->RegDioMapping1, 2 );
 
     
-    haddock_memset( gs_au8PacketBuffer, 0, ( os_size_t )RF_BUFFER_SIZE );    /* clear buffer */
+    memset( gs_au8PacketBuffer, 0, ( size_t )RF_BUFFER_SIZE );    /* clear buffer */
     gs_u8PacketSize = 0;
     
     SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */ 
-
-    /**< jt - set timeout value. refer to lora sx1276's datasheet Page40 */
-    SX1276LoRaSetSymbTimeout(2 + 5); // the next 5 is for extra 4.25 symbols.
-
+    if(LoRaSettings.u16PreambleLength + 5 > 0x3FF)
+    {
+        SX1276LoRaSetSymbTimeout((0x3FF) );   /* set timeout value */
+    }
+    else
+    {
+        SX1276LoRaSetSymbTimeout((LoRaSettings.u16PreambleLength + 5) );   /* set timeout value */
+    }
+    
     /* goto receive mode */
     if( LoRaSettings.RxSingleOn == rf_true ) /* Rx single mode */
     {
@@ -673,14 +662,14 @@ void Rf_RX1278_TxInit( void )
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_RFO );
         SX1276LoRaSetPa20dBm( rf_false );
-        //LoRaSettings.Power = 14;
+        LoRaSettings.Power = 14;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     }
     else
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_PABOOST );
         SX1276LoRaSetPa20dBm( rf_true );
-        //LoRaSettings.Power = 20;
+        LoRaSettings.Power = 20;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     } 
     
@@ -725,11 +714,11 @@ RF_P_RET_t Rf_SX1278_TxProcess( void )
 {
     RF_P_RET_t tRet = RF_P_RUNNING;
     
-    if(gs_u32PacketTxTime++ > LoRaSettings.TxPacketTimeout)
+    //if(gs_u32PacketTxTime > LoRaSettings.TxPacketTimeout)
     {
-        tRet = RF_P_TX_TMO;
+        //tRet = RF_P_TX_TMO;
     }
-    else
+  //  else
     {
         if( DIO0 == 1 ) // TxDone
         {
@@ -924,7 +913,7 @@ void SX1276FHSSChangeChannel_ISR(void)
 void SX1276LoRaSetTxPacket( const void *a_pvdBuffer, rf_uint8 a_u8Size )
 {
     gs_u8PacketSize = a_u8Size;
-    haddock_memcpy( ( void * )gs_au8PacketBuffer, a_pvdBuffer, gs_u8PacketSize ); 
+    memcpy( ( void * )gs_au8PacketBuffer, a_pvdBuffer, gs_u8PacketSize ); 
 }   /* SX1276LoRaSetTxPacket() */
 
 
@@ -977,7 +966,7 @@ void SX1276LoRaSetTxPacketSize( rf_uint8 a_u8Size )
 void SX1276LoRaGetRxPacket( const void *a_pvdBuffer, rf_uint8 *a_pu8Size )
 {
     *a_pu8Size = gs_u8PacketSize;
-    haddock_memcpy((void *)a_pvdBuffer,  ( void * )gs_au8PacketBuffer, gs_u8PacketSize );
+    memcpy((void *)a_pvdBuffer,  ( void * )gs_au8PacketBuffer, gs_u8PacketSize );
 }   /* SX1276LoRaGetRxPacket() */
 
 
@@ -1916,7 +1905,7 @@ void SX1276LoRaSetOpMode( rf_uint8 a_u8OpMode )
     SX1276Write( REG_LR_OPMODE, SX1276LR->RegOpMode );
 }
 
-// extern uint32_t time_tick_get(void);
+extern uint32_t time_tick_get(void);
 /***************************************************************************************************
  * @fn      SX1276Reset()
  *
@@ -2037,4 +2026,3 @@ double SX1276LoRaGetPacketRssi( void )
 *  	context: here write modified history
 *
 ***************************************************************************************************/
-

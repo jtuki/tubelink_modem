@@ -191,14 +191,14 @@ int os_timer_start(struct timer *timer)
     struct time *t1 = & timer->timeout_value;
     struct time *t2;
 
-    // haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
+    haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, HDK_CFG_TIMER_MAX_NUM));
     list_for_each(i, timer_list) {
         haddock_assert(_loop_cnter++ < HDK_CFG_TIMER_MAX_NUM);
         t2 = & (list_entry(i, struct timer, hdr))->timeout_value;
         if (time_tick_less_than(*t1, *t2)) {
             list_add_tail(& timer->hdr, i); // i.prev -> timer -> i -> i.next
             added = OS_TRUE;
-            // haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, 7));
+            haddock_assert(! haddock_debug_os_timer_list_have_loop(OS_FALSE, HDK_CFG_TIMER_MAX_NUM));
             break;
         }
     }
@@ -560,7 +560,7 @@ struct timer *haddock_get_next_atimer(void)
 static os_boolean haddock_debug_os_timer_list_have_loop(os_boolean is_absolute_timer_list,
                                                         os_size_t max_len)
 {
-#ifdef HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP
+#if defined(HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP) && HADDOCK_DEBUG_OS_TIMER_CHECK_LOOP == OS_TRUE
     struct list_head *pos;
     struct list_head *timer_list = is_absolute_timer_list ?
                                    & haddock_atimer_list : & haddock_timer_list;

@@ -30,7 +30,7 @@ __LPWAN struct gw_downlink_msg {
     gw_downlink_common_hdr_t hdr;
     os_uint8 seq;
     os_uint8 len;      /**< \sa LPWAN_MAX_PAYLAOD_LEN */
-    os_uint8 msg[0];
+    os_uint8 msg[];
 };
 
 #ifdef __GNUC__

@@ -65,7 +65,7 @@ void haddock_ipc_msg_module_init(void)
     const os_size_t *blk_size_list = haddock_ipc_msg_classes_blk_size;
     os_size_t classes_num = sizeof(haddock_ipc_msg_classes_capacity);
     
-#if (defined HDK_CFG_DEBUG) && HDK_CFG_DEBUG == OS_TRUE 
+#if (defined HADDOCK_DEBUG_OS_VERIFY_IPC_MSG_PARAMS) && HADDOCK_DEBUG_OS_VERIFY_IPC_MSG_PARAMS == OS_TRUE 
     // verify the ipc_msg related parameters in kernel_config.h.
     haddock_assert(classes_num == HDK_CFG_IPC_MSG_CLASSES_NUM);
     haddock_assert(sizeof(haddock_ipc_msg_classes_blk_size) == classes_num);
@@ -80,7 +80,7 @@ void haddock_ipc_msg_module_init(void)
         _total += capacity_list[i];
     }
     haddock_assert(_total == HDK_CFG_IPC_MSG_TOTAL_CAPACITY);
-#endif // HDK_CFG_DEBUG
+#endif
     
     for (os_size_t i=0; i < HDK_CFG_IPC_MSG_CLASSES_NUM; i++) {
         ipc_msg_pool_list[i] = mem_pool_create(capacity_list[i], blk_size_list[i]);
