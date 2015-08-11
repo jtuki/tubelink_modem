@@ -29,7 +29,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/driver/Inc&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1674916802" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -45,8 +45,8 @@
 									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
 									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=0"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
 								</option>
@@ -60,8 +60,8 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/haddock-os&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/driver/Inc&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.dialect.std.1482457408" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.c99" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1984943599" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
@@ -110,7 +110,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/driver/Inc&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1824191997" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -142,7 +142,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/lpwan_mac/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/easylinkin/radio/&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/STM8L15x_StdPeriph_Driver/inc/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/components/mcal/driver/Inc&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2098444937" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
