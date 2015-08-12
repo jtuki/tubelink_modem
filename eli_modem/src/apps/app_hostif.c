@@ -202,7 +202,7 @@ static void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Lengt
  *
  * @return  none
  */
-static void hostIf_UartInit__( uartHandle_t *a_ptUart );
+static void hostIf_UartInit__( UART_HandleTypeDef *a_ptUartHdl );
 
 
 /***************************************************************************************************
@@ -348,6 +348,15 @@ void hostIf_Init( void )
  */
 void hostIf_Run( void )
 {
+#if 0
+    static unsigned int i = 0;
+    
+    if( i++ > 100 ){
+        i = 0;
+        hostIf_SendToHost("hello", strlen("hello"));
+    }
+#endif
+    
     uart_Poll( &gs_tHostIfUart );
 } /* hostIf_Run() */
 
@@ -751,9 +760,9 @@ void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length)
  *
  * @return  none
  */
-void hostIf_UartInit__( uartHandle_t *a_ptUart )
+void hostIf_UartInit__( UART_HandleTypeDef *a_ptUartHdl )
 {
-    UART_HandleTypeDef *ptUart = (UART_HandleTypeDef*)a_ptUart->phUart;
+    UART_HandleTypeDef *ptUart = a_ptUartHdl;
 
     GPIO_InitTypeDef  GPIO_InitStruct;
 
