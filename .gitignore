@@ -55,3 +55,5 @@ eli_modem/eclipse_proj/.settings/
 *.uvgui.*
 *.uvoptx
 *.htm
+*.iex
+eli_modem/ide/eli_modem/JLinkLog.txt
