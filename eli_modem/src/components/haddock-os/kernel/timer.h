@@ -23,7 +23,7 @@ extern "C"
 
 struct time {
     os_uint32 s;
-    os_uint16 ms;
+    os_uint32 ms;
     /** Does the timer is an absolute timer?
      *  (absolute timers will not shift during sync after first sync)
      *  \sa haddock_timer_sync() */
@@ -72,7 +72,7 @@ void os_timer_stop(struct timer *timer);
 void os_timer_destroy(struct timer *timer);
 
 // called in ISR each 1ms.
-void __haddock_increment_time_tick_now(os_uint16 delta_ms);
+void __haddock_increment_time_tick_now(os_uint32 delta_ms);
 
 struct timer *__haddock_timer_create(os_pid_t pid,
                                      os_boolean is_absolute, os_boolean is_one_shot,

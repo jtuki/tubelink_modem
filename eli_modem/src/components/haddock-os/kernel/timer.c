@@ -65,15 +65,18 @@ int haddock_timer_module_init(void)
 
 /**
  * Called in the interrupt service routine each 1ms!
+ * \ref \file systick.c systick_Get()
  */
-void __haddock_increment_time_tick_now(os_uint16 delta_ms)
+void __haddock_increment_time_tick_now(os_uint32 delta_ms)
 {
-    // we suppose the uint16 @ms will not overflow.
+    /**
+     * we suppose that os_uint32 will not overflow.
+     */
     haddock_time_tick_now.ms += delta_ms;
     
     if (haddock_time_tick_now.ms >= 1000) {
-        haddock_time_tick_now.ms -= 1000;
-        haddock_time_tick_now.s += 1;
+        haddock_time_tick_now.s += (haddock_time_tick_now.ms) / 1000;
+        haddock_time_tick_now.ms = (haddock_time_tick_now.ms) % 1000;
     }
 }
 
@@ -299,13 +302,26 @@ struct time *haddock_check_next_timeout(void)
 void haddock_timer_update_routine(void)
 {
     static struct time _now = {
-        .s = 0xFFFFFFFF,
-        .ms = 0xFFFF,
+        .s  = 0xFFFFFFFF,
+        .ms = 0xFFFFFFFF,
     };
     
     if (list_empty(& haddock_timer_list) && list_empty(& haddock_atimer_list))
         return;
     
+    static os_uint32 _systick_prev = 0;
+    static os_uint32 _systick_now = 0;
+    _systick_now = (os_uint32) systick_Get();
+
+    if (_systick_now == _systick_prev)
+        return;
+
+    __haddock_increment_time_tick_now(
+        (_systick_now >= _systick_prev) ? (_systick_now - _systick_prev)
+                                        : (0xFFFFFFFF - _systick_prev + _systick_now)
+    ); // 0xFFFFFFFF is MAX_UINT32
+    _systick_prev = _systick_now;
+
     /*
      * @haddock_time_tick_now has not changed yet.
      */
