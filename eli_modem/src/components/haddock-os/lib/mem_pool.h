@@ -19,15 +19,17 @@ extern "C"
 /**
  * The structure of a memory pool is:
  *      struct mem_pool_hdr hdr;
- *      uint16 bv[]; (sizeof(bv) == (bv_num))
- *      uint8  bv_num; (bit-vector number, bv_num == (hdr.capacity/16)+1)
- *      uint8 pool[];  (which contains a series of struct mem_pool_blk(s))
+ *      os_uint32 bv[]; (sizeof(bv) == (bv_num))
+ *      os_uint32 bv_num;
+ *          bit-vector number
+ *          bv_num == hdr.capacity/32 + ((hdr.capacity%32==0)?0:1);
+ *      os_uint8 pool[];  (which contains a series of struct mem_pool_blk(s))
  */
 struct mem_pool_hdr {
     os_size_t capacity;
     os_size_t blk_size;
     os_size_t size;
-    os_uint16 bv[];
+    os_uint32 bv[];
 };
 
 struct mem_pool_blk {
@@ -44,7 +46,7 @@ struct mem_pool_hdr *mem_pool_create(os_uint16 capacity, os_uint16 blk_size);
 void mem_pool_destroy(struct mem_pool_hdr *pool);
 
 struct mem_pool_blk *mem_pool_alloc_blk(struct mem_pool_hdr *mem_pool,
-                                        os_size_t blk_size);
+                                        os_size_t obj_size);
 
 void mem_pool_free_blk(struct mem_pool_blk *blk);
 

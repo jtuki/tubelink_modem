@@ -31,10 +31,10 @@ os_boolean is_equal_string(const char *a, const char *b)
 /**
  * eg. return 0 for 0x800B, 1 for 0x4030 etc. 
  */
-os_size_t find_first_1_bit_uint16(os_uint16 n)
+os_size_t find_first_1_bit_uint32(os_uint32 n)
 {
     haddock_assert(n != 0);
-    os_uint16 mask = 0x8000;
+    os_uint32 mask = 0x80000000;
     os_size_t i = 0;
     while ((n & mask) == 0) {
         mask = mask >> 1;
@@ -43,9 +43,9 @@ os_size_t find_first_1_bit_uint16(os_uint16 n)
     return i;
 }
 
-os_size_t find_any_1_bit_uint16(os_uint16 n)
+os_size_t find_any_1_bit_uint32(os_uint32 n)
 {
-    return find_first_1_bit_uint16(n);
+    return find_first_1_bit_uint32(n);
 }
 
 /**< @} */

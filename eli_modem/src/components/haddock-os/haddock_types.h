@@ -61,6 +61,12 @@ typedef signed short os_int16;
 
 typedef os_uint32 os_size_t;
 
+/**
+ * For 4-byte alignment under 32-bit architecture.
+ * @size here should be size_t type.
+ */
+#define ALIGNED_SIZE(size)     (((size)%4 == 0) ? (size) : (4*((size)/4+1)))
+
 #ifdef __cplusplus
 }
 #endif

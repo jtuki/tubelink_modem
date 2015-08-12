@@ -11,8 +11,7 @@
  */
 #include "app_config.h"
 #include "lib_util/crc/crc.h"
-
-#include <assert.h>
+#include "lib/assert.h"
 
 
 /***************************************************************************************************
@@ -22,7 +21,7 @@
 /***************************************************************************************************
  * MACROS
  */
-#define CFG_ASSERT          assert
+#define CFG_ASSERT          haddock_assert
 
 #define CFG_MAC_BYTE0_DEFAULT        (0x02)
 #define CFG_MAC_BYTE0_CONFIGURE      (0x00)

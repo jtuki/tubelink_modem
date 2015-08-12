@@ -24,10 +24,10 @@ extern "C"
 
 os_boolean is_equal_string(const char *a, const char *b);
 
-os_size_t find_first_1_bit_uint16(os_uint16 n);
-os_size_t find_any_1_bit_uint16(os_uint16 n);
-#define find_first_0_bit_uint16(n)  find_first_1_bit_uint16(~(n))
-#define find_any_0_bit_uint16(n)    find_any_1_bit_uint16(~(n))
+os_size_t find_first_1_bit_uint32(os_uint32 n);
+os_size_t find_any_1_bit_uint32(os_uint32 n);
+#define find_first_0_bit_uint32(n)  find_first_1_bit_uint32(~(n))
+#define find_any_0_bit_uint32(n)    find_any_1_bit_uint32(~(n))
 
 void hdk_srand(os_int32 seed);
 os_int32 hdk_rand(void);

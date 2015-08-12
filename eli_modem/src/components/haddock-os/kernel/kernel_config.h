@@ -63,9 +63,10 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Memory allocation related configuration.
  */
 
-/** memory reserevd for allocation, in bytes. 
+/** Memory reserevd for allocation, in bytes.
+ * \note must be a multiple of 4, for byte alignment.
  * \sa haddock_malloc() */
-#define HDK_CFG_MEMORY_FOR_MALLOC       600
+#define HDK_CFG_MEMORY_FOR_MALLOC       (4 * 500)
 
 /******************************************************************************
  * Timer related configuration.

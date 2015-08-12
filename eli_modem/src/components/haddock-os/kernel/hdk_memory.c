@@ -18,7 +18,7 @@ static os_uint32 _hdk_malloc_usage = 0;
 #define _update_hdk_malloc_usage(len)
 #endif
 
-static os_uint8 __haddock_memory_allocation[HDK_CFG_MEMORY_FOR_MALLOC];
+static os_uint8 __haddock_memory_allocation[HDK_CFG_MEMORY_FOR_MALLOC] __attribute__((aligned (32)));
 
 struct __memory_blk {
     /**
@@ -30,13 +30,14 @@ struct __memory_blk {
     os_uint8 blk[];
 };
 
-#define MAX_MEMORY_BLK_SIZE     ((((os_uint32)1)<<24)-1-sizeof(struct __memory_blk))
+#define MAX_MEMORY_BLK_SIZE     ((((os_uint32)1)<<24)-4-sizeof(struct __memory_blk))
 
 /**
  * \sa HDK_CFG_MEMORY_FOR_MALLOC
  */
-void *haddock_malloc(os_size_t size)
+void *haddock_malloc(os_size_t s)
 {
+    os_size_t size = ALIGNED_SIZE(s);
     haddock_assert(size < HDK_CFG_MEMORY_FOR_MALLOC
                    && size < MAX_MEMORY_BLK_SIZE);
     
