@@ -21,6 +21,7 @@
 #include "lib/assert.h"
 
 static os_uint32 __kernel_main_loop_counter = 0;
+static struct time __kernel_current_timetick;
 
 int main ()
 {
@@ -53,6 +54,7 @@ int main ()
     
     while (OS_TRUE) {
         __kernel_main_loop_counter += 1;
+        haddock_get_time_tick_now(&__kernel_current_timetick);
         
         haddock_timer_update_routine();
         proc = schedule_next();
