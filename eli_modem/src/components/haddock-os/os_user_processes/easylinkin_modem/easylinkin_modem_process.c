@@ -79,9 +79,10 @@ void os_processes_init_easylinkin_modem(void) {
     os_uint8 priority = 0;
 #if defined MODEM_FOR_END_DEVICE
     /** same priority of radio controller and mac engine, init radio controller first */
-    radio_controller_init(priority);
+    proc_HostifInit(priority);
+    radio_controller_init(priority++);
     device_mac_engine_init(priority++);
-    proc_HostifInit(priority++);
+    
     
 #ifdef LPWAN_DEBUG_ONLY_TRACK_BEACON
 #else

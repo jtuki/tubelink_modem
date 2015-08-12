@@ -58,7 +58,7 @@ typedef enum{uartFalse = 0, uartTrue = !uartFalse}uartBool;
 #define uartNull     ((void*)0)
 
 typedef struct tag_UartHandle_t uartHandle_t;
-typedef void (*uart_InitHdl)( uartHandle_t *a_ptUart );
+typedef void (*uart_InitHdl)( void *a_ptUart );
 typedef void (*uart_DeInitHdl)( uartHandle_t *a_ptUart );
 typedef uartBool (*uart_SendByteWithItHdl)( uartU8 a_u8Byte );
 typedef uartU32 (*uart_GetTickHdl)( void );
@@ -66,6 +66,7 @@ typedef uartBool (*uart_isTxingHdl)( void );
 typedef uartU8 (*uart_EventHdl)( uartHandle_t *a_ptUart, uartU8 a_u8Evt);
 
 struct tag_UartHandle_t{
+    uartBool bInitial;         /* it is initial state or not */
     void *phUart;                   /* this will be cast to type hal_uart use */
     fifoBase_t *ptTxFifo;
     fifoBase_t *ptRxFifo;

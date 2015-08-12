@@ -113,14 +113,12 @@ void uart_Init( uartHandle_t *a_ptUart )
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->ptTxFifo) );
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->hEvt) );
 
-    fifo_Init(a_ptUart->ptTxFifo, sizeof( a_ptUart->ptTxFifo->au8Array ));
-    fifo_Init(a_ptUart->ptRxFifo, sizeof( a_ptUart->ptRxFifo->au8Array ));
-    
     a_ptUart->bRxMonitorTmo = uartFalse;
     a_ptUart->bTxFlag = uartFalse;
     a_ptUart->u8Evt = UART_EVT_NONE;
     
     a_ptUart->hInit( a_ptUart->phUart );
+    a_ptUart->bInitial = uartTrue;
 
 }
 
@@ -148,6 +146,10 @@ void uart_Poll( uartHandle_t *a_ptUart )
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->ptRxFifo) );
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->ptTxFifo) );
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->hEvt) );
+    
+    if( a_ptUart->bInitial != uartTrue ){
+        return;
+    }
 
     if( fifoTrue == fifo_isFull(a_ptUart->ptRxFifo) ){
         u8Evt |= UART_EVT_RX_FIFO_FULL;
@@ -194,6 +196,10 @@ void uart_Poll( uartHandle_t *a_ptUart )
  */
 uartBool uart_GetSendByte( uartHandle_t *a_ptUart, uartU8 *a_pu8Data )
 {
+    if( a_ptUart->bInitial != uartTrue ){
+        return uartFalse;
+    }
+    
     a_ptUart->bTxFlag = uartTrue;
     return (uartBool)fifo_Pop( a_ptUart->ptTxFifo, a_pu8Data );
 }   /* uart_GetSendByte() */
@@ -212,6 +218,10 @@ uartBool uart_GetSendByte( uartHandle_t *a_ptUart, uartU8 *a_pu8Data )
  */
 uartBool uart_SetReceiveByte( uartHandle_t *a_ptUart, uartU8 a_u8Data )
 {
+    if( a_ptUart->bInitial != uartTrue ){
+        return uartFalse;
+    }
+    
     a_ptUart->bRxMonitorTmo = uartTrue;
     a_ptUart->u8RxTimeout = (a_ptUart->hGetTick() & 0xFF) + a_ptUart->u8RxInterval;
     return (uartBool)fifo_Push( a_ptUart->ptRxFifo, a_u8Data );
@@ -230,6 +240,9 @@ uartBool uart_SetReceiveByte( uartHandle_t *a_ptUart, uartU8 a_u8Data )
  */
 uartU16 uart_GetReceiveLength( uartHandle_t *a_ptUart )
 {
+    if( a_ptUart->bInitial != uartTrue ){
+        return 0;
+    }
     return (uartU16)fifo_Size( a_ptUart->ptRxFifo );
 }
 
@@ -248,6 +261,10 @@ uartU8 uart_ReceiveBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8
 {
     uartU8 u8RealReceBytes = a_u8Length;    /* real receive bytes equal request receive bytes */
 
+    if( a_ptUart->bInitial != uartTrue ){
+        return 0;
+    }
+    
     for( uartU8 i = 0; i < a_u8Length; i++ ){
         /* if fifo length is smaller than request length */
         if( fifoFalse == fifo_Pop( a_ptUart->ptRxFifo, &a_pu8Data[i] )){
@@ -277,6 +294,10 @@ uartBool uart_SendBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8L
     uartU32 u32UseSize = 0;
     uartU8 u8Data;
     uartBool bTxRestart = uartFalse;
+    
+    if( a_ptUart->bInitial != uartTrue ){
+        return uartFalse;
+    }
     
     __UART_DISABLE_INT();
     

@@ -202,7 +202,7 @@ static void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Lengt
  *
  * @return  none
  */
-static void hostIf_UartInit__( UART_HandleTypeDef *a_ptUartHdl );
+static void hostIf_UartInit__( void *a_ptUartHdl );
 
 
 /***************************************************************************************************
@@ -262,6 +262,7 @@ hostIfUint8 gs_u8SendByte = 0;
 
 uartHandle_t gs_tHostIfUart = 
 {
+    .bInitial = uartFalse,      /* this musb be init with false when define */
     .phUart = &UartHandle,                   /* this will be cast to type hal_uart use */
     .ptTxFifo = (fifoBase_t*)&gs_tUartTxFifo,
     .ptRxFifo = (fifoBase_t*)&gs_tUartRxFifo,
@@ -330,6 +331,9 @@ const static atCmd_t gsc_atAtCmdW[] =
  */
 void hostIf_Init( void )
 {
+    /* must init fifo first, otherwise, unknow error will occure */
+    fifo_Init(gs_tHostIfUart.ptTxFifo, sizeof( gs_tUartTxFifo.au8Array ));
+    fifo_Init(gs_tHostIfUart.ptRxFifo, sizeof( gs_tUartRxFifo.au8Array ));
     uart_Init( &gs_tHostIfUart );
 
 } /* hostIf_Init() */
@@ -760,9 +764,9 @@ void hostIf_AtResponseWrite__ (hostIfChar *a_pcBuf, hostIfUint8 a_u8Length)
  *
  * @return  none
  */
-void hostIf_UartInit__( UART_HandleTypeDef *a_ptUartHdl )
+void hostIf_UartInit__( void *a_ptUartHdl )
 {
-    UART_HandleTypeDef *ptUart = a_ptUartHdl;
+    UART_HandleTypeDef *ptUart = (UART_HandleTypeDef *)a_ptUartHdl;
 
     GPIO_InitTypeDef  GPIO_InitStruct;
 
