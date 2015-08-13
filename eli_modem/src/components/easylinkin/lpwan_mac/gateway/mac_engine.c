@@ -53,7 +53,7 @@ static os_uint32 _stat_total_tx_timeout_frame_num = 0;
 os_pid_t gl_gateway_mac_engine_pid;
 haddock_process("gateway_mac_engine");
 
-static void gateway_mac_get_uuid(gateway_uuid_t *uuid);
+static void gateway_mac_get_uuid(modem_uuid_t *uuid);
 static void gateway_mac_srand(void);
 static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal);
 static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info);
@@ -82,7 +82,7 @@ void gateway_mac_engine_init(os_uint8 priority)
 
     /** @} */
 
-    gateway_mac_get_uuid(& mac_info.gateway_uuid);
+    gateway_mac_get_uuid(& mac_info.gateway_modem_uuid);
     gateway_mac_srand();
 
     for (os_uint8 i=0; i < GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM; i++) {
@@ -418,25 +418,15 @@ static os_int8 construct_gateway_beacon_packed_ack(void *buffer,
 }
 
 /**
- * Get the UUID of gateway (may generate from the unique ID of gateway's CPU).
+ * Get the UUID of gateway's modem's UUID.
  */
-static void gateway_mac_get_uuid(gateway_uuid_t *uuid)
+static void gateway_mac_get_uuid(modem_uuid_t *uuid)
 {
-    os_uint8 *_mcu_unique_id = (os_uint8 *) 0x4926;
-    // os_uint8 _crc = CRC_Calc(POLY_CRC8_CCITT, _mcu_unique_id, 12);
-
-    uuid->addr[0] = _mcu_unique_id[11];
-    uuid->addr[1] = _mcu_unique_id[10];
-    uuid->addr[2] = _mcu_unique_id[9];
-    uuid->addr[3] = _mcu_unique_id[8];
-    uuid->addr[4] = _mcu_unique_id[7];
-    uuid->addr[5] = _mcu_unique_id[6];
-    uuid->addr[6] = _mcu_unique_id[5];
-    uuid->addr[7] = _mcu_unique_id[4];
-    uuid->addr[8] = _mcu_unique_id[3];
-    uuid->addr[9] = _mcu_unique_id[2];
-    uuid->addr[10] = _mcu_unique_id[1];
-    uuid->addr[11] = _mcu_unique_id[0];
+    mcu_read_unique_id(uuid);
+    print_log(LOG_INFO, "gw modem: uuid %02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x",
+                  uuid->addr[0], uuid->addr[1], uuid->addr[2], uuid->addr[3],
+                  uuid->addr[4], uuid->addr[5], uuid->addr[6], uuid->addr[7],
+                  uuid->addr[8], uuid->addr[9], uuid->addr[10], uuid->addr[11]);
 }
 
 /**
@@ -444,9 +434,6 @@ static void gateway_mac_get_uuid(gateway_uuid_t *uuid)
  */
 static void gateway_mac_srand(void)
 {
-    os_int32 seed = construct_u32_4(mac_info.gateway_uuid.addr[7],
-                                    mac_info.gateway_uuid.addr[6],
-                                    mac_info.gateway_uuid.addr[5],
-                                    mac_info.gateway_uuid.addr[4]);
+    os_int32 seed = mcu_generate_seed_from_uuid(& mac_info.gateway_modem_uuid);
     hdk_srand(seed);
 }

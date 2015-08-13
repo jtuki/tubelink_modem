@@ -37,7 +37,10 @@ os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower);
 os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
                               os_uint8 low, os_uint8 lowest);
 
-short_modem_uuid_t short_modem_uuid(modem_uuid_t *uuid);
+short_modem_uuid_t short_modem_uuid(const modem_uuid_t *uuid);
+
+void mcu_read_unique_id(modem_uuid_t *uuid);
+os_uint32 mcu_generate_seed_from_uuid(const modem_uuid_t *uuid);
 
 #ifdef __cplusplus
 }

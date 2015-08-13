@@ -57,7 +57,7 @@ extern "C"
 
 struct lpwan_gateway_mac_info {
     short_addr_t gateway_cluster_addr;
-    gateway_uuid_t gateway_uuid;
+    modem_uuid_t gateway_modem_uuid;
 
     struct ringbuffer *packed_ack_delay_list[GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM];
     os_int8 cur_packed_ack_delay_list_id; /**< init value:

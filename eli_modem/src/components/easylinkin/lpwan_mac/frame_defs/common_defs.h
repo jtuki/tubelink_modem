@@ -38,10 +38,6 @@ typedef struct {
     os_uint8 addr[12];
 } modem_uuid_t;
 
-typedef struct {
-    os_uint8 addr[12];
-} gateway_uuid_t;
-
 typedef os_uint16 short_modem_uuid_t; /**< used for ack \sa short_modem_uuid */
 #define SHORT_MODEM_UUID(uuid) short_modem_uuid(uuid)
 

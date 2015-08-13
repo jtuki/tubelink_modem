@@ -75,7 +75,7 @@ static void cfg_LoadMacAndSn__( void );
  * STATIC VARIABLES
  */
 static cfgMacAndSn_t gs_tMacAndSn;
-static cfgChar *gs_pcUniqueId = (cfgChar *)0x4926;
+static cfgChar *gs_pcUniqueId = (cfgChar *) 0x1FF80050;
 
 /***************************************************************************************************
  * EXTERNAL VARIABLES

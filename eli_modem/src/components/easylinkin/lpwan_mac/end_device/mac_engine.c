@@ -807,21 +807,7 @@ static void update_device_tx_frame_msg(struct device_uplink_msg *msg,
 
 static void device_mac_get_uuid(modem_uuid_t *uuid)
 {
-    os_uint8 *_mcu_unique_id = (os_uint8 *) 0x4926;
-    // os_uint8 _crc = CRC_Calc(POLY_CRC8_CCITT, _mcu_unique_id, 12);
-
-    uuid->addr[0] = _mcu_unique_id[11];
-    uuid->addr[1] = _mcu_unique_id[10];
-    uuid->addr[2] = _mcu_unique_id[9];
-    uuid->addr[3] = _mcu_unique_id[8];
-    uuid->addr[4] = _mcu_unique_id[7];
-    uuid->addr[5] = _mcu_unique_id[6];
-    uuid->addr[6] = _mcu_unique_id[5];
-    uuid->addr[7] = _mcu_unique_id[4];
-    uuid->addr[8] = _mcu_unique_id[3];
-    uuid->addr[9] = _mcu_unique_id[2];
-    uuid->addr[10] = _mcu_unique_id[1];
-    uuid->addr[11] = _mcu_unique_id[0];
+    mcu_read_unique_id(uuid);
 
     print_log(LOG_INFO, "init: uuid %02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x",
               uuid->addr[0], uuid->addr[1], uuid->addr[2], uuid->addr[3],
@@ -843,10 +829,7 @@ static void device_mac_calculate_suuid(void)
  */
 static void device_mac_srand(void)
 {
-    os_int32 seed = construct_u32_4(91 + mac_info.uuid.addr[11],
-                                    91 + mac_info.uuid.addr[10],
-                                    91 + mac_info.uuid.addr[9],
-                                    91 + mac_info.uuid.addr[8]);
+    os_int32 seed = mcu_generate_seed_from_uuid(& mac_info.uuid);
     hdk_srand(seed);
 }
 
