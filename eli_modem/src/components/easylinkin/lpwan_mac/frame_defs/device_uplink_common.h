@@ -16,7 +16,7 @@ extern "C"
 #include "lpwan_types.h"
 #include "gw_beacon.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -41,7 +41,7 @@ struct device_uplink_debug_info {
     os_uint8 wakeup_delta_time;    /**< @time_beacon_received - @time_wakeup */
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

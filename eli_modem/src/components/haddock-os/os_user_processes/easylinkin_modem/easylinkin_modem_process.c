@@ -76,22 +76,20 @@
  * @return  none
  */
 void os_processes_init_easylinkin_modem(void) {
-    os_uint8 priority = 0;
 #if defined MODEM_FOR_END_DEVICE
     /** same priority of radio controller and mac engine, init radio controller first */
-    proc_HostifInit(priority);
-    radio_controller_init(priority++);
-    device_mac_engine_init(priority++);
-    
+    proc_HostifInit(1);     // higher the value, lower the priority
+    radio_controller_init(0);
+    device_mac_engine_init(0);
     
 #ifdef LPWAN_DEBUG_ONLY_TRACK_BEACON
 #else
-    proc_test_end_device_app_init(priority++);
+    proc_test_end_device_app_init(2);
 #endif // LPWAN_DEBUG_ONLY_TRACK_BEACON
     
 #elif defined MODEM_FOR_GATEWAY
-    gateway_mac_engine_init(priority++);
-    proc_HostifInit(priority++);
+    proc_HostifInit(1);
+    gateway_mac_engine_init(0);
 #endif
 }   /* os_processes_init_easylinkin_modem */
 

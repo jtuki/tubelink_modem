@@ -15,7 +15,7 @@ extern "C"
 
 #include "lpwan_types.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -32,7 +32,7 @@ extern "C"
  */
 typedef os_uint8 gw_downlink_common_hdr_t;
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

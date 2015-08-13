@@ -793,7 +793,7 @@ void hostIf_UartInit__( void *a_ptUartHdl )
     
     ptUart->Instance = USART2;
     
-    ptUart->Init.BaudRate   = 9600;
+    ptUart->Init.BaudRate   = 38400;
     ptUart->Init.WordLength = UART_WORDLENGTH_8B;
     ptUart->Init.StopBits   = UART_STOPBITS_1;
     ptUart->Init.Parity     = UART_PARITY_NONE;

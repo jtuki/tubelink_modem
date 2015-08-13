@@ -15,7 +15,7 @@ extern "C"
 
 #include "common_defs.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -72,7 +72,7 @@ __LPWAN struct frame_header {
     } dest_and_src;
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

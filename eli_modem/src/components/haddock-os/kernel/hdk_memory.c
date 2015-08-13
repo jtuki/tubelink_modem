@@ -18,7 +18,7 @@ static os_uint32 _hdk_malloc_usage = 0;
 #define _update_hdk_malloc_usage(len)
 #endif
 
-static os_uint8 __haddock_memory_allocation[HDK_CFG_MEMORY_FOR_MALLOC] __attribute__((aligned (32)));
+static os_uint8 __haddock_memory_allocation[HDK_CFG_MEMORY_FOR_MALLOC] __attribute__((aligned (4)));
 
 struct __memory_blk {
     /**

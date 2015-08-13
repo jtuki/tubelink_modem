@@ -54,7 +54,7 @@ struct tx_frame_buffer {
     enum device_message_type msg_type;  /**< if @ftype is FTYPE_DEVICE_MSG, use
                                            this @msg_type to decide its type. */
     os_uint8 len;
-    os_uint8 frame[LPWAN_DEVICE_MAC_UPLINK_MTU];
+    os_uint8 frame[LPWAN_DEVICE_MAC_UPLINK_MTU] __attribute__((aligned (4)));
 };
 
 /**
@@ -64,7 +64,7 @@ struct tx_frame_buffer {
 static struct mem_pool_hdr *_uplink_frame_pool;
 
 #define DE_MAC_SHORT_ADDR_INVALID   0x0000
-static struct lpwan_device_mac_info mac_info __attribute__((aligned (32)));
+static struct lpwan_device_mac_info mac_info __attribute__((aligned (4)));
 
 /** 2 alias(es) */
 struct parsed_beacon_info
@@ -126,7 +126,7 @@ static struct lpwan_addr _frame_src;
  * the MAC's rx buffer for radio's rx frames
  * \sa struct tx_frame_buffer::frame
  */
-extern os_uint8 radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
+extern os_uint8 *radio_rx_buffer;
 
 /**< @} */
 /*---------------------------------------------------------------------------*/

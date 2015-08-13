@@ -15,7 +15,7 @@ extern "C"
 
 #include "device_uplink_common.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -30,7 +30,7 @@ __LPWAN struct device_uplink_ack {
     os_uint8 confirm_seq;
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

@@ -15,7 +15,7 @@ extern "C"
 
 #include "gw_downlink_common.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -33,7 +33,7 @@ __LPWAN struct gw_downlink_msg {
     os_uint8 msg[];
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

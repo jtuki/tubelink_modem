@@ -15,7 +15,7 @@ extern "C"
 
 #include "lpwan_types.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -131,7 +131,7 @@ enum cmd_id_gw {
     _gw_cmd_id_invalid          = 16,
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

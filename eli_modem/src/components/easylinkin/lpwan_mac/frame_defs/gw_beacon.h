@@ -16,7 +16,7 @@ extern "C"
 #include "lpwan_types.h"
 #include "common_defs.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -161,7 +161,7 @@ enum _gateway_occupied_capacity {
 
 /** @} */
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

@@ -15,7 +15,7 @@ extern "C"
 
 #include "gw_downlink_common.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -78,7 +78,7 @@ enum _gw_cmd_force_leave_reason {
 /**< @} */
 /*---------------------------------------------------------------------------*/
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

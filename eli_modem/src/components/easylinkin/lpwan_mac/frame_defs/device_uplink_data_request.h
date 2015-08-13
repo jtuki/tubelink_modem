@@ -15,7 +15,7 @@ extern "C"
 
 #include "device_uplink_common.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -29,7 +29,7 @@ __LPWAN struct device_uplink_data_requst {
     struct device_uplink_common hdr;
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 

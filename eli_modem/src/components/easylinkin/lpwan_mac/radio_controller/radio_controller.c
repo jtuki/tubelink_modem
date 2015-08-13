@@ -59,7 +59,13 @@ static struct {
     os_boolean is_continuous;
 } _radio_rx_buffer_config;
 
-os_uint8 radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
+static struct {
+    os_uint8 _padding1, _padding2, _padding3;
+    os_uint8 buffer_size; // for back-level compatibility
+    os_uint8 buffer[LPWAN_RADIO_RX_BUFFER_MAX_LEN] __attribute__((aligned (4)));
+} __radio_rx_buffer;
+
+os_uint8 *radio_rx_buffer;
 
 void radio_controller_init(os_uint8 priority)
 {
@@ -67,6 +73,8 @@ void radio_controller_init(os_uint8 priority)
                                                            priority);
     haddock_assert(proc_radio_controller);
     gl_radio_controller_pid = proc_radio_controller->_pid;
+
+    radio_rx_buffer = (os_uint8 *) &__radio_rx_buffer.buffer_size;
 
     radio_controller_timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
                                                      RADIO_CONTROLLER_MAX_TIMER_DELTA_MS);

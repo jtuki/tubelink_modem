@@ -17,6 +17,10 @@
 /** Enable the assert function for OS and other upper layer stack/apps. */
 #define HDK_CFG_ASSERT_ENABLED                  OS_TRUE
 
+/** Enable the general information visible (by the IDE debugger etc.).
+ * \ref __kernel_main_loop_counter */
+#define HDK_DEBUG_GENERAL_INFO_ENABLE           OS_TRUE
+
 #define HADDOCK_DEBUG_OS_VERIFY_IPC_MSG_PARAMS  OS_TRUE
 #define HADDOCK_DEBUG_OS_POWER_MANAGER          OS_TRUE
 

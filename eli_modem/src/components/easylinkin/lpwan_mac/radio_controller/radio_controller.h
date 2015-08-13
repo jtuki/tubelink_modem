@@ -105,7 +105,7 @@ os_int8 radio_controller_rx_stop(void);
 
 void radio_controller_init(os_uint8 priority);
 
-extern os_uint8 radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
+extern os_uint8 *radio_rx_buffer; /** \ref __radio_rx_buffer */
 
 #ifdef __cplusplus
 }

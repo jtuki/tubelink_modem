@@ -20,8 +20,16 @@
 
 #include "lib/assert.h"
 
-static os_uint32 __kernel_main_loop_counter = 0;
-static struct time __kernel_current_timetick;
+#if defined HDK_DEBUG_GENERAL_INFO_ENABLE && HDK_DEBUG_GENERAL_INFO_ENABLE == OS_TRUE
+os_uint32 __kernel_main_loop_counter = 0;
+struct time __kernel_current_timetick;
+
+#define __increment_main_loop_counter() {__kernel_main_loop_counter += 1;}
+#define __get_kernel_timetick_now() {haddock_get_time_tick_now(&__kernel_current_timetick);}
+#else
+#define __increment_main_loop_counter()
+#define __get_kernel_timetick_now()
+#endif
 
 int main ()
 {
@@ -53,8 +61,8 @@ int main ()
     interrupt_state_t _state;
     
     while (OS_TRUE) {
-        __kernel_main_loop_counter += 1;
-        haddock_get_time_tick_now(&__kernel_current_timetick);
+        __increment_main_loop_counter();
+        __get_kernel_timetick_now();
         
         haddock_timer_update_routine();
         proc = schedule_next();

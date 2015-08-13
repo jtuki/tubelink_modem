@@ -16,7 +16,7 @@ extern "C"
 #include "lpwan_types.h"
 #include "device_uplink_common.h"
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(push)
 #pragma pack(1)
 #endif
@@ -53,7 +53,7 @@ enum _device_join_reason {
     _device_join_reason_invalid = 16,
 };
 
-#ifdef __GNUC__
+#if defined(__CC_ARM) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
