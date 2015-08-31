@@ -1140,6 +1140,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine.h</FilePath>
             </File>
+            <File>
+              <FileName>mac_engine_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>mac_engine_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine_driver.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

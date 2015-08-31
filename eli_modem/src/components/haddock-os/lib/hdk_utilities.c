@@ -9,6 +9,45 @@
 #include "assert.h"
 #include "hdk_utilities.h"
 
+os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower)
+{
+    return ((os_uint32) higher << 16) + lower;
+}
+
+os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
+                          os_uint8 low, os_uint8 lowest)
+{
+    return ((os_uint32) highest << 24) + ((os_uint32) high << 16) + \
+           ((os_uint32) low << 8) + lowest;
+}
+
+os_uint16 construct_u16_2(os_uint8 higher, os_uint8 lower)
+{
+    return (higher << 8) + lower;
+}
+
+void decompose_u32_2(os_uint32 i, os_uint16 *higher, os_uint16 *lower)
+{
+    *higher = (os_uint16) ((i >> 16) & 0xFFFF);
+    *lower = (os_uint16) (i & 0xFFFF);
+}
+
+void decompose_u32_4(os_uint32 i,
+                     os_uint8 *highest, os_uint8 *high,
+                     os_uint8 *low, os_uint8 *lowest)
+{
+    *highest    = (os_uint8) ((i >> 24) & 0xFF);
+    *high       = (os_uint8) ((i >> 16) & 0xFF);
+    *low        = (os_uint8) ((i >> 8) & 0xFF);
+    *lowest     = (os_uint8) (i & 0xFF);
+}
+
+void decompose_u16_2(os_uint16 i, os_uint8 *higher, os_uint8 *lower)
+{
+    *higher = (os_uint8) ((i >> 8) & 0xFF);;
+    *lower  = (os_uint8) (i & 0xFF);
+}
+
 /*---------------------------------------------------------------------------*/
 /**
  * string and bit manipulation.

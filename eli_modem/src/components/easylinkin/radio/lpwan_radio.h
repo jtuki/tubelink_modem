@@ -41,6 +41,8 @@ os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len);
 void lpwan_radio_sleep(void);
 void lpwan_radio_wakeup(void);
 
+void lpwan_radio_change_base_frequency(os_uint32 freq);
+
 #ifdef __cplusplus
 }
 #endif

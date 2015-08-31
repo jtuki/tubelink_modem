@@ -29,6 +29,7 @@
 #include "lpwan_config.h"
 #include "config_gateway.h"
 #include "mac_engine.h"
+#include "mac_engine_driver.h"
 
 /*---------------------------------------------------------------------------*/
 /**< file-scope resources @{ */
@@ -52,6 +53,8 @@ static os_uint32 _stat_total_tx_timeout_frame_num = 0;
 
 os_pid_t gl_gateway_mac_engine_pid;
 haddock_process("gateway_mac_engine");
+
+static os_boolean gl_gw_mac_engine_started = OS_FALSE;
 
 static void gateway_mac_get_uuid(modem_uuid_t *uuid);
 static void gateway_mac_srand(void);
@@ -79,9 +82,9 @@ void gateway_mac_engine_init(os_uint8 priority)
 
     /** initialize the @mac_info @{ */
     haddock_memset(& mac_info, 0, sizeof(mac_info));
-
     /** @} */
 
+    // obtain the Gateway's modem UUID.
     gateway_mac_get_uuid(& mac_info.gateway_modem_uuid);
     gateway_mac_srand();
 
@@ -92,11 +95,7 @@ void gateway_mac_engine_init(os_uint8 priority)
         haddock_assert(mac_info.packed_ack_delay_list[i] != NULL);
     }
 
-    os_ipc_set_signal(this->_pid, SIGNAL_GW_MAC_ENGINE_INIT_FINISHED);
-
     lpwan_radio_register_radio_controller_pid(gl_gateway_mac_engine_pid);
-    /** initialize the radio interface */
-    lpwan_radio_init();
 }
 
 static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
@@ -121,7 +120,13 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         _run_first_time = OS_FALSE;
     }
 
-    if (signal & SIGNAL_GW_MAC_ENGINE_INIT_FINISHED) {
+    if (signal & SIGNAL_GW_MAC_ENGINE_START) {
+        if (is_gw_mac_engine_started())
+            return signal ^ SIGNAL_GW_MAC_ENGINE_START;
+
+        /** initialize the radio interface */
+        lpwan_radio_init();
+
         gateway_init_beacon_info(& mac_info);
         mac_info.cur_packed_ack_delay_list_id = 0-GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM;
 
@@ -136,7 +141,65 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         os_timer_start(beacon_timer);
         os_timer_start(radio_check_timer);
 
-        return signal ^ SIGNAL_GW_MAC_ENGINE_INIT_FINISHED;
+        gl_gw_mac_engine_started = OS_TRUE;
+        return signal ^ SIGNAL_GW_MAC_ENGINE_START;
+    }
+
+    if (signal & SIGNAL_GW_MAC_ENGINE_STOP) {
+        // todo
+        gl_gw_mac_engine_started = OS_FALSE;
+        return signal ^ SIGNAL_GW_MAC_ENGINE_STOP;
+    }
+
+    if (signal & SIGNAL_GW_MAC_ENGINE_UPDATE_BCN_INFO) {
+        /**
+         * update information from MAC engine driver's configuration.
+         */
+        mac_driver_config_get(ECP_GW_C2M_UPDATE_ALLOWABLE_MAX_TX_POWER,
+                              & mac_info.bcn_info.allowable_max_tx_power);
+        mac_driver_config_get(ECP_GW_C2M_UPDATE_IS_JOIN_ALLOWED,
+                              & mac_info.bcn_info.is_join_allowed);
+        mac_driver_config_get(ECP_GW_C2M_UPDATE_IS_SERVER_CONNECTED,
+                              & mac_info.bcn_info.is_server_connected);
+        mac_driver_config_get(ECP_GW_C2M_UPDATE_OCCUPIED_CAPACITY,
+                              & mac_info.bcn_info.occupied_capacity);
+        mac_driver_config_get(ECP_GW_C2M_UPDATE_GATEWAY_CLUSTER_ADDR,
+                              & mac_info.bcn_info.gateway_cluster_addr);
+        return signal ^ SIGNAL_GW_MAC_ENGINE_UPDATE_BCN_INFO;
+    }
+
+    if (signal & SIGNAL_GW_MAC_ENGINE_UPDATE_BCN_CLASSES_NUM) {
+        if (! is_gw_mac_engine_started()) {
+            // simply init the beacon classes number
+            mac_driver_config_get(ECP_GW_C2M_UPDATE_BEACON_CLASSES_NUM,
+                                  & mac_info.bcn_info.beacon_classes_num);
+        } else {
+            /*
+             * Change the beacon classes number during MAC engine is running.
+             * todo -
+             * Stop the MAC engine for a few seconds, and start the engine again
+             * with a new classes number.
+             */
+        }
+        return signal ^ SIGNAL_GW_MAC_ENGINE_UPDATE_BCN_CLASSES_NUM;
+    }
+
+    if (signal & SIGNAL_GW_MAC_ENGINE_UPDATE_MODEM_CHANNEL) {
+        if (! is_gw_mac_engine_started()) {
+            // Init the channel configuration todo
+            mac_driver_config_get(ECP_GW_C2M_UPDATE_MODEM_CHANNEL,
+                                  & mac_info.modem_channel);
+            lpwan_radio_change_base_frequency(
+                    lpwan_radio_channels_list[mac_info.modem_channel]);
+        } else {
+            /*
+             * Change the channel configuration
+             * todo -
+             * Stop the MAC engine for a few seconds, and start the engine again
+             * with a new frequency.
+             */
+        }
+        return signal ^ SIGNAL_GW_MAC_ENGINE_UPDATE_MODEM_CHANNEL;
     }
 
     if (signal & SIGNAL_GW_MAC_ENGINE_CHECK_RADIO_TIMEOUT) {
@@ -350,19 +413,25 @@ gateway_mac_label_radio_rx_invalid_frame:
     return 0;
 }
 
+os_boolean is_gw_mac_engine_started(void)
+{
+    return gl_gw_mac_engine_started;
+}
+
+const modem_uuid_t *gw_mac_info_get_modem_uuid(void)
+{
+    return & mac_info.gateway_modem_uuid;
+}
+
+/**
+ * Init the beacon information when mac engine starts.
+ * \sa mac_engine_driver_config
+ */
 static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
 {
     /**< todo @{ */
-    info->bcn_info.gateway_cluster_addr = 0x0000;
-
     info->bcn_info.required_min_version = 0x0;
     info->bcn_info.lpwan_protocol_version = 0x0;
-
-    info->bcn_info.allowable_max_tx_power = RADIO_TX_POWER_LEVELS_NUM-1;
-
-    info->bcn_info.is_join_allowed = OS_TRUE;
-    info->bcn_info.is_server_connected = OS_TRUE;
-    info->bcn_info.occupied_capacity = GW_OCCUPIED_CAPACITY_BELOW_25;
 
     info->bcn_info.nearby_channels = 0x00;
     /**< @} */
@@ -375,8 +444,6 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info._beacon_max_groups_num = BEACON_MAX_GROUP_15;
     info->bcn_info.beacon_period_length = _beacon_period_length_list[BEACON_PERIOD_2S];
     info->bcn_info.beacon_groups_num = _beacon_groups_num_list[BEACON_MAX_GROUP_15];
-
-    info->bcn_info.beacon_classes_num = 1; // use the smallest classes num by default
 
     info->bcn_info.beacon_seq_id = (os_int8) 0x80;
     info->bcn_info.beacon_group_seq_id = 0;
@@ -391,6 +458,24 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info.ratio.ratio_beacon       = 6;
     info->bcn_info.ratio.ratio_downlink_msg = 0;
     info->bcn_info.ratio.ratio_uplink_msg   = 122;
+
+    /**
+     * obtain information from MAC engine driver's configuration.
+     * \sa mac_driver_config_set()
+     * \sa mac_driver_config_get()
+     */
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_BEACON_CLASSES_NUM,
+                          & info->bcn_info.beacon_classes_num);
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_ALLOWABLE_MAX_TX_POWER,
+                          & info->bcn_info.allowable_max_tx_power);
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_IS_JOIN_ALLOWED,
+                          & info->bcn_info.is_join_allowed);
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_IS_SERVER_CONNECTED,
+                          & info->bcn_info.is_server_connected);
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_OCCUPIED_CAPACITY,
+                          & info->bcn_info.occupied_capacity);
+    mac_driver_config_get(ECP_GW_C2M_UPDATE_GATEWAY_CLUSTER_ADDR,
+                          & info->bcn_info.gateway_cluster_addr);
 }
 
 /**

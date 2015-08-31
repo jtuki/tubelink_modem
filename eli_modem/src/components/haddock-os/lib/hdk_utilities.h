@@ -22,7 +22,10 @@ extern "C"
  */
 #define BV(n)  (((os_uint32)1)<<(n))
 
+#define is_boolean(x) ((((os_uint8)(x)) & 0xFE) == 0xFE)
+
 os_boolean is_equal_string(const char *a, const char *b);
+
 
 os_size_t find_first_1_bit_uint32(os_uint32 n);
 os_size_t find_any_1_bit_uint32(os_uint32 n);
@@ -36,6 +39,21 @@ os_uint32 hdk_randr(os_uint32 min, os_uint32 max);
 #ifndef offsetof
 #define offsetof(st, m) ((os_size_t) (& ((st *)0)->m))
 #endif
+
+/**
+ * Construction of uint32 contents. From 2 uint16 or 4 uint8.
+ */
+os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower);
+os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
+                          os_uint8 low, os_uint8 lowest);
+os_uint16 construct_u16_2(os_uint8 higher, os_uint8 lower);
+
+void decompose_u32_2(os_uint32 i, os_uint16 *higher, os_uint16 *lower);
+void decompose_u32_4(os_uint32 i,
+                     os_uint8 *highest, os_uint8 *high,
+                     os_uint8 *low, os_uint8 *lowest);
+void decompose_u16_2(os_uint16 i, os_uint8 *higher, os_uint8 *lower);
+
 
 #ifdef __cplusplus
 }

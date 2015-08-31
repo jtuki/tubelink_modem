@@ -70,7 +70,7 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
         break;
     }
 
-    info->beacon_classes_num = get_bits(bcn_info[0], 3, 0) + 1; // highest value is 16
+    info->beacon_classes_num = get_bits(bcn_info[0], 3, 0) + 1; // highest value is @BEACON_MAX_CLASSES_NUM
     /** @} */
 
     /** bcn_info[1] @{ */

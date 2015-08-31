@@ -36,7 +36,7 @@ extern "C"
  * byte 1:
  *      bits 2: beacon_period_length (~ constant) \sa enum _beacon_period
  *      bits 2: beacon_groups_num (~ constant) \sa enum _beacon_max_groups_num
- *      bits 4: beacon_classes_num (var, but nearly constant, at most 16 classes)
+ *      bits 4: beacon_classes_num (var, but nearly constant, at most @BEACON_MAX_CLASSES_NUM classes)
  * byte 2:
  *      bits 1: _reserved
  *      bits 1: has_packed_ack? (var)

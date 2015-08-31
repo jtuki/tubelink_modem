@@ -3,7 +3,9 @@
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.mingw.exe.debug.1625817325" moduleId="org.eclipse.cdt.core.settings" name="Debug">
-				<externalSettings/>
+				<externalSettings>
+					<externalSetting/>
+				</externalSettings>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -42,13 +44,11 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.mingw.exe.debug.option.optimization.level.388434353" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.mingw.exe.debug.option.debugging.level.460228684" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1319713158" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
-									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=0"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
@@ -123,10 +123,8 @@
 								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.mingw.exe.release.option.optimization.level.1306999754" name="Optimization Level" superClass="gnu.c.compiler.mingw.exe.release.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.mingw.exe.release.option.debugging.level.1038867205" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1418305512" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="USE_STM8L1526_EVAL=1"/>
-									<listOptionValue builtIn="false" value="STM8L15X_MD=1"/>
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
 									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>

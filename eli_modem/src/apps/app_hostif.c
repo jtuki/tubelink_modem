@@ -24,6 +24,12 @@
 #include <string.h>
 // #include <stdio.h>
 
+#if defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
+#include "external_comm_protocol/ecp_sn_modem.h"
+#elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+#include "external_comm_protocol/ecp_gw_modem.h"
+#endif
+
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
  */
@@ -861,17 +867,32 @@ uartBool hostIf_SendByteWithIt__( uartU8 a_u8Byte )
  */
 uartU8 hostIf_UartEvent__ (  uartHandle_t *a_ptUart, uartU8 a_u8Evt )
 {
-    hostIfUint8 au8Buf[256];
+    static hostIfUint8 au8Buf[HOSTIF_UART_RX_BUF_SIZE];
     hostIfUint8 u8ReceiveLength = 0;
     
     if( UART_EVT_RX_TIMEOUT == (a_u8Evt & UART_EVT_RX_TIMEOUT) ){
         u8ReceiveLength = uart_GetReceiveLength( a_ptUart );
         uart_ReceiveBytes( a_ptUart, au8Buf, u8ReceiveLength );
+
+        /**
+         * \note This is a dispatcher wrapper for both gateway and sensor-node's
+         * modems.
+         */
+#if defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+        ecp_gw_modem_dispatcher((os_uint8 *) au8Buf, (os_uint16) u8ReceiveLength);
+#elif defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
+        ecp_sn_modem_dispatcher((os_uint8 *) au8Buf, (os_uint16) u8ReceiveLength);
+#endif
         //hostIf_AtParse__(acBuf, halUart_Read(&gs_tHostIfUart, acBuf, sizeof(acBuf)));
-    }else{
+    } else {
         if( UART_EVT_RX_FIFO_FULL == (a_u8Evt & UART_EVT_RX_FIFO_FULL) ){
             u8ReceiveLength = uart_GetReceiveLength( a_ptUart );
             uart_ReceiveBytes( a_ptUart, au8Buf, u8ReceiveLength );
+
+            /**
+             *  \note jt - we only pull the data, but perform nothing.
+             * we don't handle such a long frame.
+             */
         }
         
         if( UART_EVT_RX_FIFO_HFULL == (a_u8Evt & UART_EVT_RX_FIFO_HFULL) ){

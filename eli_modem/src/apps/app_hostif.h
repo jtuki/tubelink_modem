@@ -31,10 +31,11 @@ extern "C"{
 /***************************************************************************************************
  * MACROS
  */
-    
-#define HOSTIF_UART_RX_BUF_SIZE     (64)
-#define HOSTIF_UART_TX_BUF_SIZE     (64)
-#define HOSTIF_UART_TX_MSG_MAXLEN   (64)
+
+#define HOSTIF_UAR_BUF_DEFAULT_SIZE (128)
+#define HOSTIF_UART_RX_BUF_SIZE     (HOSTIF_UAR_BUF_DEFAULT_SIZE)
+#define HOSTIF_UART_TX_BUF_SIZE     (HOSTIF_UAR_BUF_DEFAULT_SIZE)
+#define HOSTIF_UART_TX_MSG_MAXLEN   (HOSTIF_UAR_BUF_DEFAULT_SIZE)
 
 /***************************************************************************************************
  * CONSTANTS

@@ -19,6 +19,7 @@
 #include "radio_controller/radio_controller.h"
 
 #include "sx1278/rf_manager.h"
+#include "sx1278/sx1278.h"
 
 /**
  * \note The first byte contain the length of the rx frame length.
@@ -102,6 +103,14 @@ os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
         haddock_memcpy(buffer, lpwan_radio_rx_buffer, 1+lpwan_radio_rx_buffer[0]);
         return 0;
     }
+}
+
+/**
+ * Set the base frequency.
+ */
+void lpwan_radio_change_base_frequency(os_uint32 freq)
+{
+    SX1276LoRaSetRFBaseFrequency(freq);
 }
 
 /***************************************************************************************************

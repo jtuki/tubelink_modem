@@ -18,12 +18,13 @@ extern "C"
 /*---------------------------------------------------------------------------*/
 /**< Radio configuration @{ */
 
-#define RADIO_CHANNELS_MAX_NUM          8
-#define RADIO_TX_POWER_LEVELS_NUM       4   // see @lpwan_radio_tx_power_list
+#define LPWAN_MAX_RADIO_CHANNELS_NUM    40  // modem's channel id range [0, 40)
 
-typedef os_uint32 radio_channel_t;
-extern const radio_channel_t lpwan_radio_channels_list[RADIO_CHANNELS_MAX_NUM];
+extern const os_uint32 lpwan_radio_channels_list[LPWAN_MAX_RADIO_CHANNELS_NUM];
+
+#define RADIO_TX_POWER_LEVELS_NUM       4   // see @lpwan_radio_tx_power_list
 extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
+
 
 /**< @} */
 /*---------------------------------------------------------------------------*/
@@ -34,6 +35,11 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
  * \sa http://en.wikipedia.org/wiki/Lollipop_sequence_numbering
  */
 #define BEACON_MAX_SEQ_NUM      0x7F
+
+/**
+ * At most 16 classes.
+ */
+#define BEACON_MAX_CLASSES_NUM  16
 
 #define LPWAN_BEACON_PERIOD     BEACON_PERIOD_2S
 #define LPWAN_BEACON_MAX_GROUP  BEACON_MAX_GROUP_15

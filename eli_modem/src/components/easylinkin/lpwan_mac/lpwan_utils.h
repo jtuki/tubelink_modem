@@ -13,34 +13,18 @@ extern "C"
 {
 #endif
 
+#include "lib/hdk_utilities.h"
+
 #include "lpwan_types.h"
 #include "frame_defs/common_defs.h"
-
-/**
- * \brief Set the bit-vector.
- */
-#define BV(n) (((os_uint32)1)<<(n))
-
-/**
- * Assertions.
- */
-#ifdef LPWAN_DEBUG
-#define lpwan_assert(x) do {if (!(x)) while(1) {;}} while (0)
-#else
-#define lpwan_assert(x)
-#endif
-
-/**
- * Construction of uint32 contents. From 2 uint16 or 4 uint8.
- */
-os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower);
-os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
-                              os_uint8 low, os_uint8 lowest);
 
 short_modem_uuid_t short_modem_uuid(const modem_uuid_t *uuid);
 
 void mcu_read_unique_id(modem_uuid_t *uuid);
 os_uint32 mcu_generate_seed_from_uuid(const modem_uuid_t *uuid);
+
+os_boolean lpwan_uuid_is_equal(const modem_uuid_t *self, const modem_uuid_t *uuid);
+os_boolean lpwan_uuid_is_broadcast(const modem_uuid_t *uuid);
 
 #ifdef __cplusplus
 }

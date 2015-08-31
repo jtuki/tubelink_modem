@@ -8,18 +8,6 @@
 
 #include "lpwan_utils.h"
 
-os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower)
-{
-    return ((os_uint32) higher << 16) + lower;
-}
-
-os_uint32 construct_u32_4(os_uint8 highest, os_uint8 high,
-                          os_uint8 low, os_uint8 lowest)
-{
-    return ((os_uint32) highest << 24) + ((os_uint32) high << 16) + \
-           ((os_uint32) low << 8) + lowest;
-}
-
 short_modem_uuid_t short_modem_uuid(const modem_uuid_t *uuid)
 {
     // for stm32L0x1 Cortex-M0+ series
@@ -66,4 +54,22 @@ os_uint32 mcu_generate_seed_from_uuid(const modem_uuid_t *uuid)
                            91 + uuid->addr[10],
                            91 + uuid->addr[9],
                            91 + uuid->addr[8]);
+}
+
+os_boolean lpwan_uuid_is_equal(const modem_uuid_t *self, const modem_uuid_t *uuid)
+{
+    for (size_t i=0; i<12; i++) {
+        if (self->addr[i] != uuid->addr[i])
+            return OS_FALSE;
+    }
+    return OS_TRUE;
+}
+
+os_boolean lpwan_uuid_is_broadcast(const modem_uuid_t *uuid)
+{
+    for (size_t i=0; i<12; i++) {
+        if (uuid->addr[i] != 0xFF)
+            return OS_FALSE;
+    }
+    return OS_TRUE;
 }

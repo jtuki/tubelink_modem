@@ -54,7 +54,8 @@ struct parsed_beacon_info {
     os_uint8 beacon_groups_num;        /**< \sa enum _beacon_max_groups_num */
     /**< @} */
 
-    os_uint8 beacon_classes_num; /**< \sa struct beacon_info_t::beacon_classes_num, range [1, 16] */
+    os_uint8 beacon_classes_num; /**< \sa struct beacon_info_t::beacon_classes_num
+                                      range [1, @BEACON_MAX_CLASSES_NUM] */
 
     os_boolean is_server_connected;
     os_boolean is_join_allowed;

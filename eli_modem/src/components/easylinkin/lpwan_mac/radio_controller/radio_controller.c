@@ -14,9 +14,9 @@
 #include "kernel/sys_signal_defs.h"
 #include "kernel/power_manager.h"
 
-#ifdef MODEM_FOR_END_DEVICE
+#if defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
 #include "lpwan_mac/end_device/mac_engine.h"
-#elif defined MODEM_FOR_GATEWAY
+#elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
 #include "lpwan_mac/gateway/mac_engine.h"
 #endif
 
