@@ -13,6 +13,7 @@ extern "C"
 {
 #endif
 
+#include "haddock_types.h"
 #include <stdarg.h>
 
 /**
@@ -25,7 +26,13 @@ enum log_type {
     LOG_ERROR,
 };
 
-#define SIMPLE_LOG_ENABLE 1
+#if defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+// disable print_log() for gateway modem
+#define SIMPLE_LOG_ENABLE   OS_FALSE
+#elif defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
+// enable print_log() for end-device modem
+#define SIMPLE_LOG_ENABLE   OS_TRUE
+#endif
 
 extern void print_log(enum log_type type, const char *log, ...);
 

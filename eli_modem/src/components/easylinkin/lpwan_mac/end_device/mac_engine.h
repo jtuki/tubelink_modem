@@ -67,8 +67,8 @@ extern struct parsed_beacon_info *_s_info;
 /**< the longest time to find beacon during joining process */
 #define DEVICE_JOINING_FIND_BEACON_TIMEOUT_MS       5000
 
-#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       100
-#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          200
+#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       150
+#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
 
 /**< If the MAC will be idle for at least 12ms, we put MAC into low-power mode. */
 #define DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS       12

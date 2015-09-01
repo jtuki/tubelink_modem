@@ -33,6 +33,8 @@ struct time __kernel_current_timetick;
 
 int main ()
 {
+    hdk_init_platform_endian();
+
     // hardware related initialization.
     haddock_hal_init();
     

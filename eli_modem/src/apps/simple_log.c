@@ -13,6 +13,7 @@
 #include "simple_log.h"
 #include "kernel/timer.h"
 
+#if defined SIMPLE_LOG_ENABLE && (SIMPLE_LOG_ENABLE == OS_TRUE)
 static const char *log_type_string[4] = {
     " ", "*", "W", "E",
 };
@@ -23,9 +24,11 @@ static const char *log_type_string[4] = {
  */
 
 static char _debug_str[HOSTIF_UART_TX_MSG_MAXLEN];
+#endif
+
 void print_log(enum log_type type, const char *log, ...)
 {
-#if defined SIMPLE_LOG_ENABLE && (SIMPLE_LOG_ENABLE == 1)
+#if defined SIMPLE_LOG_ENABLE && (SIMPLE_LOG_ENABLE == OS_TRUE)
     static va_list args;
     va_start(args, log);
 

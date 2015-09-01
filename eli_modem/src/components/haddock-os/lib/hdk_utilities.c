@@ -9,6 +9,7 @@
 #include "assert.h"
 #include "hdk_utilities.h"
 
+/*---------------------------------------------------------------------------*/
 os_uint32 construct_u32_2(os_uint16 higher, os_uint16 lower)
 {
     return ((os_uint32) higher << 16) + lower;
@@ -126,4 +127,68 @@ os_uint32 hdk_randr(os_uint32 min, os_uint32 max)
 
 /** @} */
 /*---------------------------------------------------------------------------*/
+/**< @{ All the external communication message refer to network endian (big endian) */
 
+static enum platform_endian _endian;
+static os_boolean _platform_endian_checked = OS_FALSE;
+
+/**< The external communication endian-ness: big endian */
+static const enum platform_endian EXTERNAL_COMMUNICATION_ENDIAN = PLATFORM_ENDIAN_BIG;
+
+void hdk_init_platform_endian(void)
+{
+    os_uint32 i = 0x55667788;
+    _endian = (*((os_uint8 *) &i) == 0x55) ? PLATFORM_ENDIAN_BIG : PLATFORM_ENDIAN_LITTLE;
+    _platform_endian_checked = OS_TRUE;
+}
+
+os_uint32 os_hton_u32(os_uint32 i)
+{
+    haddock_assert(_platform_endian_checked);
+    if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
+        return i;
+    else {
+        os_uint8 b1, b2, b3, b4;
+        decompose_u32_4(i, &b1, &b2, &b3, &b4);
+        return construct_u32_4(b4, b3, b2, b1);
+    }
+}
+
+os_uint16 os_hton_u16(os_uint16 i)
+{
+    haddock_assert(_platform_endian_checked);
+    if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
+        return i;
+    else {
+        os_uint8 b1, b2;
+        decompose_u16_2(i, &b1, &b2);
+        return construct_u16_2(b2, b1);
+    }
+}
+
+os_uint32 os_ntoh_u32(os_uint32 i)
+{
+    haddock_assert(_platform_endian_checked);
+    if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
+        return i;
+    else {
+        os_uint8 b1, b2, b3, b4;
+        decompose_u32_4(i, &b1, &b2, &b3, &b4);
+        return construct_u32_4(b4, b3, b2, b1);
+    }
+}
+
+os_uint16 os_ntoh_u16(os_uint16 i)
+{
+    haddock_assert(_platform_endian_checked);
+    if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
+        return i;
+    else {
+        os_uint8 b1, b2;
+        decompose_u16_2(i, &b1, &b2);
+        return construct_u16_2(b2, b1);
+    }
+}
+
+/**< @} */
+/*---------------------------------------------------------------------------*/

@@ -22,7 +22,7 @@ extern "C"
  */
 #define BV(n)  (((os_uint32)1)<<(n))
 
-#define is_boolean(x) ((((os_uint8)(x)) & 0xFE) == 0xFE)
+#define is_boolean(x) ((((os_uint8)(x)) & 0xFE) == 0)
 
 os_boolean is_equal_string(const char *a, const char *b);
 
@@ -54,6 +54,18 @@ void decompose_u32_4(os_uint32 i,
                      os_uint8 *low, os_uint8 *lowest);
 void decompose_u16_2(os_uint16 i, os_uint8 *higher, os_uint8 *lower);
 
+
+enum platform_endian {
+    PLATFORM_ENDIAN_LITTLE,
+    PLATFORM_ENDIAN_BIG,
+};
+
+void hdk_init_platform_endian(void);
+
+os_uint32 os_hton_u32(os_uint32 i);
+os_uint16 os_hton_u16(os_uint16 i);
+os_uint32 os_ntoh_u32(os_uint32 i);
+os_uint16 os_ntoh_u16(os_uint16 i);
 
 #ifdef __cplusplus
 }

@@ -167,15 +167,24 @@ static os_int8 mac_driver_handle_c2m_control_payload(os_uint8 *control, os_uint1
                 _is_join_allowed = init_info->is_join_allowed;
                 _is_server_connected = init_info->is_server_connected;
                 _max_tx_power = init_info->allowable_max_tx_power;
-                _gw_cluster_addr = init_info->gateway_cluster_addr;
+                _gw_cluster_addr = os_ntoh_u16(init_info->gateway_cluster_addr);
 
-                mac_driver_config_set(code, &_beacon_class_num);
-                mac_driver_config_set(code, &_capacity);
-                mac_driver_config_set(code, &_channel);
-                mac_driver_config_set(code, &_is_join_allowed);
-                mac_driver_config_set(code, &_is_server_connected);
-                mac_driver_config_set(code, &_max_tx_power);
-                mac_driver_config_set(code, &_gw_cluster_addr);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_BEACON_CLASSES_NUM,
+                                      &_beacon_class_num);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_OCCUPIED_CAPACITY,
+                                      &_capacity);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_MODEM_CHANNEL,
+                                      &_channel);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_IS_JOIN_ALLOWED,
+                                      &_is_join_allowed);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_IS_SERVER_CONNECTED,
+                                      &_is_server_connected);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_ALLOWABLE_MAX_TX_POWER,
+                                      &_max_tx_power);
+                mac_driver_config_set(ECP_GW_C2M_UPDATE_GATEWAY_CLUSTER_ADDR,
+                                      &_gw_cluster_addr);
+
+                os_ipc_set_signal(this->_pid, SIGNAL_MAC_DRIVER_START_ENGINE);
             } else {
                 return -1;
             }

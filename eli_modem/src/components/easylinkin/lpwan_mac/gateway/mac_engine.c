@@ -298,10 +298,14 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 expected_packed_ack_list_id = (mac_info.cur_packed_ack_delay_list_id +
                                                mac_info.bcn_info.packed_ack_delay_num)
                                                % mac_info.bcn_info.packed_ack_delay_num;
+                /** push the ACK header to the @packed_ack_delay_list */
                 rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
                                &_ack, sizeof(struct beacon_packed_ack));
-            }
 
+                /** sent the currently received frame to CPU */
+                ecp_gw_modem_m2c_send_data(_rx_buf+1, _rx_buf[0],
+                                           lpwan_radio_get_snr(), lpwan_radio_get_rssi());
+            }
 
             break;
         }

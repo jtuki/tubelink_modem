@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls>--C99</MiscControls>
-              <Define>STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE</Define>
+              <Define>STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE, xLPWAN_DEBUG_ONLY_TRACK_BEACON</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\src\components\;..\..\src\components\mcal\cmsis\Include;..\..\src\components\mcal\cmsis\Device\ST\STM32L0xx\Include;..\..\src;..\..\src\apps;..\..\src\components\bal;..\..\src\components\lib_util;..\..\src\components\mcal\conf;..\..\src\components\mcal\driver\Inc;..\..\src\components\os;..\..\src\components\haddock-os;..\..\src\components\easylinkin;..\..\src\components\easylinkin\lpwan_mac;..\..\src\components\easylinkin\radio</IncludePath>
             </VariousControls>
@@ -1080,6 +1080,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine.h</FilePath>
             </File>
+            <File>
+              <FileName>mac_engine_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>mac_engine_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\mac_engine_driver.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1495,6 +1505,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\haddock-os\lib\ringbuffer.h</FilePath>
             </File>
+            <File>
+              <FileName>crc_generator.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\haddock-os\lib\crc_generator.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc_generator.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\haddock-os\lib\crc_generator.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1539,6 +1559,31 @@
               <FileName>process_test_end_device_app.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\src\components\haddock-os\os_user_processes\easylinkin_modem\process_test_end_device_app.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>components/external_comm_protocol</GroupName>
+          <Files>
+            <File>
+              <FileName>ecp_gw_modem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\external_comm_protocol\ecp_gw_modem.c</FilePath>
+            </File>
+            <File>
+              <FileName>ecp_gw_modem.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\external_comm_protocol\ecp_gw_modem.h</FilePath>
+            </File>
+            <File>
+              <FileName>ecp_sn_modem.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\external_comm_protocol\ecp_sn_modem.c</FilePath>
+            </File>
+            <File>
+              <FileName>ecp_sn_modem.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\external_comm_protocol\ecp_sn_modem.h</FilePath>
             </File>
           </Files>
         </Group>

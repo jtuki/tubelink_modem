@@ -55,7 +55,7 @@ void lpwan_radio_register_radio_controller_pid(os_pid_t pid)
 os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
 {
     haddock_assert(Rf_GetCurState() == RF_STANDBY);
-    print_log(LOG_INFO, "RTx");
+    // print_log(LOG_INFO, "RTx");
     if (len > LPWAN_RADIO_TX_MAX_LEN)
         return LPWAN_RADIO_ERR_TX_LEN_INVALID;
     
@@ -71,7 +71,7 @@ os_int8 lpwan_radio_start_rx(void)
 {
     haddock_assert(Rf_GetCurState() == RF_STANDBY);
     if (! _radio_is_rx) {
-        print_log(LOG_INFO, "RRxStart");
+        // print_log(LOG_INFO, "RRxStart");
         _radio_is_rx = OS_TRUE;
     }
     Rf_ReceiveStart();
@@ -81,7 +81,7 @@ os_int8 lpwan_radio_start_rx(void)
 os_int8 lpwan_radio_stop_rx(void)
 {
     Rf_Stop();
-    print_log(LOG_INFO, "RRxStop");
+    // print_log(LOG_INFO, "RRxStop");
     _radio_is_rx = OS_FALSE;
     return 0;
 }
@@ -93,7 +93,7 @@ os_int8 lpwan_radio_stop_rx(void)
  */
 os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
 {
-    print_log(LOG_INFO, "RRead");
+    // print_log(LOG_INFO, "RRead");
     lpwan_radio_rx_buffer[0] = (os_uint8)Rf_Get((rfChar*)&lpwan_radio_rx_buffer[1], LPWAN_RADIO_RX_BUFFER_MAX_LEN);
     if (1+lpwan_radio_rx_buffer[0] > len) {
         buffer[0] = 0;
@@ -103,6 +103,22 @@ os_int8 lpwan_radio_read(os_uint8 buffer[], os_uint16 len)
         haddock_memcpy(buffer, lpwan_radio_rx_buffer, 1+lpwan_radio_rx_buffer[0]);
         return 0;
     }
+}
+
+/**
+ * Call this function before the next frame has fully received.
+ */
+os_int16 lpwan_radio_get_snr(void)
+{
+    return (os_int16) Rf_GetPacketSnr();
+}
+
+/**
+ * Call this function before the next frame has fully received.
+ */
+os_int16 lpwan_radio_get_rssi(void)
+{
+    return (os_int16) Rf_GetPacketRssi();
 }
 
 /**

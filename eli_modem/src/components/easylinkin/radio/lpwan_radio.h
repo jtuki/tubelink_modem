@@ -43,6 +43,9 @@ void lpwan_radio_wakeup(void);
 
 void lpwan_radio_change_base_frequency(os_uint32 freq);
 
+os_int16 lpwan_radio_get_rssi(void);
+os_int16 lpwan_radio_get_snr(void);
+
 #ifdef __cplusplus
 }
 #endif

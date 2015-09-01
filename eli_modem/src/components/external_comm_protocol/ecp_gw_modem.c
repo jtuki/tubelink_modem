@@ -59,14 +59,14 @@ static ecp_gw_modem_c2m_data_callback_fn    _gw_c2m_data_cb;
  * \sa ecp_gw_modem_init() will init this tx buffer
  */
 static os_uint8 ecp_gw_m2c_tx_buf[HOSTIF_UAR_BUF_DEFAULT_SIZE];
-static os_uint16 ecp_gw_m2c_tx_frame_seq_id = 0;    /**< global tx frame seq id */
+static os_uint8 ecp_gw_m2c_tx_frame_seq_id = 0;    /**< global tx frame seq id */
 
 static os_boolean ecp_gw_modem_inited = OS_FALSE;   /**< \sa ecp_gw_modem_init() */
 
 /*---------------------------------------------------------------------------*/
 /**< @{ static function declarations */
-static inline os_uint16 ecp_gw_m2c_increment_frame_seq_id(void);
-static os_uint16 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 len);
+static inline os_uint8 ecp_gw_m2c_increment_frame_seq_id(void);
+static os_uint8 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 len);
 /**< @} */
 /*---------------------------------------------------------------------------*/
 
@@ -108,7 +108,7 @@ void ecp_gw_modem_register_c2m_data_callback(ecp_gw_modem_c2m_data_callback_fn c
  */
 os_int8 ecp_gw_modem_dispatcher(os_uint8 *recv_frame_buf, os_uint16 len)
 {
-    os_uint16 payload_len = ecp_gw_c2m_is_valid_frame(recv_frame_buf, len);
+    os_uint8 payload_len = ecp_gw_c2m_is_valid_frame(recv_frame_buf, len);
     if (payload_len == 0)
         return -1;
 
@@ -117,13 +117,13 @@ os_int8 ecp_gw_modem_dispatcher(os_uint8 *recv_frame_buf, os_uint16 len)
     switch ((enum ecp_frame_type) hdr->frame_type) {
         case ECP_FTYPE_CONTROL:
             if (_gw_c2m_control_cb) {
-                _gw_c2m_control_cb(hdr->payload, payload_len);
+                _gw_c2m_control_cb(hdr->payload, (os_uint16) payload_len);
             }
             // we don't generate ACK frames todo
             break;
         case ECP_FTYPE_DATA:
             if (_gw_c2m_data_cb) {
-                _gw_c2m_data_cb(hdr->payload, payload_len);
+                _gw_c2m_data_cb(hdr->payload, (os_uint16) payload_len);
             }
             // we don't generate ACK frames todo
             break;
@@ -139,7 +139,7 @@ os_int8 ecp_gw_modem_dispatcher(os_uint8 *recv_frame_buf, os_uint16 len)
     return 0;
 }
 
-static os_uint16 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 len)
+static os_uint8 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 len)
 {
     struct ecp_gw_c2m_frame_header *hdr = (struct ecp_gw_c2m_frame_header *) recv_frame_buf;
 
@@ -153,8 +153,8 @@ static os_uint16 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 l
         return 0;
 
     // validate the frame length and 16-bits CRC.
-    os_uint16 frame_len = offsetof(struct ecp_gw_c2m_frame_header, payload);
-    os_uint16 payload_len = 0;
+    os_uint8 frame_len = offsetof(struct ecp_gw_c2m_frame_header, payload);
+    os_uint8 payload_len = 0;
     if (len < frame_len)
         return 0;
 
@@ -165,7 +165,7 @@ static os_uint16 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 l
         frame_len += payload_len;
         break;
     case ECP_FTYPE_ACK:
-        payload_len = sizeof(os_uint16) * hdr->len_or_num.ack_num;
+        payload_len = sizeof(os_uint8) * hdr->len_or_num.ack_num;
         frame_len += payload_len;
         break;
     default:
@@ -183,12 +183,11 @@ static os_uint16 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 l
     if (_crc16 != construct_u16_2(recv_frame_buf[frame_len], recv_frame_buf[frame_len+1]))
         return 0;
 
-    // valid frame!
-    haddock_assert(payload_len > 0);
+    // valid frame if @payload_len > 0!
     return payload_len;
 }
 
-static inline os_uint16 ecp_gw_m2c_increment_frame_seq_id(void)
+static inline os_uint8 ecp_gw_m2c_increment_frame_seq_id(void)
 {
     // we don't handle ACK currently.
     return ++ecp_gw_m2c_tx_frame_seq_id;
@@ -203,7 +202,7 @@ static inline os_uint16 ecp_gw_m2c_increment_frame_seq_id(void)
 void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
                                    void *data, os_uint16 len)
 {
-    os_uint16 tx_len = 0;
+    os_uint8 tx_len = 0;
     os_uint16 crc16;
     struct ecp_gw_m2c_frame_header *hdr = (void *) ecp_gw_m2c_tx_buf;
 
@@ -241,11 +240,17 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
 
 /**
  * \sa ecp_gw_m2c_tx_buf[]
+ *
  */
-void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len)
+void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len,
+                                os_int16 snr, os_int16 rssi)
 {
     os_uint16 tx_len = 0;
     os_uint16 crc16;
+
+    os_int16 _snr   = os_hton_u16((os_uint16) snr);
+    os_int16 _rssi  = os_hton_u16((os_uint16) rssi);
+
     struct ecp_gw_m2c_frame_header *hdr = (void *) ecp_gw_m2c_tx_buf;
 
     haddock_assert(is_ecp_gw_modem_inited());
@@ -257,9 +262,11 @@ void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len)
     hdr->frame_type = ECP_FTYPE_DATA;
 
     hdr->len_or_num.payload_len = len;
-    haddock_memcpy(hdr->payload, data, len);
+    haddock_memcpy(hdr->payload, &_snr, 2);
+    haddock_memcpy(hdr->payload + 2, &_rssi, 2);
+    haddock_memcpy(hdr->payload + 4, data, len);
 
-    tx_len += len;
+    tx_len += 4+len;
 
     crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
     decompose_u16_2(crc16, &ecp_gw_m2c_tx_buf[tx_len], &ecp_gw_m2c_tx_buf[tx_len+1]);

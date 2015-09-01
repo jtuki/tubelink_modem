@@ -276,7 +276,8 @@ uartHandle_t gs_tHostIfUart =
     .hDeInit = hostIf_UartDeInit__,
     .hSendByteWithIt = hostIf_SendByteWithIt__,     /* transmit byte handle */
     .hGetTick = (uart_GetTickHdl) systick_Get,       /* get tick */
-    .hEvt = hostIf_UartEvent__             /* event export */
+    .hEvt = hostIf_UartEvent__,             /* event export */
+    .u8RxInterval = 5, // jt - initialize the rx interval to 5ms
 };
 
 

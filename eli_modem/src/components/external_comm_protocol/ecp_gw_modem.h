@@ -29,11 +29,11 @@ extern "C"
 struct ecp_gw_c2m_frame_header {
     os_uint8 constant_header[2];    /**< 0xAA 0x55 */
     modem_uuid_t dest_modem_uuid;
-    os_uint16 frame_seq_id;
+    os_uint8 frame_seq_id;
     os_uint8 frame_type;        /**< \sa enum ecp_frame_type */
     union {
-        os_uint16 payload_len;  /**< for control and data frames */
-        os_uint16 ack_num;      /**< for ack frame */
+        os_uint8 payload_len;  /**< for control and data frames */
+        os_uint8 ack_num;      /**< for ack frame */
     } len_or_num;
     os_uint8 payload[];
 };
@@ -41,15 +41,19 @@ struct ecp_gw_c2m_frame_header {
 /**
  * The common frame header formats sent from gateway modem to gateway CPU.
  * \sa ecp_gw_c2m_frame_header
+ *
+ * \note As for data frames received from end-devices, @payload's first 4 bytes
+ * are the RSSI and SNR value: [os_int16: SNR][os_int16: RSSI]
+ * \sa ecp_gw_modem_m2c_send_data(buf, len, snr, rssi)
  */
 struct ecp_gw_m2c_frame_header {
     os_uint8 constant_header[2];    /**< 0xAA 0x55 */
     modem_uuid_t src_modem_uuid;
-    os_uint16 frame_seq_id;
+    os_uint8 frame_seq_id;
     os_uint8 frame_type;        /**< \sa enum ecp_frame_type */
     union {
-        os_uint16 payload_len;  /**< for control and data frames */
-        os_uint16 ack_num;      /**< for ack frame */
+        os_uint8 payload_len;  /**< for control and data frames */
+        os_uint8 ack_num;      /**< for ack frame */
     } len_or_num;
     os_uint8 payload[];
 };
@@ -130,7 +134,8 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
 /**
  * Send data information, from gateway modem to gateway CPU.
  */
-void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len);
+void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len,
+                                os_int16 snr, os_int16 rssi);
 
 /**
  * Dispatch received frame (sent from gateway CPU) to registered handler.

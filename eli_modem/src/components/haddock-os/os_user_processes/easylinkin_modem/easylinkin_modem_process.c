@@ -91,6 +91,7 @@ void os_processes_init_easylinkin_modem(void) {
 #elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
     proc_HostifInit(1);
     gateway_mac_engine_init(0);
+    gateway_mac_engine_driver_init(1);
 #endif
 }   /* os_processes_init_easylinkin_modem */
 
