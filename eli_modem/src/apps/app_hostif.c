@@ -948,6 +948,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 /***************************************************************************************************
+ * @fn      HAL_UART_ErrorCallback()
+ *
+ * @brief   dtu uart error callback, this is weak in uart driver, so this should not modify
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+  if( USART2 == huart->Instance ){
+      huart->ErrorCode = HAL_UART_ERROR_NONE;
+      HAL_UART_Receive_IT(&UartHandle, &gs_u8ReceiveByte, 1);
+    }
+}
+
+/***************************************************************************************************
 * HISTORY LIST
 * 1. Create File by author @ data
 *  	context: here write modified history

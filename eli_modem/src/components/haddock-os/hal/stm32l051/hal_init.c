@@ -50,6 +50,7 @@ void clk_HsiPll32MHz(void)
 
     /* Enable MSI Oscillator */
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    RCC_OscInitStruct.HSICalibrationValue = 16;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
     RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_4;
