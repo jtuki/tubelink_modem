@@ -42,8 +42,9 @@ struct ecp_gw_c2m_frame_header {
  * The common frame header formats sent from gateway modem to gateway CPU.
  * \sa ecp_gw_c2m_frame_header
  *
- * \note As for data frames received from end-devices, @payload's first 4 bytes
- * are the RSSI and SNR value: [os_int16: SNR][os_int16: RSSI]
+ * \note As for data frames received from end-devices:
+ *  @payload's first 4 bytes are the RSSI and SNR value: [os_int16: SNR][os_int16: RSSI].
+ *  @len_or_num.payload_len contain this 4 bytes.
  * \sa ecp_gw_modem_m2c_send_data(buf, len, snr, rssi)
  */
 struct ecp_gw_m2c_frame_header {

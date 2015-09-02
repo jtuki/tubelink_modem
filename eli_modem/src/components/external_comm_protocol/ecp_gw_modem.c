@@ -217,7 +217,9 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
         hdr->frame_seq_id = ecp_gw_m2c_increment_frame_seq_id();
         hdr->frame_type = ECP_FTYPE_CONTROL;
 
-        hdr->len_or_num.payload_len = ecp_gw_m2c_control_payload_len[ECP_GW_M2C_REPORT_MODEM_UUID];
+        hdr->len_or_num.payload_len = 1 + ecp_gw_m2c_control_payload_len[ECP_GW_M2C_REPORT_MODEM_UUID];
+        ecp_gw_m2c_tx_buf[tx_len+1] = (os_uint8) ECP_GW_M2C_REPORT_MODEM_UUID;
+
         tx_len += hdr->len_or_num.payload_len;
 
         crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
@@ -261,12 +263,12 @@ void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len,
     hdr->frame_seq_id = ecp_gw_m2c_increment_frame_seq_id();
     hdr->frame_type = ECP_FTYPE_DATA;
 
-    hdr->len_or_num.payload_len = len;
+    hdr->len_or_num.payload_len = 4 + len;
     haddock_memcpy(hdr->payload, &_snr, 2);
     haddock_memcpy(hdr->payload + 2, &_rssi, 2);
     haddock_memcpy(hdr->payload + 4, data, len);
 
-    tx_len += 4+len;
+    tx_len += hdr->len_or_num.payload_len;
 
     crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
     decompose_u16_2(crc16, &ecp_gw_m2c_tx_buf[tx_len], &ecp_gw_m2c_tx_buf[tx_len+1]);
