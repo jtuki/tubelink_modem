@@ -179,7 +179,8 @@ static os_uint8 ecp_gw_c2m_is_valid_frame(os_uint8 *recv_frame_buf, os_uint16 le
 
     // validate the 16-bits CRC
     os_uint16 _crc16;
-    _crc16 = crc16_generator(recv_frame_buf, frame_len);
+    _crc16 = os_hton_u16(crc16_generator(recv_frame_buf, frame_len));
+    // Note that construct_u16_2 using network-endian (big-endian)
     if (_crc16 != construct_u16_2(recv_frame_buf[frame_len], recv_frame_buf[frame_len+1]))
         return 0;
 
@@ -223,6 +224,7 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
         tx_len += hdr->len_or_num.payload_len;
 
         crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
+        // decompose the crc16 using network-endian (big-endian)
         decompose_u16_2(crc16, &ecp_gw_m2c_tx_buf[tx_len], &ecp_gw_m2c_tx_buf[tx_len+1]);
 
         tx_len += 2; // crc part
