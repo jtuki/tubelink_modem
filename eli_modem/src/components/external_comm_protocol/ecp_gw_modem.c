@@ -223,7 +223,7 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
 
         tx_len += hdr->len_or_num.payload_len;
 
-        crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
+        crc16 = os_hton_u16(crc16_generator(ecp_gw_m2c_tx_buf, tx_len));
         // decompose the crc16 using network-endian (big-endian)
         decompose_u16_2(crc16, &ecp_gw_m2c_tx_buf[tx_len], &ecp_gw_m2c_tx_buf[tx_len+1]);
 
@@ -272,7 +272,7 @@ void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len,
 
     tx_len += hdr->len_or_num.payload_len;
 
-    crc16 = crc16_generator(ecp_gw_m2c_tx_buf, tx_len);
+    crc16 = os_hton_u16(crc16_generator(ecp_gw_m2c_tx_buf, tx_len));
     decompose_u16_2(crc16, &ecp_gw_m2c_tx_buf[tx_len], &ecp_gw_m2c_tx_buf[tx_len+1]);
 
     tx_len += 2; // crc part
