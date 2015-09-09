@@ -265,9 +265,9 @@ void ecp_gw_modem_m2c_send_data(void *data, os_uint16 len,
     hdr->frame_seq_id = ecp_gw_m2c_increment_frame_seq_id();
     hdr->frame_type = ECP_FTYPE_DATA;
 
-    hdr->len_or_num.payload_len = 4 + len;
-    haddock_memcpy(hdr->payload, &_snr, 2);
-    haddock_memcpy(hdr->payload + 2, &_rssi, 2);
+    hdr->len_or_num.payload_len = 4 + len; // 4 for the SNR+RSSI
+    decompose_u16_2(_snr, hdr->payload, hdr->payload + 1);
+    decompose_u16_2(_rssi, hdr->payload + 2, hdr->payload + 3);
     haddock_memcpy(hdr->payload + 4, data, len);
 
     tx_len += hdr->len_or_num.payload_len;
