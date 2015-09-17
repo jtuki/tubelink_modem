@@ -103,7 +103,6 @@ static inline os_int8 beacon_seq_id_cmp(os_int8 seq1, os_int8 seq2);
 
 static void update_device_tx_frame_msg(struct device_uplink_msg *msg,
                                        const struct tx_frame_buffer *buffer,
-                                       os_uint8 beacon_group_seq_id,
                                        os_uint8 beacon_class_seq_id);
 
 static void device_mac_get_uuid(modem_uuid_t *uuid);
@@ -566,7 +565,6 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     update_device_tx_frame_msg(
                             (void *) & _cur_tx_frame_info.tx_frame->frame[FRAME_HDR_LEN_NORMAL],
                             _cur_tx_frame_info.tx_frame,
-                            _s_info->beacon_group_seq_id,
                             _s_info->beacon_class_seq_id);
                     print_log(LOG_INFO, "JD: rlc_tx (%s %dB %dT) >%d",
                               device_msg_type_string[(int) _cur_tx_frame_info.tx_frame->msg_type],
@@ -773,10 +771,8 @@ static inline os_int8 beacon_seq_id_cmp(os_int8 seq1, os_int8 seq2)
  */
 static void update_device_tx_frame_msg(struct device_uplink_msg *msg,
                                        const struct tx_frame_buffer *buffer,
-                                       os_uint8 beacon_group_seq_id,
                                        os_uint8 beacon_class_seq_id)
 {
-    haddock_assert(beacon_group_seq_id <= 15);
     haddock_assert(beacon_class_seq_id <= 15);
 
     os_uint8 retransmit_num = buffer->transmit_times - 1;
@@ -799,7 +795,7 @@ static void update_device_tx_frame_msg(struct device_uplink_msg *msg,
 
     os_uint8 *_beacon_seq = (os_uint8 *) msg->hdr.beacon_seq;
     _beacon_seq[0] = (os_uint8) buffer->beacon_seq_id;
-    _beacon_seq[1] = (beacon_group_seq_id << 4) + beacon_class_seq_id;
+    _beacon_seq[1] = beacon_class_seq_id;
 }
 
 /**< @} */

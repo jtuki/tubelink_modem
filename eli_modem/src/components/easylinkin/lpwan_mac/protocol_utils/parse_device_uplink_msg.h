@@ -18,7 +18,6 @@ extern "C"
 
 struct parsed_device_uplink_msg_info {
     os_int8 beacon_seq_id;
-    os_uint8 beacon_group_seq_id;
     os_uint8 beacon_class_seq_id;
 
     os_int8 beacon_rssi;

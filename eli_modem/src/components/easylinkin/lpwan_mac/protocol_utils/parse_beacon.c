@@ -14,9 +14,6 @@
  * \sa enum _beacon_period */
 const os_uint8 _beacon_period_length_list[4] = {2, 3, 4, 5};
 
-/** \sa enum _beacon_max_groups_num */
-const os_uint8 _beacon_groups_num_list[4] = {15, 9, 7, 5};
-
 /** We segment each beacon period into 128 sections. Below are the section length
  *  for different beacon period length. (uint: us)
  * \sa beacon_period_section_ratio_t
@@ -60,16 +57,6 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
         break;
     }
 
-    switch ((os_uint8) get_bits(bcn_info[0], 5, 4)) {
-    case BEACON_MAX_GROUP_15:
-    case BEACON_MAX_GROUP_9:
-    case BEACON_MAX_GROUP_7:
-    case BEACON_MAX_GROUP_5:
-        info->beacon_groups_num = \
-            _beacon_groups_num_list[(int) get_bits(bcn_info[0], 5, 4)];
-        break;
-    }
-
     info->beacon_classes_num = get_bits(bcn_info[0], 3, 0) + 1; // highest value is @BEACON_MAX_CLASSES_NUM
     /** @} */
 
@@ -103,7 +90,6 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
 
     const os_uint8 *bcn_seq_id = bcn_hdr->seq;
     info->beacon_seq_id         = (os_int8) bcn_seq_id[0];
-    info->beacon_group_seq_id   = get_bits(bcn_seq_id[1], 7, 4);
     // range [1, info->beacon_classes_num]
     info->beacon_class_seq_id   = get_bits(bcn_seq_id[1], 3, 0) + 1;
 

@@ -21,7 +21,6 @@ struct parsed_beacon_info {
     version_t lpwan_protocol_version;
     
     os_int8 beacon_seq_id; /**< range [0, BEACON_MAX_SEQ_NUM) */
-    os_uint8 beacon_group_seq_id; /**< range [0, ::beacon_groups_num] */
     os_uint8 beacon_class_seq_id; /**< range [1, ::beacon_classes_num] */
     
     os_uint8 packed_ack_delay_num;
@@ -44,14 +43,12 @@ struct parsed_beacon_info {
     } ratio;
     
     enum _beacon_period _beacon_period_length;
-    enum _beacon_max_groups_num _beacon_max_groups_num;
 
-    /**< parsed information from @_beacon_period_length and @_beacon_max_groups_num
+    /**< parsed information from @_beacon_period_length.
      * @{ */
     os_uint32 beacon_section_length_us;    /**< \sa _beacon_section_length_us
                                                 \sa enum _beacon_period */
     os_uint8 beacon_period_length;     /**< \sa enum _beacon_period */
-    os_uint8 beacon_groups_num;        /**< \sa enum _beacon_max_groups_num */
     /**< @} */
 
     os_uint8 beacon_classes_num; /**< \sa struct beacon_info_t::beacon_classes_num
@@ -100,8 +97,6 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
 
 /** \sa enum _beacon_period */
 extern const os_uint8 _beacon_period_length_list[4];
-/** \sa enum _beacon_max_groups_num */
-extern const os_uint8 _beacon_groups_num_list[4];
 
 #ifdef __cplusplus
 }

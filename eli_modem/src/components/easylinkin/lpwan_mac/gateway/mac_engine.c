@@ -335,11 +335,6 @@ gateway_mac_label_radio_rx_invalid_frame:
         mac_info.bcn_info.beacon_seq_id += 1;
         if (mac_info.bcn_info.beacon_seq_id >= BEACON_MAX_SEQ_NUM) {
             mac_info.bcn_info.beacon_seq_id = 0;
-            // beacon group id
-            mac_info.bcn_info.beacon_group_seq_id += 1;
-            if (mac_info.bcn_info.beacon_group_seq_id > mac_info.bcn_info.beacon_groups_num) {
-                mac_info.bcn_info.beacon_group_seq_id = 0;
-            }
         }
         /** @} */
 
@@ -445,12 +440,9 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info.packed_ack_delay_num = GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM;
 
     info->bcn_info._beacon_period_length = BEACON_PERIOD_2S;
-    info->bcn_info._beacon_max_groups_num = BEACON_MAX_GROUP_15;
     info->bcn_info.beacon_period_length = _beacon_period_length_list[BEACON_PERIOD_2S];
-    info->bcn_info.beacon_groups_num = _beacon_groups_num_list[BEACON_MAX_GROUP_15];
 
     info->bcn_info.beacon_seq_id = (os_int8) 0x80;
-    info->bcn_info.beacon_group_seq_id = 0;
     info->bcn_info.beacon_class_seq_id = 1; // range [1, @beacon_classes_num]
 
     /*
