@@ -12,7 +12,6 @@
  */
 #include <stdio.h>
 #include "rf/rf_type.h"
-#include "../rf_config.h"
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS

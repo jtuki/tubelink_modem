@@ -26,5 +26,5 @@ tLoRaSettings LoRaSettings =
     /* here, if in cad mode, rx timeout value may be need greater then sleep time */
     20,               // RxPacketTimeout
     128,              // PayloadLength (used for implicit header mode)
-    32,               /* preamble length */
+    24,               /* u16PreambleLength (preamble length) */
 };

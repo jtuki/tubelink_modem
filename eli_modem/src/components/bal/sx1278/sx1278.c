@@ -468,16 +468,25 @@ void sx1278_RxInit( void )
     memset( gs_au8PacketBuffer, 0, ( size_t )RF_BUFFER_SIZE );    /* clear buffer */
     gs_u8PacketSize = 0;
     
-    SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */ 
+    SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */
+
+    /**< jt - set timeout value.
+     * \ref sx1276's datasheet Page40
+     * \ref sx1276's datasheet Page113 RegSymbTimeoutLsb
+     * */
+    SX1276LoRaSetSymbTimeout(2 + 5); // the next 5 is for extra 4.25 symbols.
+
+    /*
     if(LoRaSettings.u16PreambleLength > 0x3FF)
     {
-        SX1276LoRaSetSymbTimeout((0x3FF) );   /* set timeout value */
+        SX1276LoRaSetSymbTimeout((0x3FF) );   // set timeout value
     }
-    else
+    else //
     {
-        SX1276LoRaSetSymbTimeout(LoRaSettings.u16PreambleLength );   /* set timeout value */
+        SX1276LoRaSetSymbTimeout(LoRaSettings.u16PreambleLength );   // set timeout value
         time_i = 0;
     }
+    */
     
     /* goto receive mode */
     if( LoRaSettings.RxSingleOn == rf_true ) /* Rx single mode */
