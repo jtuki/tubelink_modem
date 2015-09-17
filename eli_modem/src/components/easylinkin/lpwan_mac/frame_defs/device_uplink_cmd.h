@@ -35,7 +35,6 @@ __LPWAN struct device_cmd_leave {
      * bits 4: leave_reason \sa enum _device_leave_reason
      */
     os_uint8 cmd_info;
-    token_code_t rejoin_token;
 };
 
 enum _device_leave_reason {

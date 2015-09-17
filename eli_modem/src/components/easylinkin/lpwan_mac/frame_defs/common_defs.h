@@ -71,10 +71,10 @@ enum _address_type {
  */
 enum frame_type_gw {
     FTYPE_GW_BEACON             = 0,
-    FTYPE_GW_ACK                = 1,
-    FTYPE_GW_JOIN_PENDING_ACK   = 2,
+    FTYPE_GW_ACK                = 1,    // no use currently
+    FTYPE_GW_JOIN_PENDING_ACK   = 2,    // no use currently
     FTYPE_GW_JOIN_CONFIRMED     = 3,
-    FTYPE_GW_CMD                = 4,
+    FTYPE_GW_CMD                = 4,    // no use currently
     FTYPE_GW_MSG                = 5,
     _ftype_gw_invalid = 8,
 };
@@ -90,10 +90,10 @@ enum frame_type_gw {
  */
 enum frame_type_end_device {
     FTYPE_DEVICE_JOIN           = 0,
-    FTYPE_DEVICE_REJOIN         = 1,
+    FTYPE_DEVICE_REJOIN         = 1,    // no use currently
     FTYPE_DEVICE_DATA_REQUEST   = 2,
-    FTYPE_DEVICE_ACK            = 3,
-    FTYPE_DEVICE_CMD            = 4,
+    FTYPE_DEVICE_ACK            = 3,    /**< for downlink message acknowledgement. */
+    FTYPE_DEVICE_CMD            = 4,    // no use currently
     FTYPE_DEVICE_MSG            = 5,
     _ftype_device_invalid = 8,
 };

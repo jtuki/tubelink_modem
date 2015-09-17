@@ -25,7 +25,7 @@ extern "C"
  *      there is no need to put @seq here.
  * \sa struct gw_downlink_cmd_common; struct gw_downlink_msg;
  */
-__LPWAN struct gw_downlink_ack {
+__LPWAN struct gw_downlink_ack {    // no use currently
     gw_downlink_common_hdr_t hdr;
     os_uint8 confirm_seq;
 };

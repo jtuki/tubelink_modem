@@ -22,7 +22,7 @@ extern "C"
 #endif
 
 /**
- * \remark Devices' join and rejoin request will generate a random @init_seq_id as
+ * \remark Devices' join request will generate a random @init_seq_id as
  *  initial session sequence id.
  */
 __LPWAN struct device_join_requst {
@@ -30,14 +30,6 @@ __LPWAN struct device_join_requst {
     os_uint8 init_seq_id;
     os_uint8 join_reason;  /**< \sa enum _device_join_reason */
     app_id_t app_id;
-};
-
-__LPWAN struct device_rejoin_request {
-    struct device_uplink_common hdr;
-    os_uint8 init_seq_id;
-    os_uint8 join_reason;
-    app_id_t app_id;
-    token_code_t last_rejoin_token; /**< \sa struct gw_join_confirmed::rejoin_token */
 };
 
 enum _device_join_reason {

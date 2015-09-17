@@ -26,9 +26,6 @@ extern "C"
  *
  * \remark Destination are modem_uuid_t (12 bytes long).
  * \sa struct frame_header
- *
- * \remark @rejoinToken is a non-zero random 16-bits value, designed for the
- *  security concerns.
  */
 __LPWAN struct gw_join_confirmed {
     /**
@@ -39,8 +36,6 @@ __LPWAN struct gw_join_confirmed {
     os_uint8 init_seq_id;  /**< \remark gateway's join confirmed response will generate a
                              random @init_seq_id as the initial session sequence id. */
     short_addr_t distributed_short_addr;
-    multicast_addr_t distributed_multi_addr;
-    token_code_t rejoin_token;
 };
 
 /**
