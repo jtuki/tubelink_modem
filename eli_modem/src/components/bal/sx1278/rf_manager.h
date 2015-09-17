@@ -148,7 +148,7 @@ extern RF_RTE_RET_t Rf_Routine(void *a_pvdArg);
  *          RF_RET_TX_MSG_LONG  - request failed, message is too long, rf radio can't send it
  *          RF_RET_TX_BUSY  - request failed, rf tx busy, can not receive request
  */
-extern RF_RET_t Rf_Send( rfChar *a_pcData, rfUint16 a_u16Len );
+extern RF_RET_t Rf_Send( rf_char *a_pcData, rf_uint16 a_u16Len );
 
 
  /***************************************************************************************************
@@ -164,7 +164,7 @@ extern RF_RET_t Rf_Send( rfChar *a_pcData, rfUint16 a_u16Len );
  *
  * @return  receive length
  */
-rfUint16 Rf_Get( rfChar *a_pcData, rfUint16 a_u16Len );
+rf_uint16 Rf_Get( rf_char *a_pcData, rf_uint16 a_u16Len );
 
  /***************************************************************************************************
  * @fn      Rf_ReceiveStart()
@@ -204,7 +204,7 @@ void Rf_Stop( void );
  * @return  rf_true  - rf send finished
  *          rf_false  - rf send not finished yet
  */
-extern rfBool Rf_IsSendFinished( void );
+extern rf_bool Rf_IsSendFinished( void );
 
 
  /***************************************************************************************************
@@ -219,7 +219,7 @@ extern rfBool Rf_IsSendFinished( void );
  * @return  rf_true  - rf send finished
  *          rf_false  - rf send not finished yet
  */
-extern rfBool Rf_IsReceiveFinished( void );
+extern rf_bool Rf_IsReceiveFinished( void );
 
 
  /***************************************************************************************************
@@ -233,7 +233,7 @@ extern rfBool Rf_IsReceiveFinished( void );
  *
  * @return  rssi value
  */
-extern rfUint8 Rf_GetRssi( void );
+extern rf_uint8 Rf_GetRssi( void );
 
 
 /***************************************************************************************************
@@ -248,7 +248,7 @@ extern rfUint8 Rf_GetRssi( void );
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - power is not suitable for this rf radio
  */
-extern RF_RET_t Rf_SetPower( rfUint8 a_u8PowerVal );
+extern RF_RET_t Rf_SetPower( rf_uint8 a_u8PowerVal );
 
 
 /***************************************************************************************************
@@ -262,7 +262,7 @@ extern RF_RET_t Rf_SetPower( rfUint8 a_u8PowerVal );
  *
  * @return  power value
  */
-extern rfUint8 Rf_GetPower( void );
+extern rf_uint8 Rf_GetPower( void );
 
 
 
@@ -278,7 +278,7 @@ extern rfUint8 Rf_GetPower( void );
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - frequence is not suitable for this rf radio
  */
-extern RF_RET_t Rf_SetFreq( rfUint32 a_u32Freq );
+extern RF_RET_t Rf_SetFreq( rf_uint32 a_u32Freq );
 
 
 
@@ -293,7 +293,7 @@ extern RF_RET_t Rf_SetFreq( rfUint32 a_u32Freq );
  *
  * @return  rf frequence, unit is kHz, for example, 433MHz, ret value = 433000
  */
-extern rfUint32 Rf_GetFreq( void );
+extern rf_uint32 Rf_GetFreq( void );
 
 
 /***************************************************************************************************
@@ -308,7 +308,7 @@ extern rfUint32 Rf_GetFreq( void );
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - bandwidth is not suitable for this rf radio
  */
-extern RF_RET_t Rf_SetBandwidth( rfUint32 a_u32Bandwidth );
+extern RF_RET_t Rf_SetBandwidth( rf_uint32 a_u32Bandwidth );
 
 
 /***************************************************************************************************
@@ -322,7 +322,7 @@ extern RF_RET_t Rf_SetBandwidth( rfUint32 a_u32Bandwidth );
  *
  * @return  rf bandwidth, unit is kHz, for example, 500kHz, ret value = 500
  */
-extern rfUint32 Rf_GetBandwidth( void );
+extern rf_uint32 Rf_GetBandwidth( void );
 
 
 /***************************************************************************************************
@@ -337,7 +337,7 @@ extern rfUint32 Rf_GetBandwidth( void );
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - baud is not suitable for this rf radio
  */
-extern RF_RET_t Rf_SetAirBaud( rfUint32 a_u32AirBadu);
+extern RF_RET_t Rf_SetAirBaud( rf_uint32 a_u32AirBadu);
 
 
 /***************************************************************************************************
@@ -351,9 +351,9 @@ extern RF_RET_t Rf_SetAirBaud( rfUint32 a_u32AirBadu);
  *
  * @return  rf air baudrate, unit is Hz
  */
-extern rfUint32 Rf_GetAirBaud( void );
+extern rf_uint32 Rf_GetAirBaud( void );
 
-extern rfInt8 Rf_GetPacketSnr( void );
+extern rf_int8 Rf_GetPacketSnr( void );
 extern double Rf_GetPacketRssi( void );
 
 /***************************************************************************************************
@@ -401,7 +401,7 @@ extern RF_STATE_t Rf_GetWorkState( void );
  *          a_u16Par  - addition parameter, for RF_TX, this is the length request to send
  * @return  none
  */
-extern void Rf_SetStateRequset( RF_STATE_t a_tReq, rfUint16 a_u16Par );
+extern void Rf_SetStateRequset( RF_STATE_t a_tReq, rf_uint16 a_u16Par );
 
 
 /***************************************************************************************************
@@ -443,7 +443,7 @@ extern void Rf_ExcuteConfigParameters( void );
  *
  * @return  baudrate
  */
-extern rfUint32 Rf_GetConfigUartBaud( void );
+extern rf_uint32 Rf_GetConfigUartBaud( void );
 
 /***************************************************************************************************
  * @fn      Rf_GetConfigUartParity()
@@ -456,7 +456,7 @@ extern rfUint32 Rf_GetConfigUartBaud( void );
  *
  * @return  parity
  */
-extern rfUint8 Rf_GetConfigUartParity( void );
+extern rf_uint8 Rf_GetConfigUartParity( void );
 
 
 /***************************************************************************************************
@@ -470,7 +470,7 @@ extern rfUint8 Rf_GetConfigUartParity( void );
  *
  * @return  none
  */
-extern rfUint16 Rf_GetConfigWakeupTime( void );
+extern rf_uint16 Rf_GetConfigWakeupTime( void );
 
 
 /***************************************************************************************************
@@ -485,7 +485,7 @@ extern rfUint16 Rf_GetConfigWakeupTime( void );
  *
  * @return  none
  */
-extern rfUint16 Rf_GetConfigPreamble(rfBool a_bWakeupMode);
+extern rf_uint16 Rf_GetConfigPreamble(rf_bool a_bWakeupMode);
 
 
 /***************************************************************************************************
@@ -499,7 +499,7 @@ extern rfUint16 Rf_GetConfigPreamble(rfBool a_bWakeupMode);
  *
  * @return  none
  */
-void Rf_SetPreambleLengthPara(rfUint16 a_u16length);
+void Rf_SetPreambleLengthPara(rf_uint16 a_u16length);
 
 
 enum rf_state Rf_GetCurState(void);

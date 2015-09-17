@@ -98,7 +98,7 @@ extern void* Sx1276_Cfg_GetBufferAddr( void );
  *
  * @return  none
  */
-extern void Sx1276_Cfg_SetBufferSize( rfUint8 a_u8Size );
+extern void Sx1276_Cfg_SetBufferSize( rf_uint8 a_u8Size );
 
 
 /***************************************************************************************************
@@ -126,7 +126,7 @@ extern void Sx1276_Cfg_UpdateAliveTime( void );
  *
  * @return  uart baud
  */
-extern rfUint32 Sx1276_Cfg_GetUartBaud( void );
+extern rf_uint32 Sx1276_Cfg_GetUartBaud( void );
 
 /***************************************************************************************************
  * @fn      Sx1276_Cfg_GetUartParity()
@@ -139,7 +139,7 @@ extern rfUint32 Sx1276_Cfg_GetUartBaud( void );
  *
  * @return  uart parity
  */
-extern rfUint8 Sx1276_Cfg_GetUartParity( void );
+extern rf_uint8 Sx1276_Cfg_GetUartParity( void );
 
 
 /***************************************************************************************************
@@ -153,7 +153,7 @@ extern rfUint8 Sx1276_Cfg_GetUartParity( void );
  *
  * @return  none
  */
-extern rfUint16 Sx1276_Cfg_GetWakeupTime( void );
+extern rf_uint16 Sx1276_Cfg_GetWakeupTime( void );
 
 
 /***************************************************************************************************
@@ -168,7 +168,7 @@ extern rfUint16 Sx1276_Cfg_GetWakeupTime( void );
  *
  * @return  none
  */
-extern rfUint16 Sx1276_Cfg_GetPreamble(rfBool a_bWakeupMode);
+extern rf_uint16 Sx1276_Cfg_GetPreamble(rf_bool a_bWakeupMode);
 
 
 

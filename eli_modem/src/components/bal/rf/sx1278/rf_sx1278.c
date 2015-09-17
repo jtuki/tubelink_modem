@@ -230,27 +230,6 @@ typedef struct
 static rf_uint8 SX1276Regs[0x70] = {0};
 
 tSX1276LR* SX1276LR;
-// Default settings
-tLoRaSettings LoRaSettings =
-{
-    424000000,        // RFFrequency
-    20,               // Power
-    9,                // SignalBw [0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
-                      // 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]
-    7,                // SpreadingFactor [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096  chips]
-    2,                // ErrorCoding [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
-    rf_true,             // CrcOn [0: OFF, 1: ON]
-    rf_false,            // ImplicitHeaderOn [0: OFF, 1: ON]
-    rf_true,             // RxSingleOn [0: Continuous, 1 Single]
-    rf_true,            // FreqHopOn [0: OFF, 1: ON]
-    4,                // HopPeriod Hops every frequency hopping period symbols
-    2000,              // TxPacketTimeout
-    /* here, if in cad mode, rx timeout value may be need greater then sleep time */
-    20,              // RxPacketTimeout
-    128,              // PayloadLength (used for implicit header mode)
-    /*12*/128,              /* preamble length */
-};
-
 
 //static SX1278_IRQ_FLAGS_t gs_tIrqFlags = {0};
 
@@ -1542,7 +1521,7 @@ rf_uint8 SX1276LoRaGetHopPeriod( void )
  *
  * @return  none
  */
-void SX1276LoRaSetTxPacketTimeout( uint32_t value )
+void SX1276LoRaSetTxPacketTimeout( rf_uint32 value )
 {
     LoRaSettings.TxPacketTimeout = value;
 }   /* SX1276LoRaSetTxPacketTimeout() */
@@ -1559,7 +1538,7 @@ void SX1276LoRaSetTxPacketTimeout( uint32_t value )
  *
  * @return  tx packet timeout time in unit ms
  */
-uint32_t SX1276LoRaGetTxPacketTimeout( void )
+rf_uint32 SX1276LoRaGetTxPacketTimeout( void )
 {
     return LoRaSettings.TxPacketTimeout;
 }   /* SX1276LoRaGetTxPacketTimeout() */
@@ -1576,7 +1555,7 @@ uint32_t SX1276LoRaGetTxPacketTimeout( void )
  *
  * @return  none
  */
-void SX1276LoRaSetRxPacketTimeout( uint32_t a_u32Value )
+void SX1276LoRaSetRxPacketTimeout( rf_uint32 a_u32Value )
 {
     LoRaSettings.RxPacketTimeout = a_u32Value;
 }   /* SX1276LoRaSetRxPacketTimeout() */
@@ -1593,7 +1572,7 @@ void SX1276LoRaSetRxPacketTimeout( uint32_t a_u32Value )
  *
  * @return  rx packet timeout time in unit ms
  */
-uint32_t SX1276LoRaGetRxPacketTimeout( void )
+rf_uint32 SX1276LoRaGetRxPacketTimeout( void )
 {
     return LoRaSettings.RxPacketTimeout;
 }   /* SX1276LoRaGetRxPacketTimeout() */

@@ -102,7 +102,7 @@
  *
  * @return  none
  */
-static void sx1278_DioDelay__(rfUint8 a_u8DelayCnt);
+static void sx1278_DioDelay__(rf_uint8 a_u8DelayCnt);
 
 /***************************************************************************************************
  * GLOBAL VARIABLES
@@ -235,7 +235,7 @@ void sx1278_DioDeInit(void)
  *
  * @return  none
  */
-void sx1276_Dio2EnableInt( rfBool a_bEnable )
+void sx1276_Dio2EnableInt( rf_bool a_bEnable )
 {
 #if ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 )
     
@@ -246,7 +246,7 @@ void sx1276_Dio2EnableInt( rfBool a_bEnable )
     tGpioInit.Speed     = GPIO_SPEED_FAST;
     tGpioInit.Pin       = DIO2_PIN;
     
-    if(rfFalse == a_bEnable){
+    if(rf_false == a_bEnable){
         tGpioInit.Mode = GPIO_MODE_INPUT;
         HAL_GPIO_Init(DIO2_IOPORT, &tGpioInit);
     }
@@ -274,10 +274,10 @@ void sx1276_Dio2EnableInt( rfBool a_bEnable )
  *
  * @return  none
  */
-void sx1278_DioReset( rfBool a_bReset )
+void sx1278_DioReset( rf_bool a_bReset )
 {
 #if ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 )
-    if( a_bReset == rfTrue ){
+    if( a_bReset == rf_true ){
         HAL_GPIO_WritePin(RESET_IOPORT, RESET_PIN, GPIO_PIN_RESET); /* reset pin = low level */
     }else{
         HAL_GPIO_WritePin(RESET_IOPORT, RESET_PIN, GPIO_PIN_SET);   /* reset pin = high level */
@@ -296,7 +296,7 @@ void sx1278_DioReset( rfBool a_bReset )
  *
  * @return  none
  */
-inline rfUint8 sx1278_DioReadDio0( void )
+inline rf_uint8 sx1278_DioReadDio0( void )
 {
 #if(PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0)
   return HAL_GPIO_ReadPin(DIO0_IOPORT, DIO0_PIN) == GPIO_PIN_RESET ? 0 : 1;
@@ -405,12 +405,12 @@ inline uint8_t sx1278_DioReadDio5( void )
  *
  * @return  none
  */
-inline void sx1278_DioSetDioCtrl( rfBool a_bTxEnable )
+inline void sx1278_DioSetDioCtrl( rf_bool a_bTxEnable )
 {
     /* do not understand this function's use */
     
 #if(PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0)
-    if(rfFalse == a_bTxEnable)
+    if(rf_false == a_bTxEnable)
     {
         HAL_GPIO_WritePin(CTRL1_IOPORT, CTRL1_PIN, GPIO_PIN_RESET);                     /* nss pin = low level */
         HAL_GPIO_WritePin(CTRL2_IOPORT, CTRL2_PIN, GPIO_PIN_SET);                    /* nss pin = high level */
@@ -437,7 +437,7 @@ inline void sx1278_DioSetDioCtrl( rfBool a_bTxEnable )
  *
  * @return  none
  */
-void sx1278_DioDelay__(rfUint8 a_u8DelayCnt)
+void sx1278_DioDelay__(rf_uint8 a_u8DelayCnt)
 {
     while(a_u8DelayCnt--){
         ;

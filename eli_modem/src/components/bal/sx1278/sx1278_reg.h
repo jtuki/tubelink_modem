@@ -666,89 +666,89 @@ extern "C"{
 
 typedef struct sSX1276LR
 {
-    rfUint8 RegFifo;                                // 0x00 
+    rf_uint8 RegFifo;                                // 0x00 
     // Common settings
-    rfUint8 RegOpMode;                              // 0x01 
-    rfUint8 RegRes02;                               // 0x02 
-    rfUint8 RegRes03;                               // 0x03 
-    rfUint8 RegBandSetting;                         // 0x04 
-    rfUint8 RegRes05;                               // 0x05 
-    rfUint8 RegFrfMsb;                              // 0x06 
-    rfUint8 RegFrfMid;                              // 0x07 
-    rfUint8 RegFrfLsb;                              // 0x08 
+    rf_uint8 RegOpMode;                              // 0x01 
+    rf_uint8 RegRes02;                               // 0x02 
+    rf_uint8 RegRes03;                               // 0x03 
+    rf_uint8 RegBandSetting;                         // 0x04 
+    rf_uint8 RegRes05;                               // 0x05 
+    rf_uint8 RegFrfMsb;                              // 0x06 
+    rf_uint8 RegFrfMid;                              // 0x07 
+    rf_uint8 RegFrfLsb;                              // 0x08 
     // Tx settings
-    rfUint8 RegPaConfig;                            // 0x09 
-    rfUint8 RegPaRamp;                              // 0x0A 
-    rfUint8 RegOcp;                                 // 0x0B 
+    rf_uint8 RegPaConfig;                            // 0x09 
+    rf_uint8 RegPaRamp;                              // 0x0A 
+    rf_uint8 RegOcp;                                 // 0x0B 
     // Rx settings
-    rfUint8 RegLna;                                 // 0x0C 
+    rf_uint8 RegLna;                                 // 0x0C 
     // LoRa registers
-    rfUint8 RegFifoAddrPtr;                         // 0x0D 
-    rfUint8 RegFifoTxBaseAddr;                      // 0x0E 
-    rfUint8 RegFifoRxBaseAddr;                      // 0x0F 
-    rfUint8 RegFifoRxCurrentAddr;                   // 0x10 
-    rfUint8 RegIrqFlagsMask;                        // 0x11 
-    rfUint8 RegIrqFlags;                            // 0x12 
-    rfUint8 RegNbRxBytes;                           // 0x13 
-    rfUint8 RegRxHeaderCntValueMsb;                 // 0x14 
-    rfUint8 RegRxHeaderCntValueLsb;                 // 0x15 
-    rfUint8 RegRxPacketCntValueMsb;                 // 0x16 
-    rfUint8 RegRxPacketCntValueLsb;                 // 0x17 
-    rfUint8 RegModemStat;                           // 0x18 
-    rfUint8 RegPktSnrValue;                         // 0x19 
-    rfUint8 RegPktRssiValue;                        // 0x1A 
-    rfUint8 RegRssiValue;                           // 0x1B 
-    rfUint8 RegHopChannel;                          // 0x1C 
-    rfUint8 RegModemConfig1;                        // 0x1D 
-    rfUint8 RegModemConfig2;                        // 0x1E 
-    rfUint8 RegSymbTimeoutLsb;                      // 0x1F 
-    rfUint8 RegPreambleMsb;                         // 0x20 
-    rfUint8 RegPreambleLsb;                         // 0x21 
-    rfUint8 RegPayloadLength;                       // 0x22 
-    rfUint8 RegMaxPayloadLength;                    // 0x23 
-    rfUint8 RegHopPeriod;                           // 0x24 
-    rfUint8 RegFifoRxByteAddr;                      // 0x25
-    rfUint8 RegModemConfig3;                        // 0x26
-    rfUint8 RegTestReserved27[0x30 - 0x27];         // 0x27-0x2f    /* modified by chuanpengl */
-    rfUint8 RegTestReserved30;                      // 0x30         /* modified by chuanpengl */
-    rfUint8 RegTestReserved31;                      // 0x31
-    rfUint8 RegTestReserved32[0x40 - 0x32];         // 0x32-0x3f
+    rf_uint8 RegFifoAddrPtr;                         // 0x0D 
+    rf_uint8 RegFifoTxBaseAddr;                      // 0x0E 
+    rf_uint8 RegFifoRxBaseAddr;                      // 0x0F 
+    rf_uint8 RegFifoRxCurrentAddr;                   // 0x10 
+    rf_uint8 RegIrqFlagsMask;                        // 0x11 
+    rf_uint8 RegIrqFlags;                            // 0x12 
+    rf_uint8 RegNbRxBytes;                           // 0x13 
+    rf_uint8 RegRxHeaderCntValueMsb;                 // 0x14 
+    rf_uint8 RegRxHeaderCntValueLsb;                 // 0x15 
+    rf_uint8 RegRxPacketCntValueMsb;                 // 0x16 
+    rf_uint8 RegRxPacketCntValueLsb;                 // 0x17 
+    rf_uint8 RegModemStat;                           // 0x18 
+    rf_uint8 RegPktSnrValue;                         // 0x19 
+    rf_uint8 RegPktRssiValue;                        // 0x1A 
+    rf_uint8 RegRssiValue;                           // 0x1B 
+    rf_uint8 RegHopChannel;                          // 0x1C 
+    rf_uint8 RegModemConfig1;                        // 0x1D 
+    rf_uint8 RegModemConfig2;                        // 0x1E 
+    rf_uint8 RegSymbTimeoutLsb;                      // 0x1F 
+    rf_uint8 RegPreambleMsb;                         // 0x20 
+    rf_uint8 RegPreambleLsb;                         // 0x21 
+    rf_uint8 RegPayloadLength;                       // 0x22 
+    rf_uint8 RegMaxPayloadLength;                    // 0x23 
+    rf_uint8 RegHopPeriod;                           // 0x24 
+    rf_uint8 RegFifoRxByteAddr;                      // 0x25
+    rf_uint8 RegModemConfig3;                        // 0x26
+    rf_uint8 RegTestReserved27[0x30 - 0x27];         // 0x27-0x2f    /* modified by chuanpengl */
+    rf_uint8 RegTestReserved30;                      // 0x30         /* modified by chuanpengl */
+    rf_uint8 RegTestReserved31;                      // 0x31
+    rf_uint8 RegTestReserved32[0x40 - 0x32];         // 0x32-0x3f
     // I/O settings                
-    rfUint8 RegDioMapping1;                         // 0x40 
-    rfUint8 RegDioMapping2;                         // 0x41 
+    rf_uint8 RegDioMapping1;                         // 0x40 
+    rf_uint8 RegDioMapping2;                         // 0x41 
     // Version
-    rfUint8 RegVersion;                             // 0x42
+    rf_uint8 RegVersion;                             // 0x42
     // Additional settings
-    rfUint8 RegAgcRef;                              // 0x43
-    rfUint8 RegAgcThresh1;                          // 0x44
-    rfUint8 RegAgcThresh2;                          // 0x45
-    rfUint8 RegAgcThresh3;                          // 0x46
+    rf_uint8 RegAgcRef;                              // 0x43
+    rf_uint8 RegAgcThresh1;                          // 0x44
+    rf_uint8 RegAgcThresh2;                          // 0x45
+    rf_uint8 RegAgcThresh3;                          // 0x46
     // Test
-    rfUint8 RegTestReserved47[0x4B - 0x47];         // 0x47-0x4A
+    rf_uint8 RegTestReserved47[0x4B - 0x47];         // 0x47-0x4A
     // Additional settings
-    rfUint8 RegPllHop;                              // 0x4B
-    rfUint8 RegTestReserved4C;                      // 0x4C
-    rfUint8 RegPaDac;                               // 0x4D
+    rf_uint8 RegPllHop;                              // 0x4B
+    rf_uint8 RegTestReserved4C;                      // 0x4C
+    rf_uint8 RegPaDac;                               // 0x4D
     // Test
-    rfUint8 RegTestReserved4E[0x58-0x4E];           // 0x4E-0x57
+    rf_uint8 RegTestReserved4E[0x58-0x4E];           // 0x4E-0x57
     // Additional settings
-    rfUint8 RegTcxo;                                // 0x58
+    rf_uint8 RegTcxo;                                // 0x58
     // Test
-    rfUint8 RegTestReserved59;                      // 0x59
+    rf_uint8 RegTestReserved59;                      // 0x59
     // Test
-    rfUint8 RegTestReserved5B;                      // 0x5B
+    rf_uint8 RegTestReserved5B;                      // 0x5B
     // Additional settings
-    rfUint8 RegPll;                                 // 0x5C
+    rf_uint8 RegPll;                                 // 0x5C
     // Test
-    rfUint8 RegTestReserved5D;                      // 0x5D
+    rf_uint8 RegTestReserved5D;                      // 0x5D
     // Additional settings
-    rfUint8 RegPllLowPn;                            // 0x5E
+    rf_uint8 RegPllLowPn;                            // 0x5E
     // Test
-    rfUint8 RegTestReserved5F[0x6C - 0x5F];         // 0x5F-0x6B
+    rf_uint8 RegTestReserved5F[0x6C - 0x5F];         // 0x5F-0x6B
     // Additional settings
-    rfUint8 RegFormerTemp;                          // 0x6C
+    rf_uint8 RegFormerTemp;                          // 0x6C
     // Test
-    rfUint8 RegTestReserved6D[0x71 - 0x6D];         // 0x6D-0x70
+    rf_uint8 RegTestReserved6D[0x71 - 0x6D];         // 0x6D-0x70
 }tSX1276LR;
 
 extern tSX1276LR* SX1276LR;

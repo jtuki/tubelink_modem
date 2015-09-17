@@ -78,7 +78,7 @@ void sx1278_DioDeInit(void);
  *
  * @return  none
  */
-void sx1276_Dio2EnableInt( rfBool a_bEnable );
+void sx1276_Dio2EnableInt( rf_bool a_bEnable );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReset()
@@ -91,7 +91,7 @@ void sx1276_Dio2EnableInt( rfBool a_bEnable );
  *
  * @return  none
  */
-void sx1278_DioReset( rfBool a_bReset );
+void sx1278_DioReset( rf_bool a_bReset );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio0()
@@ -104,7 +104,7 @@ void sx1278_DioReset( rfBool a_bReset );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio0( void );
+extern rf_uint8 sx1278_DioReadDio0( void );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio1()
@@ -117,7 +117,7 @@ extern rfUint8 sx1278_DioReadDio0( void );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio1( void );
+extern rf_uint8 sx1278_DioReadDio1( void );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio2()
@@ -130,7 +130,7 @@ extern rfUint8 sx1278_DioReadDio1( void );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio2( void );
+extern rf_uint8 sx1278_DioReadDio2( void );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio3()
@@ -143,7 +143,7 @@ extern rfUint8 sx1278_DioReadDio2( void );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio3( void );
+extern rf_uint8 sx1278_DioReadDio3( void );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio4()
@@ -156,7 +156,7 @@ extern rfUint8 sx1278_DioReadDio3( void );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio4( void );
+extern rf_uint8 sx1278_DioReadDio4( void );
 
 /***************************************************************************************************
  * @fn      sx1278_DioReadDio5()
@@ -169,7 +169,7 @@ extern rfUint8 sx1278_DioReadDio4( void );
  *
  * @return  none
  */
-extern rfUint8 sx1278_DioReadDio5( void );
+extern rf_uint8 sx1278_DioReadDio5( void );
 
 
 /***************************************************************************************************
@@ -184,7 +184,7 @@ extern rfUint8 sx1278_DioReadDio5( void );
  *
  * @return  none
  */
-extern void sx1278_DioSetDioCtrl( rfBool a_bTxEnable );
+extern void sx1278_DioSetDioCtrl( rf_bool a_bTxEnable );
 
 #endif /* (BAL_USE_SX1278 == BAL_MODULE_ON) */
 

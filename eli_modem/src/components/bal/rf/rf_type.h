@@ -39,7 +39,7 @@ typedef unsigned long       rf_uint32;
 typedef signed long         rf_int32;
 
 
-typedef enum{rf_false = 0, rf_true = 1}rf_bool;
+typedef enum{rf_false = 0, rf_true = 1} rf_bool;
 
 /***************************************************************************************************
  * GLOBAL VARIABLES DECLEAR

@@ -16,6 +16,20 @@ extern "C"
 #include "lpwan_types.h"
 
 /*---------------------------------------------------------------------------*/
+/**< Configuration sets */
+#define LPWAN_RADIO_CONFIG_SET_SF7      0
+#define LPWAN_RADIO_CONFIG_SET_SF8      1
+
+// #define LPWAN_RADIO_CONFIGURATION   LPWAN_RADIO_CONFIG_SET_SF7
+#define LPWAN_RADIO_CONFIGURATION   LPWAN_RADIO_CONFIG_SET_SF8
+
+#if defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF7
+#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_2S
+#elif defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF8
+#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_4S
+#endif
+
+/*---------------------------------------------------------------------------*/
 /**< Radio configuration @{ */
 
 #define LPWAN_MAX_RADIO_CHANNELS_NUM    40  // modem's channel id range [0, 40)
@@ -40,15 +54,6 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
  * At most 16 classes.
  */
 #define BEACON_MAX_CLASSES_NUM  16
-
-#define LPWAN_BEACON_PERIOD     BEACON_PERIOD_2S
-#define LPWAN_BEACON_MAX_GROUP  BEACON_MAX_GROUP_15
-
-/**
- * \brief The spreading factor beacon use.
- * \remark only LoRa chips can use the "spreading factor".
- */
-#define LPWAN_BEACON_SF   8
 
 /**
  * \brief The tx power beacon use.

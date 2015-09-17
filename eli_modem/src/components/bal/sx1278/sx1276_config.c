@@ -48,36 +48,36 @@
  * CONSTANTS
  */
 /* used for normal mode, if wakeup mode, calculate the value */
-const rfUint16 gsc_au16PreambleLength[]=
+const rf_uint16 gsc_au16PreambleLength[]=
 {
     8, 8, 8, 12, 12, 12
 };
 
-const rfUint16 gsc_au16SymbolTimeUs[] = 
+const rf_uint16 gsc_au16SymbolTimeUs[] = 
 {
     8192, 4096, 2048, 1024, 512, 256
 };
 
-const rfUint8 gsc_au8TxPower[] = 
+const rf_uint8 gsc_au8TxPower[] = 
 {
     3,6,9,11,13,15,18,20
 };
 
 
 /* wakeup time with unit 50ms */
-const rfUint8 gs_au8WakeupTime[WAKEUP_TIME_SLECT] = 
+const rf_uint8 gs_au8WakeupTime[WAKEUP_TIME_SLECT] = 
 {
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 };
 
-const rfUint16 gs_au8SF[6] = {10,9,8,7,7,7};
-const rfUint8 gs_au8SigBw[6] = {7,7,7,7,8,9};
+const rf_uint16 gs_au8SF[6] = {10,9,8,7,7,7};
+const rf_uint8 gs_au8SigBw[6] = {7,7,7,7,8,9};
 
 
 
-const rfUint8 gsc_au8ReadCmd[] = {0xFF,0x56,0xAE,0x35,0xA9,0x55,0xF0, 0x00};  /* configure read command */
-const rfUint8 gsc_au8WriteCmd[] = {0xFF,0x56,0xAE,0x35,0xA9,0x55, 0x90, 0x00};
-const rfUint16 gsc_au16WakeupTime[] = {
+const rf_uint8 gsc_au8ReadCmd[] = {0xFF,0x56,0xAE,0x35,0xA9,0x55,0xF0, 0x00};  /* configure read command */
+const rf_uint8 gsc_au8WriteCmd[] = {0xFF,0x56,0xAE,0x35,0xA9,0x55, 0x90, 0x00};
+const rf_uint16 gsc_au16WakeupTime[] = {
     50,    /* 50ms */
     100,    /* 100ms */
     200,   /* 200ms */
@@ -91,18 +91,18 @@ const rfUint16 gsc_au16WakeupTime[] = {
     4000,  /* 4000ms */
     5000   /* 5000ms */
 };
-const rfUint32 gsc_au16Baud[] = 
+const rf_uint32 gsc_au16Baud[] = 
 {
     1200,2400,4800,9600,19200,38400,57600,115200
 };
 
 /* tx packet timeout value */
-static const rfUint32 gs_u32TX_PACKET_TIMEOUT[] = 
+static const rf_uint32 gs_u32TX_PACKET_TIMEOUT[] = 
 {
     3000, 2000, 1000, 1000, 500, 500
 };
 
-const rfUint32 eeprom_start_add = (uint32_t)FLASH_DATA_EEPROM_START_PHYSICAL_ADDRESS + (0 * FLASH_BLOCK_SIZE);  /* block 0 of eeprom */
+const rf_uint32 eeprom_start_add = (uint32_t)FLASH_DATA_EEPROM_START_PHYSICAL_ADDRESS + (0 * FLASH_BLOCK_SIZE);  /* block 0 of eeprom */
 
 
 /***************************************************************************************************
@@ -110,15 +110,15 @@ const rfUint32 eeprom_start_add = (uint32_t)FLASH_DATA_EEPROM_START_PHYSICAL_ADD
  */
 typedef struct
 {
-    rfUint8 u8Ack;          /* ACK byte */
-    rfUint8 u8Type;         /* module type */
-    rfUint8 u8Version;      /* module version */
-    rfUint8 au8Freq[3];     /* frequency */
-    rfUint8 u8AirRate;      /* the rate in the are */
-    rfUint8 u8TxPower;      /* transmit power */
-    rfUint8 u8UartBaud;     /* uart baudrate */
-    rfUint8 u8UartParity;   /* uart parity:none,even,odd */
-    rfUint8 u8WakeupTime;   /* wake up time */  
+    rf_uint8 u8Ack;          /* ACK byte */
+    rf_uint8 u8Type;         /* module type */
+    rf_uint8 u8Version;      /* module version */
+    rf_uint8 au8Freq[3];     /* frequency */
+    rf_uint8 u8AirRate;      /* the rate in the are */
+    rf_uint8 u8TxPower;      /* transmit power */
+    rf_uint8 u8UartBaud;     /* uart baudrate */
+    rf_uint8 u8UartParity;   /* uart parity:none,even,odd */
+    rf_uint8 u8WakeupTime;   /* wake up time */  
 }LORA_CONFIG_TYPE_t;
 
 
@@ -140,10 +140,10 @@ typedef enum
  * STATIC VARIABLES
  */
 
-static rfUint8 gs_u8ConfigBuffer[u16RF_CONFIG_BUFFER_SIZE] = {0};  /* config buffer */
-static rfUint8 gs_u8ConfigBufSize = 0;     /* config buffer size */
+static rf_uint8 gs_u8ConfigBuffer[u16RF_CONFIG_BUFFER_SIZE] = {0};  /* config buffer */
+static rf_uint8 gs_u8ConfigBufSize = 0;     /* config buffer size */
 
-static rfUint16 gs_u16RfConfigAliveTime = 0;   /* rf config alive time */
+static rf_uint16 gs_u16RfConfigAliveTime = 0;   /* rf config alive time */
 
 static LORA_CONFIG_TYPE_t gs_tLoRaCfg = {
     0x24,   /* ACK byte */
@@ -306,7 +306,7 @@ void* Sx1276_Cfg_GetBufferAddr( void )
  *
  * @return  none
  */
-void Sx1276_Cfg_SetBufferSize( rfUint8 a_u8Size )
+void Sx1276_Cfg_SetBufferSize( rf_uint8 a_u8Size )
 {
     gs_u8ConfigBufSize = a_u8Size;
 
@@ -324,7 +324,7 @@ void Sx1276_Cfg_SetBufferSize( rfUint8 a_u8Size )
  *
  * @return  config buffer size
  */
-rfUint8 Sx1276_Cfg_GetBufferSize( void )
+rf_uint8 Sx1276_Cfg_GetBufferSize( void )
 {
     return gs_u8ConfigBufSize;
 
@@ -408,7 +408,7 @@ void Sx1276_Cfg_ExcuteParameters( void )
  *
  * @return  none
  */
-rfUint32 Sx1276_Cfg_GetUartBaud( void )
+rf_uint32 Sx1276_Cfg_GetUartBaud( void )
 {
     return gsc_au16Baud[gs_tLoRaCfg.u8UartBaud];
 }   /* Sx1276_Cfg_GetUartBaud() */
@@ -425,7 +425,7 @@ rfUint32 Sx1276_Cfg_GetUartBaud( void )
  *
  * @return  none
  */
-rfUint8 Sx1276_Cfg_GetUartParity( void )
+rf_uint8 Sx1276_Cfg_GetUartParity( void )
 {
     return gs_tLoRaCfg.u8UartParity;
 }   /* Sx1276_Cfg_GetUartParity() */
@@ -441,7 +441,7 @@ rfUint8 Sx1276_Cfg_GetUartParity( void )
  *
  * @return  none
  */
-rfUint16 Sx1276_Cfg_GetWakeupTime( void )
+rf_uint16 Sx1276_Cfg_GetWakeupTime( void )
 {
     return gsc_au16WakeupTime[gs_tLoRaCfg.u8WakeupTime];
 }   /* Sx1276_Cfg_GetWakeupTime() */
@@ -458,11 +458,11 @@ rfUint16 Sx1276_Cfg_GetWakeupTime( void )
  *
  * @return  none
  */
-rfUint16 Sx1276_Cfg_GetPreamble(rfBool a_bWakeupMode)
+rf_uint16 Sx1276_Cfg_GetPreamble(rf_bool a_bWakeupMode)
 {
     if(rf_true == a_bWakeupMode)
     {
-        return (rfUint16)((rfUint32)gsc_au16WakeupTime[gs_tLoRaCfg.u8WakeupTime]*1000 / gsc_au16SymbolTimeUs[gs_tLoRaCfg.u8AirRate]);
+        return (rf_uint16)((rf_uint32)gsc_au16WakeupTime[gs_tLoRaCfg.u8WakeupTime]*1000 / gsc_au16SymbolTimeUs[gs_tLoRaCfg.u8AirRate]);
     }
     else
     {
@@ -482,7 +482,7 @@ rfUint16 Sx1276_Cfg_GetPreamble(rfBool a_bWakeupMode)
  *
  * @return  none
  */
-rfUint16 Sx1276_Cfg_GetPreambleTime(rfBool a_bWakeupMode)
+rf_uint16 Sx1276_Cfg_GetPreambleTime(rf_bool a_bWakeupMode)
 {
     if(rf_true == a_bWakeupMode)
     {
@@ -507,7 +507,7 @@ rfUint16 Sx1276_Cfg_GetPreambleTime(rfBool a_bWakeupMode)
  *
  * @return  none
  */
-rfUint16 Sx1276_Cfg_GetSymbolTime(void)
+rf_uint16 Sx1276_Cfg_GetSymbolTime(void)
 {
     return gsc_au16SymbolTimeUs[gs_tLoRaCfg.u8AirRate] / 1000 + 1;
 
@@ -551,7 +551,7 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
     RF_CONFIG_RET_t tRet;
     rf_char *pAddress = rf_null;
     
-    rfUint8 i = 0;
+    rf_uint8 i = 0;
     
     if(0 < gs_u8ConfigBufSize)
     {
@@ -561,7 +561,7 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
         
         if(rf_null != pAddress)     /* receive read command */
         {
-            memcpy(gs_u8ConfigBuffer, (rfUint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH);
+            memcpy(gs_u8ConfigBuffer, (rf_uint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH);
             gs_u8ConfigBufSize = LORA_CONFIG_DATA_LENGTH;
             tRet = RF_CFG_READ;
         }
@@ -574,7 +574,7 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
             {
             
                 memcpy(((rf_char*)&gs_tLoRaCfg) + LORA_CONFIG_DATA_START, pAddress + LORA_WRITE_CMD_LENGTH, LORA_CONFIG_DATA_LENGTH - LORA_CONFIG_DATA_START);
-                memcpy(gs_u8ConfigBuffer, (rfUint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH);
+                memcpy(gs_u8ConfigBuffer, (rf_uint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH);
                 gs_u8ConfigBufSize = LORA_CONFIG_DATA_LENGTH;
 
                 /* flash write operation */
@@ -586,12 +586,12 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
 
                 for (i = 0; i < LORA_CONFIG_DATA_LENGTH; i++)
                 {
-                    FLASH_ProgramByte(eeprom_start_add+i, ((rfUint8*)&gs_tLoRaCfg)[i]);
+                    FLASH_ProgramByte(eeprom_start_add+i, ((rf_uint8*)&gs_tLoRaCfg)[i]);
                     FLASH_WaitForLastOperation(FLASH_MemType_Data);
                 }
                 
                 /* write crc data */
-                FLASH_ProgramByte(eeprom_start_add+i, crc8bit((rfUint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH));
+                FLASH_ProgramByte(eeprom_start_add+i, crc8bit((rf_uint8*)&gs_tLoRaCfg, LORA_CONFIG_DATA_LENGTH));
                 FLASH_WaitForLastOperation(FLASH_MemType_Data);
 
                 while (FLASH_GetFlagStatus(FLASH_FLAG_HVOFF) == RESET)
@@ -625,8 +625,8 @@ RF_CONFIG_RET_t Sx1276_Cfg_ConfigProcess__(void)
  */
 void Sx1276_Cfg_ReadPara__(void)
 {
-    rfUint8 i = 0;
-    rfUint8 u8ReadData[LORA_CONFIG_DATA_LENGTH + 1] = {0};
+    rf_uint8 i = 0;
+    rf_uint8 u8ReadData[LORA_CONFIG_DATA_LENGTH + 1] = {0};
     for (i = 0; i < LORA_CONFIG_DATA_LENGTH + 1; i++)
     {
         u8ReadData[i] = FLASH_ReadByte(eeprom_start_add+i);
@@ -636,7 +636,7 @@ void Sx1276_Cfg_ReadPara__(void)
     /* if crc value is right, update configure data */
     if((0 == crc8bit(u8ReadData, LORA_CONFIG_DATA_LENGTH+1)) && (0x24 == u8ReadData[0]) && (0x0E == u8ReadData[1]))
     {
-        memcpy((rfUint8*)&gs_tLoRaCfg, u8ReadData, LORA_CONFIG_DATA_LENGTH);
+        memcpy((rf_uint8*)&gs_tLoRaCfg, u8ReadData, LORA_CONFIG_DATA_LENGTH);
     }
     /* if crc value is error, ignore */
     else

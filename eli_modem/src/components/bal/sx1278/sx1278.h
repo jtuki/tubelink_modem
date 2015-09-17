@@ -37,27 +37,8 @@ extern "C"{
 /***************************************************************************************************
  * TYPEDEFS
  */
-/*!
- * SX1276 LoRa General parameters definition
- */
-typedef struct sLoRaSettings
-{
-    rfUint32 RFFrequency;
-    rfInt8 Power;
-    rfUint8 SignalBw;                   // LORA [0: 7.8 kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
-                                        // 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]  
-    rfUint8 SpreadingFactor;            // LORA [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096  chips]
-    rfUint8 ErrorCoding;                // LORA [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
-    rfBool CrcOn;                         // [0: OFF, 1: ON]
-    rfBool ImplicitHeaderOn;              // [0: OFF, 1: ON]
-    rfBool RxSingleOn;                    // [0: Continuous, 1 Single]
-    rfBool FreqHopOn;                     // [0: OFF, 1: ON]
-    rfUint8 HopPeriod;                  // Hops every frequency hopping period symbols
-    rfUint32 TxPacketTimeout;
-    rfUint32 RxPacketTimeout;
-    rfUint8 PayloadLength;
-    rfUint16 u16PreambleLength;
-}tLoRaSettings;
+
+#include "bal_lora_settings.h"
 
 
 /*!
@@ -295,7 +276,7 @@ void *sx1278_GetBufferAddr(void);
  *
  * @return  none
  */
-void sx1278_SetPacketSize( rfUint16 a_u16Size );
+void sx1278_SetPacketSize( rf_uint16 a_u16Size );
 
 
 /***************************************************************************************************
@@ -309,7 +290,7 @@ void sx1278_SetPacketSize( rfUint16 a_u16Size );
  *
  * @return  rx packet size
  */
-rfUint16 sx1278_GetPacketSize( void );
+rf_uint16 sx1278_GetPacketSize( void );
 
 
 
@@ -324,7 +305,7 @@ rfUint16 sx1278_GetPacketSize( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetRFBaseFrequency( rfUint32 a_u32Freq);
+extern void SX1276LoRaSetRFBaseFrequency( rf_uint32 a_u32Freq);
 
 
 /***************************************************************************************************
@@ -338,7 +319,7 @@ extern void SX1276LoRaSetRFBaseFrequency( rfUint32 a_u32Freq);
  *
  * @return  none
  */
-extern void SX1276LoRaSetRFFrequency( rfUint32 a_u32Freq);
+extern void SX1276LoRaSetRFFrequency( rf_uint32 a_u32Freq);
 
 
 /***************************************************************************************************
@@ -352,7 +333,7 @@ extern void SX1276LoRaSetRFFrequency( rfUint32 a_u32Freq);
  *
  * @return  frequence, in unit Hz
  */
-extern rfUint32 SX1276LoRaGetRFFrequency( void );
+extern rf_uint32 SX1276LoRaGetRFFrequency( void );
 
 
 /***************************************************************************************************
@@ -366,7 +347,7 @@ extern rfUint32 SX1276LoRaGetRFFrequency( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetRFPower( rfInt8 a_i8Power );
+extern void SX1276LoRaSetRFPower( rf_int8 a_i8Power );
 
 
 /***************************************************************************************************
@@ -380,7 +361,7 @@ extern void SX1276LoRaSetRFPower( rfInt8 a_i8Power );
  *
  * @return  rf power
  */
-extern rfInt8 SX1276LoRaGetRFPower( void );
+extern rf_int8 SX1276LoRaGetRFPower( void );
 
 
 /***************************************************************************************************
@@ -394,7 +375,7 @@ extern rfInt8 SX1276LoRaGetRFPower( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetSignalBandwidth( rfUint8 a_u8Bw );
+extern void SX1276LoRaSetSignalBandwidth( rf_uint8 a_u8Bw );
 
 
 /***************************************************************************************************
@@ -408,7 +389,7 @@ extern void SX1276LoRaSetSignalBandwidth( rfUint8 a_u8Bw );
  *
  * @return  get LoRa signal bandwidth
  */
-extern rfUint8 SX1276LoRaGetSignalBandwidth( void );
+extern rf_uint8 SX1276LoRaGetSignalBandwidth( void );
 
 
 /***************************************************************************************************
@@ -422,7 +403,7 @@ extern rfUint8 SX1276LoRaGetSignalBandwidth( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetSpreadingFactor( rfUint8 a_u8Factor );
+extern void SX1276LoRaSetSpreadingFactor( rf_uint8 a_u8Factor );
 
 
 /***************************************************************************************************
@@ -436,7 +417,7 @@ extern void SX1276LoRaSetSpreadingFactor( rfUint8 a_u8Factor );
  *
  * @return  spreading factor
  */
-extern rfUint8 SX1276LoRaGetSpreadingFactor( void );
+extern rf_uint8 SX1276LoRaGetSpreadingFactor( void );
 
 
 /***************************************************************************************************
@@ -450,7 +431,7 @@ extern rfUint8 SX1276LoRaGetSpreadingFactor( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetErrorCoding( rfUint8 a_u8Value );
+extern void SX1276LoRaSetErrorCoding( rf_uint8 a_u8Value );
 
 
 /***************************************************************************************************
@@ -464,7 +445,7 @@ extern void SX1276LoRaSetErrorCoding( rfUint8 a_u8Value );
  *
  * @return  LoRa Error Coding Value
  */
-extern rfUint8 SX1276LoRaGetErrorCoding( void );
+extern rf_uint8 SX1276LoRaGetErrorCoding( void );
 
 
 /***************************************************************************************************
@@ -478,7 +459,7 @@ extern rfUint8 SX1276LoRaGetErrorCoding( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPacketCrcOn( rfBool a_bEnable );
+extern void SX1276LoRaSetPacketCrcOn( rf_bool a_bEnable );
 
 
 /***************************************************************************************************
@@ -493,7 +474,7 @@ extern void SX1276LoRaSetPacketCrcOn( rfBool a_bEnable );
  * @return  rf_true  - crc is on
  *          rf_false  - crc is off
  */
-extern rfBool SX1276LoRaGetPacketCrcOn( void );
+extern rf_bool SX1276LoRaGetPacketCrcOn( void );
 
 
 /***************************************************************************************************
@@ -507,7 +488,7 @@ extern rfBool SX1276LoRaGetPacketCrcOn( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPreambleLength( rfUint16 a_u16Value );
+extern void SX1276LoRaSetPreambleLength( rf_uint16 a_u16Value );
 
 
 /***************************************************************************************************
@@ -521,7 +502,7 @@ extern void SX1276LoRaSetPreambleLength( rfUint16 a_u16Value );
  *
  * @return  preamble length value
  */
-extern rfUint16 SX1276LoRaGetPreambleLength( void );
+extern rf_uint16 SX1276LoRaGetPreambleLength( void );
 
 
 /***************************************************************************************************
@@ -535,7 +516,7 @@ extern rfUint16 SX1276LoRaGetPreambleLength( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetImplicitHeaderOn( rfBool a_bEnable );
+extern void SX1276LoRaSetImplicitHeaderOn( rf_bool a_bEnable );
 
 /***************************************************************************************************
  * @fn      SX1276LoRaGetImplicitHeaderOn()
@@ -549,7 +530,7 @@ extern void SX1276LoRaSetImplicitHeaderOn( rfBool a_bEnable );
  * @return  rf_true  - implicit header is on
  *          rf_false  - implicit header is off
  */
-extern rfBool SX1276LoRaGetImplicitHeaderOn( void );
+extern rf_bool SX1276LoRaGetImplicitHeaderOn( void );
 
 
 /***************************************************************************************************
@@ -563,7 +544,7 @@ extern rfBool SX1276LoRaGetImplicitHeaderOn( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetRxSingleOn( rfBool a_bEnable );
+extern void SX1276LoRaSetRxSingleOn( rf_bool a_bEnable );
 
 
 /***************************************************************************************************
@@ -578,7 +559,7 @@ extern void SX1276LoRaSetRxSingleOn( rfBool a_bEnable );
  * @return  rf_true  - rx single on
  *          rf_false  - rx continuous
  */
-extern rfBool SX1276LoRaGetRxSingleOn( void );
+extern rf_bool SX1276LoRaGetRxSingleOn( void );
 
 
 /***************************************************************************************************
@@ -592,7 +573,7 @@ extern rfBool SX1276LoRaGetRxSingleOn( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetFreqHopOn( rfBool a_bEnable );
+extern void SX1276LoRaSetFreqHopOn( rf_bool a_bEnable );
 
 
 /***************************************************************************************************
@@ -607,7 +588,7 @@ extern void SX1276LoRaSetFreqHopOn( rfBool a_bEnable );
  * @return  rf_true  - hop is enable
  *          rf_false  - hop is disable
  */
-extern rfBool SX1276LoRaGetFreqHopOn( void );
+extern rf_bool SX1276LoRaGetFreqHopOn( void );
 
 
 /***************************************************************************************************
@@ -621,7 +602,7 @@ extern rfBool SX1276LoRaGetFreqHopOn( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetHopPeriod( rfUint8 a_u8Value );
+extern void SX1276LoRaSetHopPeriod( rf_uint8 a_u8Value );
 
 
 /***************************************************************************************************
@@ -635,7 +616,7 @@ extern void SX1276LoRaSetHopPeriod( rfUint8 a_u8Value );
  *
  * @return  hop period
  */
-extern rfUint8 SX1276LoRaGetHopPeriod( void );
+extern rf_uint8 SX1276LoRaGetHopPeriod( void );
 
 
 /***************************************************************************************************
@@ -649,7 +630,7 @@ extern rfUint8 SX1276LoRaGetHopPeriod( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetTxPacketTimeout( rfUint32 value );
+extern void SX1276LoRaSetTxPacketTimeout( rf_uint32 value );
 
 
 /***************************************************************************************************
@@ -663,7 +644,7 @@ extern void SX1276LoRaSetTxPacketTimeout( rfUint32 value );
  *
  * @return  tx packet timeout time in unit ms
  */
-extern rfUint32 SX1276LoRaGetTxPacketTimeout( void );
+extern rf_uint32 SX1276LoRaGetTxPacketTimeout( void );
 
 
 /***************************************************************************************************
@@ -677,7 +658,7 @@ extern rfUint32 SX1276LoRaGetTxPacketTimeout( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetRxPacketTimeout( rfUint32 a_u32Value );
+extern void SX1276LoRaSetRxPacketTimeout( rf_uint32 a_u32Value );
 
 
 /***************************************************************************************************
@@ -691,7 +672,7 @@ extern void SX1276LoRaSetRxPacketTimeout( rfUint32 a_u32Value );
  *
  * @return  rx packet timeout time in unit ms
  */
-extern rfUint32 SX1276LoRaGetRxPacketTimeout( void );
+extern rf_uint32 SX1276LoRaGetRxPacketTimeout( void );
 
 
 /***************************************************************************************************
@@ -705,7 +686,7 @@ extern rfUint32 SX1276LoRaGetRxPacketTimeout( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPayloadLength( rfUint8 a_u8Value );
+extern void SX1276LoRaSetPayloadLength( rf_uint8 a_u8Value );
 
 
 /***************************************************************************************************
@@ -719,7 +700,7 @@ extern void SX1276LoRaSetPayloadLength( rfUint8 a_u8Value );
  *
  * @return  payload length
  */
-extern rfUint8 SX1276LoRaGetPayloadLength( void );
+extern rf_uint8 SX1276LoRaGetPayloadLength( void );
 
 
 /***************************************************************************************************
@@ -734,7 +715,7 @@ extern rfUint8 SX1276LoRaGetPayloadLength( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPa20dBm( rfBool enale );
+extern void SX1276LoRaSetPa20dBm( rf_bool enale );
 
 
 /***************************************************************************************************
@@ -749,7 +730,7 @@ extern void SX1276LoRaSetPa20dBm( rfBool enale );
  * @return  rf_true  - +20dBm output is enable
  *          rf_false  - +20dBm output is disable
  */
-extern rfBool SX1276LoRaGetPa20dBm( void );
+extern rf_bool SX1276LoRaGetPa20dBm( void );
 
 
 /***************************************************************************************************
@@ -765,7 +746,7 @@ extern rfBool SX1276LoRaGetPa20dBm( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPAOutput( rfUint8 a_u8OutputPin );
+extern void SX1276LoRaSetPAOutput( rf_uint8 a_u8OutputPin );
 
 
 /***************************************************************************************************
@@ -780,7 +761,7 @@ extern void SX1276LoRaSetPAOutput( rfUint8 a_u8OutputPin );
  * @return  0x00  - output with RFO pin, output power is limited to +14dBm.
  *          0x80  - output with PA_BOOST pin, output power is limited to +20dBm.
  */
-extern rfUint8 SX1276LoRaGetPAOutput( void );
+extern rf_uint8 SX1276LoRaGetPAOutput( void );
 
 
 /***************************************************************************************************
@@ -794,7 +775,7 @@ extern rfUint8 SX1276LoRaGetPAOutput( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetPaRamp( rfUint8 a_u8Value );
+extern void SX1276LoRaSetPaRamp( rf_uint8 a_u8Value );
 
 
 /***************************************************************************************************
@@ -808,7 +789,7 @@ extern void SX1276LoRaSetPaRamp( rfUint8 a_u8Value );
  *
  * @return  Ramp up/down time, please reference to manual 
  */
-extern rfUint8 SX1276LoRaGetPaRamp( void );
+extern rf_uint8 SX1276LoRaGetPaRamp( void );
 
 
 /***************************************************************************************************
@@ -822,7 +803,7 @@ extern rfUint8 SX1276LoRaGetPaRamp( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetSymbTimeout( rfUint16 a_u16Value );
+extern void SX1276LoRaSetSymbTimeout( rf_uint16 a_u16Value );
 
 
 /***************************************************************************************************
@@ -836,7 +817,7 @@ extern void SX1276LoRaSetSymbTimeout( rfUint16 a_u16Value );
  *
  * @return  none
  */
-extern rfUint16 SX1276LoRaGetSymbTimeout( void );
+extern rf_uint16 SX1276LoRaGetSymbTimeout( void );
  
  
 /***************************************************************************************************
@@ -850,7 +831,7 @@ extern rfUint16 SX1276LoRaGetSymbTimeout( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetLowDatarateOptimize( rfBool a_bEnable );
+extern void SX1276LoRaSetLowDatarateOptimize( rf_bool a_bEnable );
  
  
 /***************************************************************************************************
@@ -864,7 +845,7 @@ extern void SX1276LoRaSetLowDatarateOptimize( rfBool a_bEnable );
  *
  * @return  none
  */
-extern rfBool SX1276LoRaGetLowDatarateOptimize( void );
+extern rf_bool SX1276LoRaGetLowDatarateOptimize( void );
 
 
 /***************************************************************************************************
@@ -878,7 +859,7 @@ extern rfBool SX1276LoRaGetLowDatarateOptimize( void );
  *
  * @return  none
  */
-extern rfBool SX1276LoRaGetLowDatarateOptimize( void );
+extern rf_bool SX1276LoRaGetLowDatarateOptimize( void );
 
 
 /***************************************************************************************************
@@ -892,7 +873,7 @@ extern rfBool SX1276LoRaGetLowDatarateOptimize( void );
  *
  * @return  none
  */
-extern void SX1276LoRaSetNbTrigPeaks( rfUint8 a_u8Value );
+extern void SX1276LoRaSetNbTrigPeaks( rf_uint8 a_u8Value );
 
 /***************************************************************************************************
  * @fn      SX1276LoRaSetOpMode()
@@ -905,7 +886,7 @@ extern void SX1276LoRaSetNbTrigPeaks( rfUint8 a_u8Value );
  *
  * @return  return get value
  */
-extern void SX1276LoRaSetOpMode( rfUint8 a_u8OpMode );
+extern void SX1276LoRaSetOpMode( rf_uint8 a_u8OpMode );
 
 /***************************************************************************************************
  * @fn      SX1276LoRaSetOpMode()
@@ -918,10 +899,10 @@ extern void SX1276LoRaSetOpMode( rfUint8 a_u8OpMode );
  *
  * @return  none
  */
-extern rfUint8 SX1278LoRaGetOpMode( void );
+extern rf_uint8 SX1278LoRaGetOpMode( void );
 
 
-rfInt8 SX1276LoRaGetPacketSnr( void );
+rf_int8 SX1276LoRaGetPacketSnr( void );
 
 double SX1276LoRaGetPacketRssi( void );
 

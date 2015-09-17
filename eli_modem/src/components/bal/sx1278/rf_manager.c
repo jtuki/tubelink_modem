@@ -46,21 +46,21 @@ typedef enum
 
 typedef struct
 {
-    rfUint8 u8Select;
+    rf_uint8 u8Select;
     BUFFER_STATE_t tBufferSt[2];
-    rfUint8 au8BufferIdx[2];
-    rfUint8 au8BufferSize[2];
-    rfChar acBuffer[2][u16RF_TX_BUFFER_SIZE];
+    rf_uint8 au8BufferIdx[2];
+    rf_uint8 au8BufferSize[2];
+    rf_char acBuffer[2][u16RF_TX_BUFFER_SIZE];
 }PING_PONG_BUFFER_t;
 
 /* rf state request struct */
 typedef struct
 {
-    rfUint8 bitConfigReq:1;
-    rfUint8 bitSleepReq:1;
-    rfUint8 bitTxReq:1;
-    rfUint8 bitRxReq:1;
-    rfUint8 bitCadReq:1;
+    rf_uint8 bitConfigReq:1;
+    rf_uint8 bitSleepReq:1;
+    rf_uint8 bitTxReq:1;
+    rf_uint8 bitRxReq:1;
+    rf_uint8 bitCadReq:1;
 }RF_STATE_REQ_t;
 
 
@@ -376,7 +376,7 @@ RF_RTE_RET_t Rf_Routine( void *a_pvdArg )
  *          RF_RET_TX_MSG_LONG  - request failed, message is too long, rf radio can't send it
  *          RF_RET_TX_BUSY  - request failed, rf tx busy, can not receive request
  */
-RF_RET_t Rf_Send( rfChar *a_pcData, rfUint16 a_u16Len )
+RF_RET_t Rf_Send( rf_char *a_pcData, rf_uint16 a_u16Len )
 {
     if(a_pcData)
     {
@@ -408,9 +408,9 @@ RF_RET_t Rf_Send( rfChar *a_pcData, rfUint16 a_u16Len )
  *
  * @return  receive length
  */
-rfUint16 Rf_Get( rfChar *a_pcData, rfUint16 a_u16Len )
+rf_uint16 Rf_Get( rf_char *a_pcData, rf_uint16 a_u16Len )
 {
-    rfUint16 u16Ret = 0;
+    rf_uint16 u16Ret = 0;
     if(a_pcData)
     {
         u16Ret = sx1278_GetPacketSize();
@@ -467,9 +467,9 @@ void Rf_Stop( void )
  * @return  rf_true  - rf send finished
  *          rf_false  - rf send not finished yet
  */
-rfBool Rf_IsSendFinished( void )
+rf_bool Rf_IsSendFinished( void )
 {
-    return rfTrue;
+    return rf_true;
 }/* Rf_IsSendFinished() */
 
 
@@ -485,9 +485,9 @@ rfBool Rf_IsSendFinished( void )
  * @return  rf_true  - rf send finished
  *          rf_false  - rf send not finished yet
  */
-rfBool Rf_IsReceiveFinished( void )
+rf_bool Rf_IsReceiveFinished( void )
 {
-    return rfTrue;
+    return rf_true;
 }/* Rf_IsReceiveFinished() */
 
 
@@ -502,7 +502,7 @@ rfBool Rf_IsReceiveFinished( void )
  *
  * @return  rssi value
  */
-rfUint8 Rf_GetRssi( void )
+rf_uint8 Rf_GetRssi( void )
 {
     return 0;
 }/* Rf_GetRssi() */
@@ -520,9 +520,9 @@ rfUint8 Rf_GetRssi( void )
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - power is not suitable for this rf radio
  */
-RF_RET_t Rf_SetPower( rfUint8 a_u8PowerVal )
+RF_RET_t Rf_SetPower( rf_uint8 a_u8PowerVal )
 {
-    SX1276LoRaSetRFPower( (rfInt8)(a_u8PowerVal & 0x7F) );
+    SX1276LoRaSetRFPower( (rf_int8)(a_u8PowerVal & 0x7F) );
     return RF_RET_OK;
 }/* Rf_SetPower() */
 
@@ -538,7 +538,7 @@ RF_RET_t Rf_SetPower( rfUint8 a_u8PowerVal )
  *
  * @return  power value
  */
-rfUint8 Rf_GetPower( void )
+rf_uint8 Rf_GetPower( void )
 {
     return 0;
 }/* Rf_GetPower() */
@@ -557,7 +557,7 @@ rfUint8 Rf_GetPower( void )
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - frequence is not suitable for this rf radio
  */
-RF_RET_t Rf_SetFreq( rfUint32 a_u32Freq )
+RF_RET_t Rf_SetFreq( rf_uint32 a_u32Freq )
 {
     return RF_RET_OK;
 }/* Rf_SetFreq() */
@@ -575,7 +575,7 @@ RF_RET_t Rf_SetFreq( rfUint32 a_u32Freq )
  *
  * @return  rf frequence, unit is kHz, for example, 433MHz, ret value = 433000
  */
-rfUint32 Rf_GetFreq( void )
+rf_uint32 Rf_GetFreq( void )
 {
     return 0;
 }/* Rf_GetFreq() */
@@ -593,7 +593,7 @@ rfUint32 Rf_GetFreq( void )
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - bandwidth is not suitable for this rf radio
  */
-RF_RET_t Rf_SetBandwidth( rfUint32 a_u32Bandwidth )
+RF_RET_t Rf_SetBandwidth( rf_uint32 a_u32Bandwidth )
 {
     return RF_RET_OK;
 }/* Rf_SetBandwidth() */
@@ -610,7 +610,7 @@ RF_RET_t Rf_SetBandwidth( rfUint32 a_u32Bandwidth )
  *
  * @return  rf bandwidth, unit is kHz, for example, 500kHz, ret value = 500
  */
-rfUint32 Rf_GetBandwidth( void )
+rf_uint32 Rf_GetBandwidth( void )
 {
     return 0;
 }/* Rf_GetBandwidth() */
@@ -628,7 +628,7 @@ rfUint32 Rf_GetBandwidth( void )
  * @return  RF_RET_OK  - set success
  *          RF_RET_PARA_ERROR  - baud is not suitable for this rf radio
  */
-RF_RET_t Rf_SetAirBaud( rfUint32 a_u32AirBadu)
+RF_RET_t Rf_SetAirBaud( rf_uint32 a_u32AirBadu)
 {
     return RF_RET_OK;
 }/* Rf_SetAirBaud() */
@@ -645,13 +645,13 @@ RF_RET_t Rf_SetAirBaud( rfUint32 a_u32AirBadu)
  *
  * @return  rf air baudrate, unit is Hz
  */
-rfUint32 Rf_GetAirBaud( void )
+rf_uint32 Rf_GetAirBaud( void )
 {
     return 0;
 }/* Rf_GetAirBaud() */
 
 
-rfInt8 Rf_GetPacketSnr( void ){
+rf_int8 Rf_GetPacketSnr( void ){
     return SX1276LoRaGetPacketSnr();
 }
 
@@ -711,9 +711,9 @@ RF_STATE_t Rf_GetWorkState( void )
  *          a_u16Par  - addition parameter, for RF_TX, this is the length request to send
  * @return  none
  */
-void Rf_SetStateRequset( RF_STATE_t a_tReq, rfUint16 a_u16Par )
+void Rf_SetStateRequset( RF_STATE_t a_tReq, rf_uint16 a_u16Par )
 {
-    *(rfUint8*)&gs_tRfStateReq = 0;
+    *(rf_uint8*)&gs_tRfStateReq = 0;
     switch( a_tReq )
     {
         case RF_RX:
@@ -783,7 +783,7 @@ void Rf_ExcuteConfigParameters( void )
  *
  * @return  baudrate
  */
-rfUint32 Rf_GetConfigUartBaud( void )
+rf_uint32 Rf_GetConfigUartBaud( void )
 {
     return 0;
     //return Rf_Cfg_GetUartBaud();
@@ -801,7 +801,7 @@ rfUint32 Rf_GetConfigUartBaud( void )
  *
  * @return  parity
  */
-rfUint8 Rf_GetConfigUartParity( void )
+rf_uint8 Rf_GetConfigUartParity( void )
 {
     return 0;
     //return Rf_Cfg_GetUartParity();
@@ -819,7 +819,7 @@ rfUint8 Rf_GetConfigUartParity( void )
  *
  * @return  none
  */
-rfUint16 Rf_GetConfigWakeupTime( void )
+rf_uint16 Rf_GetConfigWakeupTime( void )
 {
     return 0;
     //return Rf_Cfg_GetWakeupTime();
@@ -838,7 +838,7 @@ rfUint16 Rf_GetConfigWakeupTime( void )
  *
  * @return  none
  */
-rfUint16 Rf_GetConfigPreamble(rfBool a_bWakeupMode)
+rf_uint16 Rf_GetConfigPreamble(rf_bool a_bWakeupMode)
 {
     return 0;
     //return Rf_Cfg_GetPreamble(a_bWakeupMode);
@@ -856,7 +856,7 @@ rfUint16 Rf_GetConfigPreamble(rfBool a_bWakeupMode)
  *
  * @return  none
  */
-void Rf_SetPreambleLengthPara(rfUint16 a_u16length)
+void Rf_SetPreambleLengthPara(rf_uint16 a_u16length)
 {
     //sx1278_SetPreambleLengthPara(a_u16length);
 }   /* Rf_SetPreambleLengthPara() */

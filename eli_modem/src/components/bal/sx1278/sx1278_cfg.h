@@ -26,6 +26,8 @@
 extern "C"{
 #endif
 
+#include "rf/rf_type.h"
+
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
  */
@@ -41,16 +43,6 @@ extern "C"{
 /***************************************************************************************************
  * TYPEDEFS
  */
-typedef char rfChar;
-typedef unsigned char rfUint8;
-typedef signed char rfInt8;
-typedef unsigned short rfUint16;
-typedef signed short rfInt16;
-typedef unsigned int rfUint32;
-typedef signed int rfInt32;
-typedef enum{rfFalse = 0, rfTrue = !rfFalse}rfBool;
-#define rfNull      ((void*)0)
-
 
 /***************************************************************************************************
  * CONSTANTS

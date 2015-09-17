@@ -89,7 +89,7 @@
  *
  * @return  none
  */
-static void sx1278_SpiDelay__( rfUint16 a_u16DelayCnt );
+static void sx1278_SpiDelay__( rf_uint16 a_u16DelayCnt );
 
 /***************************************************************************************************
  * GLOBAL VARIABLES
@@ -177,7 +177,7 @@ void sx1278_SpiInit(void)
     //tGpioInit.Alternate = GPIO_AF0_SPI1;
     HAL_GPIO_Init(NSS_PORT, &tGpioInit);
     
-    sx1278_SpiSetNssHigh(rfTrue);
+    sx1278_SpiSetNssHigh(rf_true);
     __SPI1_CLK_ENABLE();
     /* init spi port */
     if(HAL_SPI_Init(&tSpiHdl) != HAL_OK)
@@ -223,10 +223,10 @@ void sx1278_SpiDeInit(void)
  *
  * @return  none
  */
-void sx1278_SpiSetNssHigh( rfBool a_bNssHigh )
+void sx1278_SpiSetNssHigh( rf_bool a_bNssHigh )
 {
 #if ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 )
-    if( rfFalse == a_bNssHigh ){
+    if( rf_false == a_bNssHigh ){
         
         HAL_GPIO_WritePin(NSS_PORT, NSS_PIN, GPIO_PIN_RESET);   /* nss pin = low level */
         sx1278_SpiDelay__(2);
@@ -251,7 +251,7 @@ void sx1278_SpiSetNssHigh( rfBool a_bNssHigh )
  *
  * @return  none
  */
-void sx1278_SpiWrite( rfUint8 *a_pu8Dat, rfUint16 a_u16Size )
+void sx1278_SpiWrite( rf_uint8 *a_pu8Dat, rf_uint16 a_u16Size )
 {
 #if ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 )
     HAL_SPI_Transmit( &tSpiHdl, a_pu8Dat, a_u16Size, 0x1000 );
@@ -270,10 +270,10 @@ void sx1278_SpiWrite( rfUint8 *a_pu8Dat, rfUint16 a_u16Size )
  *
  * @return  none
  */
-void sx1278_SpiRead( rfUint8 *a_pu8Dat, rfUint16 a_u16Size )
+void sx1278_SpiRead( rf_uint8 *a_pu8Dat, rf_uint16 a_u16Size )
 {
 #if ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 )
-    if( rfNull != a_pu8Dat ){
+    if( NULL != a_pu8Dat ){
         HAL_SPI_Receive( &tSpiHdl, a_pu8Dat, a_u16Size, 0x1000 );
     }
 #endif /* ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 ) */
@@ -311,7 +311,7 @@ void sx1278_SpiWriteRead(void)
  *
  * @return  none
  */
-void sx1278_SpiDelay__( rfUint16 a_u16DelayCnt )
+void sx1278_SpiDelay__( rf_uint16 a_u16DelayCnt )
 {
     while( a_u16DelayCnt -- > 0 ){
         __NOP();

@@ -90,7 +90,7 @@ void sx1278_SpiDeInit(void);
  *
  * @return  none
  */
-void sx1278_SpiSetNssHigh( rfBool a_bNssHigh );
+void sx1278_SpiSetNssHigh( rf_bool a_bNssHigh );
 
 /***************************************************************************************************
  * @fn      sx1278_SpiWrite()
@@ -104,7 +104,7 @@ void sx1278_SpiSetNssHigh( rfBool a_bNssHigh );
  *
  * @return  none
  */
-void sx1278_SpiWrite( rfUint8 *a_pu8Dat, rfUint16 a_u16Size );
+void sx1278_SpiWrite( rf_uint8 *a_pu8Dat, rf_uint16 a_u16Size );
 
 /***************************************************************************************************
  * @fn      sx1278_SpiRead()
@@ -118,7 +118,7 @@ void sx1278_SpiWrite( rfUint8 *a_pu8Dat, rfUint16 a_u16Size );
  *
  * @return  none
  */
-void sx1278_SpiRead( rfUint8 *a_pu8Dat, rfUint16 a_u16Size );
+void sx1278_SpiRead( rf_uint8 *a_pu8Dat, rf_uint16 a_u16Size );
 
 
 #ifdef __cplusplus

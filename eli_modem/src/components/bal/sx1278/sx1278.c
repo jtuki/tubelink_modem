@@ -80,7 +80,7 @@ const double RssiOffsetLF[] =
 /*!
  * Frequency hopping frequencies table
  */
-static const rfInt32 HoppingFrequenciesDelta[] =
+static const rf_int32 HoppingFrequenciesDelta[] =
 {
     50000>>1,
     100000>>1,
@@ -143,14 +143,14 @@ static const rfInt32 HoppingFrequenciesDelta[] =
 /* define irq flags */
 typedef struct
 {
-    rfUint8 bitRxTimeout:1;
-    rfUint8 bitRxDone:1;
-    rfUint8 bitPayloadCrcErr:1;
-    rfUint8 bitValid:1;
-    rfUint8 bitTxDne:1;
-    rfUint8 bitCadDone:1;
-    rfUint8 bitFhssChangeChn:1;
-    rfUint8 bitCadDetected:1;
+    rf_uint8 bitRxTimeout:1;
+    rf_uint8 bitRxDone:1;
+    rf_uint8 bitPayloadCrcErr:1;
+    rf_uint8 bitValid:1;
+    rf_uint8 bitTxDne:1;
+    rf_uint8 bitCadDone:1;
+    rf_uint8 bitFhssChangeChn:1;
+    rf_uint8 bitCadDetected:1;
 }SX1278_IRQ_FLAGS_t;
 
 
@@ -165,42 +165,20 @@ typedef struct
  */
 
 /* SX1276 registers variable */
-static rfUint8 SX1276Regs[0x70] = {0};
+static rf_uint8 SX1276Regs[0x70] = {0};
 
 tSX1276LR* SX1276LR;
 
-// Default settings - (jt: this is the Lora configuration what we are using)
-tLoRaSettings LoRaSettings =
-{
-    423000000,        // RFFrequency
-    20,               // Power
-    8,                // SignalBw [0: 7.8kHz, 1: 10.4 kHz, 2: 15.6 kHz, 3: 20.8 kHz, 4: 31.2 kHz,
-                      // 5: 41.6 kHz, 6: 62.5 kHz, 7: 125 kHz, 8: 250 kHz, 9: 500 kHz, other: Reserved]
-    7,                // SpreadingFactor [6: 64, 7: 128, 8: 256, 9: 512, 10: 1024, 11: 2048, 12: 4096  chips]
-    3,                // ErrorCoding [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
-    rfTrue,           // CrcOn [0: OFF, 1: ON]
-    rfFalse,          // ImplicitHeaderOn [0: OFF, 1: ON]
-    rfTrue,           // RxSingleOn [0: Continuous, 1 Single]
-    rfFalse,          // FreqHopOn [0: OFF, 1: ON]
-    4,                // HopPeriod Hops every frequency hopping period symbols
-    2000,             // TxPacketTimeout
-    /* here, if in cad mode, rx timeout value may be need greater then sleep time */
-    20,               // RxPacketTimeout
-    128,              // PayloadLength (used for implicit header mode)
-    32,               /* preamble length */
-};
-
-
 //static SX1278_IRQ_FLAGS_t gs_tIrqFlags = {0};
 
-static rfUint8 gs_u8PacketSize = 0;
-static rfUint8 gs_au8PacketBuffer[RF_BUFFER_SIZE] = {0};
+static rf_uint8 gs_u8PacketSize = 0;
+static rf_uint8 gs_au8PacketBuffer[RF_BUFFER_SIZE] = {0};
 
-static rfInt8 RxPacketSnrEstimate;
+static rf_int8 RxPacketSnrEstimate;
 static double RxPacketRssiValue;
 
-static rfUint32 gs_u32PacketTxTime = 0;
-static rfUint32 gs_u32RoutineTmo = 0;
+static rf_uint32 gs_u32PacketTxTime = 0;
+static rf_uint32 gs_u32RoutineTmo = 0;
 /***************************************************************************************************
  * EXTERNAL VARIABLES
  */
@@ -222,7 +200,7 @@ static rfUint32 gs_u32RoutineTmo = 0;
  *
  * @return  none
  */
-static void sx1278_Write__( rfUint8 a_u8Addr, rfUint8 a_u8Data );
+static void sx1278_Write__( rf_uint8 a_u8Addr, rf_uint8 a_u8Data );
 
 /***************************************************************************************************
  * @fn      sx1278_Read__()
@@ -236,7 +214,7 @@ static void sx1278_Write__( rfUint8 a_u8Addr, rfUint8 a_u8Data );
  *
  * @return  none
  */
-static void sx1278_Read__( rfUint8 a_u8Addr, rfUint8 *a_pu8Data );
+static void sx1278_Read__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Data );
 
 /***************************************************************************************************
  * @fn      sx1278_WriteBuffer__()
@@ -251,7 +229,7 @@ static void sx1278_Read__( rfUint8 a_u8Addr, rfUint8 *a_pu8Data );
  *
  * @return  none
  */
-static void sx1278_WriteBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u16Size );
+static void sx1278_WriteBuffer__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size );
 
 /***************************************************************************************************
  * @fn      sx1278_ReadBuffer__()
@@ -266,7 +244,7 @@ static void sx1278_WriteBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint
  *
  * @return  none
  */
-static void sx1278_ReadBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u16Size );
+static void sx1278_ReadBuffer__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size );
 
 /***************************************************************************************************
  * @fn      sx1278_WriteFifo__()
@@ -280,7 +258,7 @@ static void sx1278_ReadBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint1
  *
  * @return  none
  */
-static void sx1278_WriteFifo__( rfUint8 *a_pu8Buffer, rfUint16 a_u16Size );
+static void sx1278_WriteFifo__( rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size );
 
 /***************************************************************************************************
  * @fn      sx1278_ReadFifo__()
@@ -322,7 +300,7 @@ static void SX1276Reset( void );
  *
  * @return  none
  */
-static void SX1276SetLoRaOn( rfBool a_bEnable );
+static void SX1276SetLoRaOn( rf_bool a_bEnable );
 
 
 /***************************************************************************************************
@@ -350,7 +328,7 @@ void sx1278_Init( void )
     
     SX1276Reset( );
     
-    SX1276SetLoRaOn( rfTrue );
+    SX1276SetLoRaOn( rf_true );
     //RFLRState = RFLR_STATE_IDLE;
 
     //SX1276LoRaSetDefaults( );
@@ -374,20 +352,20 @@ void sx1278_Init( void )
     SX1276LoRaSetImplicitHeaderOn( LoRaSettings.ImplicitHeaderOn );
 
     SX1276LoRaSetPayloadLength( LoRaSettings.PayloadLength );
-    SX1276LoRaSetLowDatarateOptimize( rfTrue );
+    SX1276LoRaSetLowDatarateOptimize( rf_true );
     SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);
     
     if( LoRaSettings.RFFrequency > 860000000 )
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_RFO );
-        SX1276LoRaSetPa20dBm( rfFalse );
+        SX1276LoRaSetPa20dBm( rf_false );
         LoRaSettings.Power = 14;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     }
     else
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_PABOOST );
-        SX1276LoRaSetPa20dBm( rfTrue );
+        SX1276LoRaSetPa20dBm( rf_true );
         LoRaSettings.Power = 20;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     } 
@@ -432,7 +410,7 @@ void sx1278_Stop( void )
 }   /* Rf_SX1278_Stop() */
 
 
-volatile rfUint32 time_i = 0;
+volatile rf_uint32 time_i = 0;
 /***************************************************************************************************
  * @fn      sx1278_RxInit()
  *
@@ -453,7 +431,7 @@ void sx1278_RxInit( void )
     }while( 0x81 != SX1276LR->RegOpMode );
     
     
-    sx1276_Dio2EnableInt( rfFalse );
+    sx1276_Dio2EnableInt( rf_false );
     /* enable interrupt */
     SX1276LR->RegIrqFlagsMask = //RFLR_IRQFLAGS_RXTIMEOUT |
                                 //RFLR_IRQFLAGS_RXDONE |
@@ -466,7 +444,7 @@ void sx1278_RxInit( void )
     sx1278_Write__( REG_LR_IRQFLAGSMASK, SX1276LR->RegIrqFlagsMask );
 
     /* set frequence hop options */
-    if( LoRaSettings.FreqHopOn == rfTrue )
+    if( LoRaSettings.FreqHopOn == rf_true )
     {
         SX1276LR->RegHopPeriod = LoRaSettings.HopPeriod;
 
@@ -502,9 +480,9 @@ void sx1278_RxInit( void )
     }
     
     /* goto receive mode */
-    if( LoRaSettings.RxSingleOn == rfTrue ) /* Rx single mode */
+    if( LoRaSettings.RxSingleOn == rf_true ) /* Rx single mode */
     {
-        sx1276_Dio2EnableInt(rfTrue);
+        sx1276_Dio2EnableInt(rf_true);
         SX1276LoRaSetOpMode( RFLR_OPMODE_RECEIVER_SINGLE );
     }
     else /* Rx continuous mode */
@@ -520,9 +498,9 @@ void sx1278_RxInit( void )
 }   /* sx1278_RxInit() */
 
 
-volatile rfUint32 u32ReceiveTimes = 0;
-volatile rfUint32 Dio0Cnt = 0;
-volatile rfUint32 Dio3Cnt = 0;
+volatile rf_uint32 u32ReceiveTimes = 0;
+volatile rf_uint32 Dio0Cnt = 0;
+volatile rf_uint32 Dio3Cnt = 0;
 /***************************************************************************************************
  * @fn      sx1278_RxProcess()
  *
@@ -540,7 +518,7 @@ volatile rfUint32 Dio3Cnt = 0;
 RF_P_RET_t sx1278_RxProcess( void )
 {
     RF_P_RET_t tRet = RF_P_RUNNING;
-    rfUint8 u8OpMode = RFLR_OPMODE_STANDBY;
+    rf_uint8 u8OpMode = RFLR_OPMODE_STANDBY;
 
     /* here, monitor RxDone Event, payload Crc Err Event, Receive Timeout Event, and Fhss event use irq beacuse it should be real time */
 
@@ -581,7 +559,7 @@ RF_P_RET_t sx1278_RxProcess( void )
         else
         {
             {
-                rfUint8 rxSnrEstimate;
+                rf_uint8 rxSnrEstimate;
                 sx1278_Read__( REG_LR_PKTSNRVALUE, &rxSnrEstimate );
                 if( rxSnrEstimate & 0x80 ) // The SNR sign bit is 1
                 {
@@ -608,12 +586,12 @@ RF_P_RET_t sx1278_RxProcess( void )
             }
                 
             /* Rx single mode */
-            if( LoRaSettings.RxSingleOn == rfTrue )
+            if( LoRaSettings.RxSingleOn == rf_true )
             {
                 SX1276LR->RegFifoAddrPtr = SX1276LR->RegFifoRxBaseAddr;
                 sx1278_Write__( REG_LR_FIFOADDRPTR, SX1276LR->RegFifoAddrPtr );
 
-                if( LoRaSettings.ImplicitHeaderOn == rfTrue )
+                if( LoRaSettings.ImplicitHeaderOn == rf_true )
                 {
                     gs_u8PacketSize = SX1276LR->RegPayloadLength;
                     sx1278_ReadFifo__( gs_au8PacketBuffer, SX1276LR->RegPayloadLength );
@@ -630,7 +608,7 @@ RF_P_RET_t sx1278_RxProcess( void )
             {
                 sx1278_Read__( REG_LR_FIFORXCURRENTADDR, &SX1276LR->RegFifoRxCurrentAddr );
 
-                if( LoRaSettings.ImplicitHeaderOn == rfTrue )
+                if( LoRaSettings.ImplicitHeaderOn == rf_true )
                 {
                     gs_u8PacketSize = SX1276LR->RegPayloadLength;
                     SX1276LR->RegFifoAddrPtr = SX1276LR->RegFifoRxCurrentAddr;
@@ -688,7 +666,7 @@ void sx1278_TxInit( void )
         sx1278_Read__( REG_LR_OPMODE, &SX1276LR->RegOpMode );
     }while( 0x81 != SX1276LR->RegOpMode );
 
-    if( LoRaSettings.FreqHopOn == rfTrue )
+    if( LoRaSettings.FreqHopOn == rf_true )
     {
         SX1276LR->RegIrqFlagsMask = RFLR_IRQFLAGS_RXTIMEOUT |
                                     RFLR_IRQFLAGS_RXDONE |
@@ -730,14 +708,14 @@ void sx1278_TxInit( void )
     if( LoRaSettings.RFFrequency > 860000000 )
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_RFO );
-        SX1276LoRaSetPa20dBm( rfFalse );
+        SX1276LoRaSetPa20dBm( rf_false );
         LoRaSettings.Power = 14;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     }
     else
     {
         SX1276LoRaSetPAOutput( RFLR_PACONFIG_PASELECT_PABOOST );
-        SX1276LoRaSetPa20dBm( rfTrue );
+        SX1276LoRaSetPa20dBm( rf_true );
         LoRaSettings.Power = 20;
         SX1276LoRaSetRFPower( LoRaSettings.Power );
     } 
@@ -757,7 +735,7 @@ void sx1278_TxInit( void )
     SX1276LR->RegDioMapping2 = RFLR_DIOMAPPING2_DIO4_01 | RFLR_DIOMAPPING2_DIO5_00;
     sx1278_WriteBuffer__( REG_LR_DIOMAPPING1, &SX1276LR->RegDioMapping1, 2 );
     
-    sx1276_Dio2EnableInt(rfTrue);
+    sx1276_Dio2EnableInt(rf_true);
     SX1276LoRaSetOpMode( RFLR_OPMODE_TRANSMITTER );
 
     /* clear Tx Time */
@@ -791,7 +769,7 @@ RF_P_RET_t sx1278_TxProcess( void )
     {
         if( DIO0 == 1 ) // TxDone
         {
-            sx1276_Dio2EnableInt(rfFalse);
+            sx1276_Dio2EnableInt(rf_false);
             /* Clear txdone Irq flag*/
             sx1278_Write__( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE  );
             /* optimize the power consumption by switching off the transmitter as soon as the packet has been sent */
@@ -820,7 +798,7 @@ void sx1278_CADInit( void )
     SX1276LoRaSetOpMode( RFLR_OPMODE_STANDBY );
 
     /* set frequence hop options */
-    if( LoRaSettings.FreqHopOn == rfTrue )
+    if( LoRaSettings.FreqHopOn == rf_true )
     {
         SX1276LR->RegHopPeriod = LoRaSettings.HopPeriod;
 
@@ -953,7 +931,7 @@ RF_P_RET_t sx1278_SleepProcess( void )
 void SX1276FHSSChangeChannel_ISR(void)
 {
     sx1278_Write__( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL );
-    if( LoRaSettings.FreqHopOn == rfTrue )
+    if( LoRaSettings.FreqHopOn == rf_true )
     {
         SX1276LoRaSetSymbTimeout(LoRaSettings.HopPeriod);
         gs_u32PacketTxTime = 0;
@@ -982,7 +960,7 @@ void SX1276FHSSChangeChannel_ISR(void)
  *
  * @return  none
  */
-void SX1276LoRaSetTxPacket( const void *a_pvdBuffer, rfUint8 a_u8Size )
+void SX1276LoRaSetTxPacket( const void *a_pvdBuffer, rf_uint8 a_u8Size )
 {
     gs_u8PacketSize = a_u8Size;
     memcpy( ( void * )gs_au8PacketBuffer, a_pvdBuffer, gs_u8PacketSize ); 
@@ -1017,9 +995,9 @@ void *sx1278_GetBufferAddr(void)
  *
  * @return  none
  */
-void sx1278_SetPacketSize( rfUint16 a_u16Size )
+void sx1278_SetPacketSize( rf_uint16 a_u16Size )
 {
-    gs_u8PacketSize = (rfUint8)a_u16Size;
+    gs_u8PacketSize = (rf_uint8)a_u16Size;
 }   /* sx1278_SetPacketSize() */
 
 
@@ -1034,7 +1012,7 @@ void sx1278_SetPacketSize( rfUint16 a_u16Size )
  *
  * @return  rx packet size
  */
-rfUint16 sx1278_GetPacketSize( void )
+rf_uint16 sx1278_GetPacketSize( void )
 {
     return gs_u8PacketSize;
 }   /* sx1278_GetPacketSize() */
@@ -1055,7 +1033,7 @@ rfUint16 sx1278_GetPacketSize( void )
  *
  * @return  none
  */
-void SX1276LoRaSetRFBaseFrequency( rfUint32 a_u32Freq)
+void SX1276LoRaSetRFBaseFrequency( rf_uint32 a_u32Freq)
 {
     LoRaSettings.RFFrequency = a_u32Freq;
 }   /* SX1276LoRaSetRFBaseFrequency() */
@@ -1072,13 +1050,13 @@ void SX1276LoRaSetRFBaseFrequency( rfUint32 a_u32Freq)
  *
  * @return  none
  */
-void SX1276LoRaSetRFFrequency( rfUint32 a_u32Freq)
+void SX1276LoRaSetRFFrequency( rf_uint32 a_u32Freq)
 {
-    a_u32Freq = ( rfUint32 )( ( double )a_u32Freq / ( double )FREQ_STEP );
+    a_u32Freq = ( rf_uint32 )( ( double )a_u32Freq / ( double )FREQ_STEP );
     
-    SX1276LR->RegFrfMsb = ( rfUint8 )( ( a_u32Freq >> 16 ) & 0xFF );
-    SX1276LR->RegFrfMid = ( rfUint8 )( ( a_u32Freq >> 8 ) & 0xFF );
-    SX1276LR->RegFrfLsb = ( rfUint8 )( a_u32Freq & 0xFF );
+    SX1276LR->RegFrfMsb = ( rf_uint8 )( ( a_u32Freq >> 16 ) & 0xFF );
+    SX1276LR->RegFrfMid = ( rf_uint8 )( ( a_u32Freq >> 8 ) & 0xFF );
+    SX1276LR->RegFrfLsb = ( rf_uint8 )( a_u32Freq & 0xFF );
 
     sx1278_WriteBuffer__( REG_LR_FRFMSB, &SX1276LR->RegFrfMsb, 3 );
 }   /* SX1276LoRaSetRFFrequency() */
@@ -1096,7 +1074,7 @@ void SX1276LoRaSetRFFrequency( rfUint32 a_u32Freq)
  *
  * @return  frequence, in unit Hz
  */
-rfUint32 SX1276LoRaGetRFFrequency( void )
+rf_uint32 SX1276LoRaGetRFFrequency( void )
 {
     sx1278_ReadBuffer__( REG_LR_FRFMSB, &SX1276LR->RegFrfMsb, 3 );
     LoRaSettings.RFFrequency = ( ( uint32_t )SX1276LR->RegFrfMsb << 16 ) | ( ( uint32_t )SX1276LR->RegFrfMid << 8 ) | ( ( uint32_t )SX1276LR->RegFrfLsb );
@@ -1117,7 +1095,7 @@ rfUint32 SX1276LoRaGetRFFrequency( void )
  *
  * @return  none
  */
-void SX1276LoRaSetRFPower( rfInt8 a_i8Power )
+void SX1276LoRaSetRFPower( rf_int8 a_i8Power )
 {
     sx1278_Read__( REG_LR_PACONFIG, &SX1276LR->RegPaConfig );
     sx1278_Read__( REG_LR_PADAC, &SX1276LR->RegPaDac );
@@ -1135,7 +1113,7 @@ void SX1276LoRaSetRFPower( rfInt8 a_i8Power )
                 a_i8Power = 20;
             }
             SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_MAX_POWER_MASK ) | 0x70;
-            SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rfUint8 )( ( uint16_t )( a_i8Power - 5 ) & 0x0F );
+            SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rf_uint8 )( ( uint16_t )( a_i8Power - 5 ) & 0x0F );
         }
         else
         {
@@ -1148,7 +1126,7 @@ void SX1276LoRaSetRFPower( rfInt8 a_i8Power )
                 a_i8Power = 17;
             }
             SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_MAX_POWER_MASK ) | 0x70;
-            SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rfUint8 )( ( uint16_t )( a_i8Power - 2 ) & 0x0F );
+            SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rf_uint8 )( ( uint16_t )( a_i8Power - 2 ) & 0x0F );
         }
     }
     else
@@ -1162,7 +1140,7 @@ void SX1276LoRaSetRFPower( rfInt8 a_i8Power )
             a_i8Power = 14;
         }
         SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_MAX_POWER_MASK ) | 0x70;
-        SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rfUint8 )( ( uint16_t )( a_i8Power + 1 ) & 0x0F );
+        SX1276LR->RegPaConfig = ( SX1276LR->RegPaConfig & RFLR_PACONFIG_OUTPUTPOWER_MASK ) | ( rf_uint8 )( ( uint16_t )( a_i8Power + 1 ) & 0x0F );
     }
     sx1278_Write__( REG_LR_PACONFIG, SX1276LR->RegPaConfig );
     LoRaSettings.Power = a_i8Power;
@@ -1179,7 +1157,7 @@ void SX1276LoRaSetRFPower( rfInt8 a_i8Power )
  *
  * @return  rf power
  */
-rfInt8 SX1276LoRaGetRFPower( void )
+rf_int8 SX1276LoRaGetRFPower( void )
 {
     sx1278_Read__( REG_LR_PACONFIG, &SX1276LR->RegPaConfig );
     sx1278_Read__( REG_LR_PADAC, &SX1276LR->RegPaDac );
@@ -1214,7 +1192,7 @@ rfInt8 SX1276LoRaGetRFPower( void )
  *
  * @return  none
  */
-void SX1276LoRaSetSignalBandwidth( rfUint8 a_u8Bw )
+void SX1276LoRaSetSignalBandwidth( rf_uint8 a_u8Bw )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     SX1276LR->RegModemConfig1 = ( SX1276LR->RegModemConfig1 & RFLR_MODEMCONFIG1_BW_MASK ) | ( a_u8Bw << 4 );
@@ -1234,7 +1212,7 @@ void SX1276LoRaSetSignalBandwidth( rfUint8 a_u8Bw )
  *
  * @return  get LoRa signal bandwidth
  */
-rfUint8 SX1276LoRaGetSignalBandwidth( void )
+rf_uint8 SX1276LoRaGetSignalBandwidth( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     LoRaSettings.SignalBw = ( SX1276LR->RegModemConfig1 & ~RFLR_MODEMCONFIG1_BW_MASK ) >> 4;
@@ -1253,7 +1231,7 @@ rfUint8 SX1276LoRaGetSignalBandwidth( void )
  *
  * @return  none
  */
-void SX1276LoRaSetSpreadingFactor( rfUint8 a_u8Factor )
+void SX1276LoRaSetSpreadingFactor( rf_uint8 a_u8Factor )
 {
 
     if( a_u8Factor > 12 )
@@ -1292,7 +1270,7 @@ void SX1276LoRaSetSpreadingFactor( rfUint8 a_u8Factor )
  *
  * @return  spreading factor
  */
-rfUint8 SX1276LoRaGetSpreadingFactor( void )
+rf_uint8 SX1276LoRaGetSpreadingFactor( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG2, &SX1276LR->RegModemConfig2 );   
     LoRaSettings.SpreadingFactor = ( SX1276LR->RegModemConfig2 & ~RFLR_MODEMCONFIG2_SF_MASK ) >> 4;
@@ -1311,7 +1289,7 @@ rfUint8 SX1276LoRaGetSpreadingFactor( void )
  *
  * @return  none
  */
-void SX1276LoRaSetErrorCoding( rfUint8 a_u8Value )
+void SX1276LoRaSetErrorCoding( rf_uint8 a_u8Value )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     SX1276LR->RegModemConfig1 = ( SX1276LR->RegModemConfig1 & RFLR_MODEMCONFIG1_CODINGRATE_MASK ) | ( a_u8Value << 1 );
@@ -1331,7 +1309,7 @@ void SX1276LoRaSetErrorCoding( rfUint8 a_u8Value )
  *
  * @return  LoRa Error Coding Value
  */
-rfUint8 SX1276LoRaGetErrorCoding( void )
+rf_uint8 SX1276LoRaGetErrorCoding( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     LoRaSettings.ErrorCoding = ( SX1276LR->RegModemConfig1 & ~RFLR_MODEMCONFIG1_CODINGRATE_MASK ) >> 1;
@@ -1350,7 +1328,7 @@ rfUint8 SX1276LoRaGetErrorCoding( void )
  *
  * @return  none
  */
-void SX1276LoRaSetPacketCrcOn( rfBool a_bEnable )
+void SX1276LoRaSetPacketCrcOn( rf_bool a_bEnable )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG2, &SX1276LR->RegModemConfig2 );
     SX1276LR->RegModemConfig2 = ( SX1276LR->RegModemConfig2 & RFLR_MODEMCONFIG2_RXPAYLOADCRC_MASK ) | ( a_bEnable << 2 );
@@ -1371,10 +1349,10 @@ void SX1276LoRaSetPacketCrcOn( rfBool a_bEnable )
  * @return  rfTrue  - crc is on
  *          rfFalse  - crc is off
  */
-rfBool SX1276LoRaGetPacketCrcOn( void )
+rf_bool SX1276LoRaGetPacketCrcOn( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG2, &SX1276LR->RegModemConfig2 );
-    LoRaSettings.CrcOn = (( SX1276LR->RegModemConfig2 & RFLR_MODEMCONFIG2_RXPAYLOADCRC_ON ) >> 1) > 0 ? rfTrue : rfFalse;
+    LoRaSettings.CrcOn = (( SX1276LR->RegModemConfig2 & RFLR_MODEMCONFIG2_RXPAYLOADCRC_ON ) >> 1) > 0 ? rf_true : rf_false;
     return LoRaSettings.CrcOn;
 }   /* SX1276LoRaGetPacketCrcOn */
 
@@ -1429,7 +1407,7 @@ uint16_t SX1276LoRaGetPreambleLength( void )
  *
  * @return  none
  */
-void SX1276LoRaSetImplicitHeaderOn( rfBool a_bEnable )
+void SX1276LoRaSetImplicitHeaderOn( rf_bool a_bEnable )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     SX1276LR->RegModemConfig1 = ( SX1276LR->RegModemConfig1 & RFLR_MODEMCONFIG1_IMPLICITHEADER_MASK ) | ( a_bEnable );
@@ -1450,11 +1428,11 @@ void SX1276LoRaSetImplicitHeaderOn( rfBool a_bEnable )
  * @return  rfTrue  - implicit header is on
  *          rfFalse  - implicit header is off
  */
-rfBool SX1276LoRaGetImplicitHeaderOn( void )
+rf_bool SX1276LoRaGetImplicitHeaderOn( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG1, &SX1276LR->RegModemConfig1 );
     LoRaSettings.ImplicitHeaderOn = ((SX1276LR->RegModemConfig1 & RFLR_MODEMCONFIG1_IMPLICITHEADER_ON)) > 0 ?\
-      rfTrue : rfFalse;
+      rf_true : rf_false;
     return LoRaSettings.ImplicitHeaderOn;
 }   /* SX1276LoRaGetImplicitHeaderOn */
 
@@ -1470,7 +1448,7 @@ rfBool SX1276LoRaGetImplicitHeaderOn( void )
  *
  * @return  none
  */
-void SX1276LoRaSetRxSingleOn( rfBool a_bEnable )
+void SX1276LoRaSetRxSingleOn( rf_bool a_bEnable )
 {
     LoRaSettings.RxSingleOn = a_bEnable;
 }   /* SX1276LoRaSetRxSingleOn() */
@@ -1488,7 +1466,7 @@ void SX1276LoRaSetRxSingleOn( rfBool a_bEnable )
  * @return  rfTrue  - rx single on
  *          rfFalse  - rx continuous
  */
-rfBool SX1276LoRaGetRxSingleOn( void )
+rf_bool SX1276LoRaGetRxSingleOn( void )
 {
     return LoRaSettings.RxSingleOn;
 }   /* SX1276LoRaGetRxSingleOn() */
@@ -1505,7 +1483,7 @@ rfBool SX1276LoRaGetRxSingleOn( void )
  *
  * @return  none
  */
-void SX1276LoRaSetFreqHopOn( rfBool a_bEnable )
+void SX1276LoRaSetFreqHopOn( rf_bool a_bEnable )
 {
     LoRaSettings.FreqHopOn = a_bEnable;
 }
@@ -1523,7 +1501,7 @@ void SX1276LoRaSetFreqHopOn( rfBool a_bEnable )
  * @return  rfTrue  - hop is enable
  *          rfFalse  - hop is disable
  */
-rfBool SX1276LoRaGetFreqHopOn( void )
+rf_bool SX1276LoRaGetFreqHopOn( void )
 {
     return LoRaSettings.FreqHopOn;
 }   /* SX1276LoRaGetFreqHopOn() */
@@ -1540,7 +1518,7 @@ rfBool SX1276LoRaGetFreqHopOn( void )
  *
  * @return  none
  */
-void SX1276LoRaSetHopPeriod( rfUint8 a_u8Value )
+void SX1276LoRaSetHopPeriod( rf_uint8 a_u8Value )
 {
     SX1276LR->RegHopPeriod = a_u8Value;
     sx1278_Write__( REG_LR_HOPPERIOD, SX1276LR->RegHopPeriod );
@@ -1559,7 +1537,7 @@ void SX1276LoRaSetHopPeriod( rfUint8 a_u8Value )
  *
  * @return  hop period
  */
-rfUint8 SX1276LoRaGetHopPeriod( void )
+rf_uint8 SX1276LoRaGetHopPeriod( void )
 {
     sx1278_Read__( REG_LR_HOPPERIOD, &SX1276LR->RegHopPeriod );
     LoRaSettings.HopPeriod = SX1276LR->RegHopPeriod;
@@ -1578,7 +1556,7 @@ rfUint8 SX1276LoRaGetHopPeriod( void )
  *
  * @return  none
  */
-void SX1276LoRaSetTxPacketTimeout( uint32_t value )
+void SX1276LoRaSetTxPacketTimeout( rf_uint32 value )
 {
     LoRaSettings.TxPacketTimeout = value;
 }   /* SX1276LoRaSetTxPacketTimeout() */
@@ -1595,7 +1573,7 @@ void SX1276LoRaSetTxPacketTimeout( uint32_t value )
  *
  * @return  tx packet timeout time in unit ms
  */
-uint32_t SX1276LoRaGetTxPacketTimeout( void )
+rf_uint32 SX1276LoRaGetTxPacketTimeout( void )
 {
     return LoRaSettings.TxPacketTimeout;
 }   /* SX1276LoRaGetTxPacketTimeout() */
@@ -1612,7 +1590,7 @@ uint32_t SX1276LoRaGetTxPacketTimeout( void )
  *
  * @return  none
  */
-void SX1276LoRaSetRxPacketTimeout( uint32_t a_u32Value )
+void SX1276LoRaSetRxPacketTimeout( rf_uint32 a_u32Value )
 {
     LoRaSettings.RxPacketTimeout = a_u32Value;
 }   /* SX1276LoRaSetRxPacketTimeout() */
@@ -1629,7 +1607,7 @@ void SX1276LoRaSetRxPacketTimeout( uint32_t a_u32Value )
  *
  * @return  rx packet timeout time in unit ms
  */
-uint32_t SX1276LoRaGetRxPacketTimeout( void )
+rf_uint32 SX1276LoRaGetRxPacketTimeout( void )
 {
     return LoRaSettings.RxPacketTimeout;
 }   /* SX1276LoRaGetRxPacketTimeout() */
@@ -1646,7 +1624,7 @@ uint32_t SX1276LoRaGetRxPacketTimeout( void )
  *
  * @return  none
  */
-void SX1276LoRaSetPayloadLength( rfUint8 a_u8Value )
+void SX1276LoRaSetPayloadLength( rf_uint8 a_u8Value )
 {
     SX1276LR->RegPayloadLength = a_u8Value;
     sx1278_Write__( REG_LR_PAYLOADLENGTH, SX1276LR->RegPayloadLength );
@@ -1665,7 +1643,7 @@ void SX1276LoRaSetPayloadLength( rfUint8 a_u8Value )
  *
  * @return  payload length
  */
-rfUint8 SX1276LoRaGetPayloadLength( void )
+rf_uint8 SX1276LoRaGetPayloadLength( void )
 {
     sx1278_Read__( REG_LR_PAYLOADLENGTH, &SX1276LR->RegPayloadLength );
     LoRaSettings.PayloadLength = SX1276LR->RegPayloadLength;
@@ -1685,14 +1663,14 @@ rfUint8 SX1276LoRaGetPayloadLength( void )
  *
  * @return  none
  */
-void SX1276LoRaSetPa20dBm( rfBool enale )
+void SX1276LoRaSetPa20dBm( rf_bool enale )
 {
     sx1278_Read__( REG_LR_PADAC, &SX1276LR->RegPaDac );
     sx1278_Read__( REG_LR_PACONFIG, &SX1276LR->RegPaConfig );
 
     if( ( SX1276LR->RegPaConfig & RFLR_PACONFIG_PASELECT_PABOOST ) == RFLR_PACONFIG_PASELECT_PABOOST )
     {    
-        if( enale == rfTrue )
+        if( enale == rf_true )
         {
             SX1276LR->RegPaDac = 0x87;
         }
@@ -1717,11 +1695,11 @@ void SX1276LoRaSetPa20dBm( rfBool enale )
  * @return  rfTrue  - +20dBm output is enable
  *          rfFalse  - +20dBm output is disable
  */
-rfBool SX1276LoRaGetPa20dBm( void )
+rf_bool SX1276LoRaGetPa20dBm( void )
 {
     sx1278_Read__( REG_LR_PADAC, &SX1276LR->RegPaDac );
     
-    return ( ( SX1276LR->RegPaDac & 0x07 ) == 0x07 ) ? rfTrue : rfFalse;
+    return ( ( SX1276LR->RegPaDac & 0x07 ) == 0x07 ) ? rf_true : rf_false;
 }   /* SX1276LoRaGetPa20dBm() */
 
 
@@ -1738,7 +1716,7 @@ rfBool SX1276LoRaGetPa20dBm( void )
  *
  * @return  none
  */
-void SX1276LoRaSetPAOutput( rfUint8 a_u8OutputPin )
+void SX1276LoRaSetPAOutput( rf_uint8 a_u8OutputPin )
 {
     sx1278_Read__( REG_LR_PACONFIG, &SX1276LR->RegPaConfig );
     SX1276LR->RegPaConfig = (SX1276LR->RegPaConfig & RFLR_PACONFIG_PASELECT_MASK ) | a_u8OutputPin;
@@ -1758,7 +1736,7 @@ void SX1276LoRaSetPAOutput( rfUint8 a_u8OutputPin )
  * @return  0x00  - output with RFO pin, output power is limited to +14dBm.
  *          0x80  - output with PA_BOOST pin, output power is limited to +20dBm.
  */
-rfUint8 SX1276LoRaGetPAOutput( void )
+rf_uint8 SX1276LoRaGetPAOutput( void )
 {
     sx1278_Read__( REG_LR_PACONFIG, &SX1276LR->RegPaConfig );
     return SX1276LR->RegPaConfig & ~RFLR_PACONFIG_PASELECT_MASK;
@@ -1776,7 +1754,7 @@ rfUint8 SX1276LoRaGetPAOutput( void )
  *
  * @return  none
  */
-void SX1276LoRaSetPaRamp( rfUint8 a_u8Value )
+void SX1276LoRaSetPaRamp( rf_uint8 a_u8Value )
 {
     sx1278_Read__( REG_LR_PARAMP, &SX1276LR->RegPaRamp );
     SX1276LR->RegPaRamp = ( SX1276LR->RegPaRamp & RFLR_PARAMP_MASK ) | ( a_u8Value & ~RFLR_PARAMP_MASK );
@@ -1795,7 +1773,7 @@ void SX1276LoRaSetPaRamp( rfUint8 a_u8Value )
  *
  * @return  Ramp up/down time, please reference to manual 
  */
-rfUint8 SX1276LoRaGetPaRamp( void )
+rf_uint8 SX1276LoRaGetPaRamp( void )
 {
     sx1278_Read__( REG_LR_PARAMP, &SX1276LR->RegPaRamp );
     return SX1276LR->RegPaRamp & ~RFLR_PARAMP_MASK;
@@ -1813,7 +1791,7 @@ rfUint8 SX1276LoRaGetPaRamp( void )
  *
  * @return  none
  */
-void SX1276LoRaSetSymbTimeout( rfUint16 a_u16Value )
+void SX1276LoRaSetSymbTimeout( rf_uint16 a_u16Value )
 {
     sx1278_ReadBuffer__( REG_LR_MODEMCONFIG2, &SX1276LR->RegModemConfig2, 2 );
 
@@ -1834,7 +1812,7 @@ void SX1276LoRaSetSymbTimeout( rfUint16 a_u16Value )
  *
  * @return  none
  */
-rfUint16 SX1276LoRaGetSymbTimeout( void )
+rf_uint16 SX1276LoRaGetSymbTimeout( void )
 {
     sx1278_ReadBuffer__( REG_LR_MODEMCONFIG2, &SX1276LR->RegModemConfig2, 2 );
     return ( ( SX1276LR->RegModemConfig2 & ~RFLR_MODEMCONFIG2_SYMBTIMEOUTMSB_MASK ) << 8 ) | SX1276LR->RegSymbTimeoutLsb;
@@ -1852,7 +1830,7 @@ rfUint16 SX1276LoRaGetSymbTimeout( void )
  *
  * @return  none
  */
-void SX1276LoRaSetLowDatarateOptimize( rfBool a_bEnable )
+void SX1276LoRaSetLowDatarateOptimize( rf_bool a_bEnable )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG3, &SX1276LR->RegModemConfig3 );
     SX1276LR->RegModemConfig3 = ( SX1276LR->RegModemConfig3 & RFLR_MODEMCONFIG3_LOWDATARATEOPTIMIZE_MASK ) | ( a_bEnable << 3 );
@@ -1871,10 +1849,10 @@ void SX1276LoRaSetLowDatarateOptimize( rfBool a_bEnable )
  *
  * @return  none
  */
-rfBool SX1276LoRaGetLowDatarateOptimize( void )
+rf_bool SX1276LoRaGetLowDatarateOptimize( void )
 {
     sx1278_Read__( REG_LR_MODEMCONFIG3, &SX1276LR->RegModemConfig3 );
-    return (( SX1276LR->RegModemConfig3 & RFLR_MODEMCONFIG3_LOWDATARATEOPTIMIZE_ON ) >> 3 ) > 0 ? rfTrue : rfFalse;
+    return (( SX1276LR->RegModemConfig3 & RFLR_MODEMCONFIG3_LOWDATARATEOPTIMIZE_ON ) >> 3 ) > 0 ? rf_true : rf_false;
 }/* SX1276LoRaGetLowDatarateOptimize() */
 
 
@@ -1889,7 +1867,7 @@ rfBool SX1276LoRaGetLowDatarateOptimize( void )
  *
  * @return  none
  */
-void SX1276LoRaSetNbTrigPeaks( rfUint8 a_u8Value )
+void SX1276LoRaSetNbTrigPeaks( rf_uint8 a_u8Value )
 {
     sx1278_Read__( 0x31, &SX1276LR->RegTestReserved31 );
     SX1276LR->RegTestReserved31 = ( SX1276LR->RegTestReserved31 & 0xF8 ) | a_u8Value;
@@ -1908,7 +1886,7 @@ void SX1276LoRaSetNbTrigPeaks( rfUint8 a_u8Value )
  *
  * @return  return get value
  */
-rfUint8 SX1276LoRaGetNbTrigPeaks( void )
+rf_uint8 SX1276LoRaGetNbTrigPeaks( void )
 {
     sx1278_Read__( 0x31, &SX1276LR->RegTestReserved31 );
     return ( SX1276LR->RegTestReserved31 & 0x07 );
@@ -1926,16 +1904,16 @@ rfUint8 SX1276LoRaGetNbTrigPeaks( void )
  *
  * @return  none
  */
-void SX1276LoRaSetOpMode( rfUint8 a_u8OpMode )
+void SX1276LoRaSetOpMode( rf_uint8 a_u8OpMode )
 {
     if( a_u8OpMode == RFLR_OPMODE_TRANSMITTER )
     {
-        RXTX( rfTrue );
+        RXTX( rf_true );
     }
     
     if(a_u8OpMode == RFLR_OPMODE_RECEIVER_SINGLE)
     {
-        RXTX( rfFalse );
+        RXTX( rf_false );
     }
 
     SX1276LR->RegOpMode = ( SX1276LR->RegOpMode & RFLR_OPMODE_MASK ) | a_u8OpMode;
@@ -1954,7 +1932,7 @@ void SX1276LoRaSetOpMode( rfUint8 a_u8OpMode )
  *
  * @return  none
  */
-rfUint8 SX1278LoRaGetOpMode( void )
+rf_uint8 SX1278LoRaGetOpMode( void )
 {
     sx1278_Read__( REG_LR_OPMODE, &SX1276LR->RegOpMode );
     
@@ -1975,13 +1953,13 @@ rfUint8 SX1278LoRaGetOpMode( void )
 void SX1276Reset( void )
 {
     uint32_t startTick;
-    sx1278_DioReset( rfTrue );
+    sx1278_DioReset( rf_true );
     
     // Wait 1ms
     startTick = GET_TICK_COUNT( );
     while( ( GET_TICK_COUNT( ) - startTick ) < TICK_RATE_MS( 1 ) );    
 
-    sx1278_DioReset( rfFalse );
+    sx1278_DioReset( rf_false );
     
     // Wait 6ms
     startTick = GET_TICK_COUNT( );
@@ -1999,9 +1977,9 @@ void SX1276Reset( void )
  *
  * @return  none
  */
-void SX1276SetLoRaOn( rfBool a_bEnable )
+void SX1276SetLoRaOn( rf_bool a_bEnable )
 {
-    if( a_bEnable == rfTrue )
+    if( a_bEnable == rf_true )
     {
         SX1276LoRaSetOpMode( RFLR_OPMODE_SLEEP );
         
@@ -2058,12 +2036,12 @@ void Rf_Sx1276_UpdateTxPacketTime(void)
  *
  * @return  none
  */
-void Rf_Sx1276_SetPreambleLengthPara(rfUint16 a_u16length)
+void Rf_Sx1276_SetPreambleLengthPara(rf_uint16 a_u16length)
 {
     LoRaSettings.u16PreambleLength = a_u16length;
 }   /* Rf_Sx1276_SetPreambleLengthPara() */
 
-rfInt8 SX1276LoRaGetPacketSnr( void )
+rf_int8 SX1276LoRaGetPacketSnr( void )
 {
     return RxPacketSnrEstimate;
 }
@@ -2089,12 +2067,12 @@ double SX1276LoRaGetPacketRssi( void )
  *
  * @return  none
  */
-void sx1278_Write__( rfUint8 a_u8Addr, rfUint8 a_u8Data )
+void sx1278_Write__( rf_uint8 a_u8Addr, rf_uint8 a_u8Data )
 {
-    rfUint8 u8Data[2] = { a_u8Addr | 0x80, a_u8Data };
-    sx1278_SpiSetNssHigh(rfFalse);  /* nss low */
+    rf_uint8 u8Data[2] = { a_u8Addr | 0x80, a_u8Data };
+    sx1278_SpiSetNssHigh(rf_false);  /* nss low */
     sx1278_SpiWrite( u8Data, 2 );    /* write addr, data */
-    sx1278_SpiSetNssHigh(rfTrue);  /* nss high */
+    sx1278_SpiSetNssHigh(rf_true);  /* nss high */
 }
 
 /***************************************************************************************************
@@ -2109,13 +2087,13 @@ void sx1278_Write__( rfUint8 a_u8Addr, rfUint8 a_u8Data )
  *
  * @return  none
  */
-void sx1278_Read__( rfUint8 a_u8Addr, rfUint8 *a_pu8Data )
+void sx1278_Read__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Data )
 {
-    rfUint8 u8Data = a_u8Addr & 0x7F;
-    sx1278_SpiSetNssHigh(rfFalse);  /* nss low */
+    rf_uint8 u8Data = a_u8Addr & 0x7F;
+    sx1278_SpiSetNssHigh(rf_false);  /* nss low */
     sx1278_SpiWrite( &u8Data, 1 );    /* write addr */
     sx1278_SpiRead( a_pu8Data, 1 );  /* read data */
-    sx1278_SpiSetNssHigh(rfTrue);  /* nss high */
+    sx1278_SpiSetNssHigh(rf_true);  /* nss high */
 }
 
 /***************************************************************************************************
@@ -2131,13 +2109,13 @@ void sx1278_Read__( rfUint8 a_u8Addr, rfUint8 *a_pu8Data )
  *
  * @return  none
  */
-void sx1278_WriteBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u16Size )
+void sx1278_WriteBuffer__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size )
 {
-    rfUint8 u8Data = a_u8Addr | 0x80 ;
-    sx1278_SpiSetNssHigh(rfFalse);  /* nss low */
+    rf_uint8 u8Data = a_u8Addr | 0x80 ;
+    sx1278_SpiSetNssHigh(rf_false);  /* nss low */
     sx1278_SpiWrite( &u8Data, 1 );    /* write addr */
     sx1278_SpiWrite( a_pu8Buffer, a_u16Size );    /* write data */
-    sx1278_SpiSetNssHigh(rfTrue);  /* nss high */
+    sx1278_SpiSetNssHigh(rf_true);  /* nss high */
 }
 
 /***************************************************************************************************
@@ -2153,13 +2131,13 @@ void sx1278_WriteBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u1
  *
  * @return  none
  */
-void sx1278_ReadBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u16Size )
+void sx1278_ReadBuffer__( rf_uint8 a_u8Addr, rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size )
 {
-    rfUint8 u8Data = a_u8Addr & 0x7F ;
-    sx1278_SpiSetNssHigh(rfFalse);  /* nss low */
+    rf_uint8 u8Data = a_u8Addr & 0x7F ;
+    sx1278_SpiSetNssHigh(rf_false);  /* nss low */
     sx1278_SpiWrite( &u8Data, 1 );    /* write addr */
     sx1278_SpiRead( a_pu8Buffer, a_u16Size );    /* read data */
-    sx1278_SpiSetNssHigh(rfTrue);  /* nss high */
+    sx1278_SpiSetNssHigh(rf_true);  /* nss high */
 }
 
 /***************************************************************************************************
@@ -2174,7 +2152,7 @@ void sx1278_ReadBuffer__( rfUint8 a_u8Addr, rfUint8 *a_pu8Buffer, rfUint16 a_u16
  *
  * @return  none
  */
-void sx1278_WriteFifo__( rfUint8 *a_pu8Buffer, rfUint16 a_u16Size )
+void sx1278_WriteFifo__( rf_uint8 *a_pu8Buffer, rf_uint16 a_u16Size )
 {
     sx1278_WriteBuffer__( 0, a_pu8Buffer, a_u16Size );
 }
