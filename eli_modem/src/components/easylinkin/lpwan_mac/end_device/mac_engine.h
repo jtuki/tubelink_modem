@@ -23,6 +23,7 @@ extern "C"
 #include "protocol_utils/parse_beacon.h"
 
 #include "lpwan_utils.h"
+#include "lpwan_radio_config_sets.h"
 
 extern os_pid_t gl_device_mac_engine_pid;
 
@@ -65,10 +66,10 @@ extern struct parsed_beacon_info *_s_info;
 /**< The max timer value set by MAC engine. */
 #define DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS        (((os_uint32)1)<<31)
 /**< the longest time to find beacon during joining process */
-#define DEVICE_JOINING_FIND_BEACON_TIMEOUT_MS       5000
+#define DEVICE_JOINING_FIND_BEACON_TIMEOUT_MS       (1000 * (1 + gl_beacon_period_length_list[LPWAN_BEACON_PERIOD]))
 
-#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       150
-#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
+#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       200
+#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          500
 
 /**< If the MAC will be idle for at least 12ms, we put MAC into low-power mode. */
 #define DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS       12

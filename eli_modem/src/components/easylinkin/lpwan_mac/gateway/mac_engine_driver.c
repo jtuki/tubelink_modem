@@ -78,6 +78,10 @@ static signal_bv_t gateway_mac_engine_driver_entry(os_pid_t pid, signal_bv_t sig
 {
     haddock_assert(pid == this->_pid);
 
+#if defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_AUTO_TEST
+    return 0; // we don't care about external commands
+#endif
+
     if (signal & SIGNAL_MAC_DRIVER_START_ENGINE) {
         if (! is_gw_mac_engine_started())
             os_ipc_set_signal(gl_gateway_mac_engine_pid, SIGNAL_GW_MAC_ENGINE_START);

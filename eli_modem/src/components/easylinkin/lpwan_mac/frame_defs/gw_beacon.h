@@ -121,13 +121,16 @@ __LPWAN struct beacon_packed_ack {
  * @{
  */
 
-enum _beacon_period {   /** \sa _beacon_period_length_list */
-    BEACON_PERIOD_2S = 0,       /**< 2*BEACON_MAX_SEQ_NUM = 256s = 4m16s */
-    BEACON_PERIOD_3S = 1,       /**< 3*BEACON_MAX_SEQ_NUM = 384s = 6m24s */
-    BEACON_PERIOD_4S = 2,       /**< 4*BEACON_MAX_SEQ_NUM = 512s = 8m32s */
-    BEACON_PERIOD_5S = 3,       /**< 5*BEACON_MAX_SEQ_NUM = 640s = 10m40s */
+enum _beacon_period {   /** \sa gl_beacon_period_length_list */
+    BEACON_PERIOD_2S = 0,
+    BEACON_PERIOD_4S = 1,
+    BEACON_PERIOD_8S = 2,
+    BEACON_PERIOD_16S = 3,
     _beacon_period_invalid = 4,
 };
+
+extern const os_uint8 gl_beacon_period_length_list[4];  /**< \sa enum _beacon_period */
+extern const os_uint32 gl_beacon_section_length_us[4];  /**< \sa enum _beacon_period */
 
 /**
  * \brief The capacity that has been occupied by the joined modems.

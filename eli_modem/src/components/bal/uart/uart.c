@@ -287,6 +287,10 @@ uartU8 uart_ReceiveBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8
  *
  * @return  none
  */
+
+// jt - used for profiling UART communication's performance.
+// #include "kernel/timer.h"
+
 uartBool uart_SendBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8Length )
 {
     uartBool bSuccess = uartFalse;
@@ -295,6 +299,8 @@ uartBool uart_SendBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8L
     uartU8 u8Data;
     uartBool bTxRestart = uartFalse;
     
+    // static struct time t1, t2, t3, t4; // jt - used for profiling UART communication's performance.
+
     if( a_ptUart->bInitial != uartTrue ){
         return uartFalse;
     }
@@ -314,16 +320,21 @@ uartBool uart_SendBytes( uartHandle_t *a_ptUart, uartU8 *a_pu8Data, uartU8 a_u8L
         bSuccess = uartTrue;
     }
     __UART_ENABLE_INT();
-    
+
     /* first byte has pushed */
-    for( uartU8 i = 1; i < a_u8Length; i++ ){
+    for( uartU8 i = 1; i < a_u8Length; i++ ) {
         fifo_Push( a_ptUart->ptTxFifo, a_pu8Data[i] );
     }
 
+
     if( uartTrue == bTxRestart ){
+        // haddock_get_time_tick_now(&t1);
         uart_GetSendByte( a_ptUart, &u8Data );
-        a_ptUart->hSendByteWithIt( u8Data );
+        // haddock_get_time_tick_now(&t2);
+        a_ptUart->hSendByteWithIt( u8Data ); /** \sa hostIf_SendByteWithIt__() */
+        // haddock_get_time_tick_now(&t3);
     }
+
     return uartTrue;
 }
 

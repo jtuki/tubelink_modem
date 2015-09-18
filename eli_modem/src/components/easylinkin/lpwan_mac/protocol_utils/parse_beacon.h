@@ -95,9 +95,6 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
                                     struct parsed_beacon_info *info,
                                     struct parsed_beacon_packed_ack_to_me *ack);
 
-/** \sa enum _beacon_period */
-extern const os_uint8 _beacon_period_length_list[4];
-
 #ifdef __cplusplus
 }
 #endif

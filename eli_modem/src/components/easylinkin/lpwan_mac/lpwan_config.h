@@ -14,20 +14,14 @@ extern "C"
 #endif
 
 #include "lpwan_types.h"
+#include "lpwan_radio_config_sets.h"
 
 /*---------------------------------------------------------------------------*/
-/**< Configuration sets */
-#define LPWAN_RADIO_CONFIG_SET_SF7      0
-#define LPWAN_RADIO_CONFIG_SET_SF8      1
+/**< Gateway modem running mode selection. */
+#define LPWAN_GW_RUNNING_MODE_AUTO_TEST         0   // auto initialize and print_log() enabled
+#define LPWAN_GW_RUNNING_MODE_CPU_CONNECTED     1   // need external CPU to initialize gateway modem
+#define LPWAN_GW_RUNNING_MODE       LPWAN_GW_RUNNING_MODE_AUTO_TEST
 
-// #define LPWAN_RADIO_CONFIGURATION   LPWAN_RADIO_CONFIG_SET_SF7
-#define LPWAN_RADIO_CONFIGURATION   LPWAN_RADIO_CONFIG_SET_SF8
-
-#if defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF7
-#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_2S
-#elif defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF8
-#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_4S
-#endif
 
 /*---------------------------------------------------------------------------*/
 /**< Radio configuration @{ */
@@ -35,10 +29,10 @@ extern "C"
 #define LPWAN_MAX_RADIO_CHANNELS_NUM    40  // modem's channel id range [0, 40)
 
 extern const os_uint32 lpwan_radio_channels_list[LPWAN_MAX_RADIO_CHANNELS_NUM];
+#define LPWAN_DEFAULT_RADIO_FREQUENCY (423000 * 1000)   // lpwan_radio_channels_list[0]
 
 #define RADIO_TX_POWER_LEVELS_NUM       4   // see @lpwan_radio_tx_power_list
 extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
-
 
 /**< @} */
 /*---------------------------------------------------------------------------*/

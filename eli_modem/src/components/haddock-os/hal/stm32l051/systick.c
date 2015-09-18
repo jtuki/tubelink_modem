@@ -11,6 +11,7 @@
  */
 #include "systick.h"
 #include "stm32l0xx_hal.h"
+#include "hal_config_stm32l051.h"
 
 
 /***************************************************************************************************
@@ -110,7 +111,7 @@ void systick_Init( sysTick_UpdateTickCb a_hTickUpdate )
     HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
     /*Configure the SysTick IRQ priority */
-    HAL_NVIC_SetPriority(SysTick_IRQn, TICK_INT_PRIORITY ,0);
+    HAL_NVIC_SetPriority(SysTick_IRQn, INT_PRIORITY_SYSTICK ,0);
     
     SYSTICK_ENABLE();
     

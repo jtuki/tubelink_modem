@@ -383,18 +383,19 @@ void hostIf_Run( void )
  *
  * @return  none
  */
+
+// jt - used for profiling UART communication's performance.
+// #include "kernel/timer.h"
+
 void hostIf_SendToHost( hostIfChar *a_pu8Data, hostIfUint8 a_u8Length )
 {
-    // hostIfChar acBuf[16];
-    
+    // struct time t1, t2; // jt - used for profiling UART communication's performance.
+    // haddock_get_time_tick_now(&t1);
     if(a_pu8Data && (a_u8Length < HOSTIF_UART_TX_MSG_MAXLEN) )
     {
-        //sprintf((char*)acBuf, "%s%02x,", "+Read:", a_u8Length);
-        //halUart_Write(&gs_tHostIfUart, acBuf, strlen((char const *)acBuf));
         uart_SendBytes(&gs_tHostIfUart, (hostIfUint8*)a_pu8Data, a_u8Length);
-        //halUart_Write(&gs_tHostIfUart, "\r\n", 2);
-        
     }
+    // haddock_get_time_tick_now(&t2);
 }   /* hostIf_SendToHost() */
 
 
@@ -815,7 +816,7 @@ void hostIf_UartInit__( void *a_ptUartHdl )
     }
     
     /* NVIC for USART1 */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 1);
+    HAL_NVIC_SetPriority(USART2_IRQn, INT_PRIORITY_UART, 1);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
     
     HAL_UART_Receive_IT(&UartHandle, &gs_u8ReceiveByte, 1);

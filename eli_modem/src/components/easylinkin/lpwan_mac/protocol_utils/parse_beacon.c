@@ -10,16 +10,6 @@
 #include "frame_defs/gw_beacon.h"
 #include "parse_beacon.h"
 
-/** The length of each beacon period (unit: seconds).
- * \sa enum _beacon_period */
-const os_uint8 _beacon_period_length_list[4] = {2, 3, 4, 5};
-
-/** We segment each beacon period into 128 sections. Below are the section length
- *  for different beacon period length. (uint: us)
- * \sa beacon_period_section_ratio_t
- * \sa _beacon_period_length_list */
-static const os_uint32 _beacon_section_length_us[] = {15625, 23437, 31250, 39062};
-
 struct beacon_frame_offsets {
     os_uint8 offset_packed_ack_num;
     os_uint8 total_frame_len;
@@ -47,13 +37,13 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
     /** bcn_info[0] @{ */
     switch ((os_uint8) get_bits(bcn_info[0], 7, 6)) {
     case BEACON_PERIOD_2S:
-    case BEACON_PERIOD_3S:
     case BEACON_PERIOD_4S:
-    case BEACON_PERIOD_5S:
+    case BEACON_PERIOD_8S:
+    case BEACON_PERIOD_16S:
         info->beacon_period_length = \
-            _beacon_period_length_list[(int) get_bits(bcn_info[0], 7, 6)];
+            gl_beacon_period_length_list[(int) get_bits(bcn_info[0], 7, 6)];
         info->beacon_section_length_us = \
-            _beacon_section_length_us[(int) get_bits(bcn_info[0], 7, 6)];
+            gl_beacon_section_length_us[(int) get_bits(bcn_info[0], 7, 6)];
         break;
     }
 

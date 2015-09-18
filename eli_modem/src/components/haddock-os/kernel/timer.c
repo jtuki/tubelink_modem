@@ -64,7 +64,7 @@ int haddock_timer_module_init(void)
 }
 
 /**
- * Called in the interrupt service routine each 1ms!
+ * Called in the interrupt service routine each several ms if possible!
  * \ref \file systick.c systick_Get()
  */
 void __haddock_increment_time_tick_now(os_uint32 delta_ms)
@@ -308,19 +308,6 @@ void haddock_timer_update_routine(void)
     
     if (list_empty(& haddock_timer_list) && list_empty(& haddock_atimer_list))
         return;
-    
-    static os_uint32 _systick_prev = 0;
-    static os_uint32 _systick_now = 0;
-    _systick_now = (os_uint32) systick_Get();
-
-    if (_systick_now == _systick_prev)
-        return;
-
-    __haddock_increment_time_tick_now(
-        (_systick_now >= _systick_prev) ? (_systick_now - _systick_prev)
-                                        : (0xFFFFFFFF - _systick_prev + _systick_now)
-    ); // 0xFFFFFFFF is MAX_UINT32
-    _systick_prev = _systick_now;
 
     /*
      * @haddock_time_tick_now has not changed yet.
@@ -546,13 +533,32 @@ static void _haddock_time_shift(struct time *t,
     }
 }
 
+/**
+ * Get current system time tick, update @haddock_time_tick_now, and assign to @t.
+ */
 void haddock_get_time_tick_now(struct time *t)
 {
     haddock_assert(t);
-    HDK_CRITICAL_STATEMENTS(
-        t->s = haddock_time_tick_now.s;
-        t->ms = haddock_time_tick_now.ms;
-    );
+
+    static os_uint32 _systick_prev = 0;
+    static os_uint32 _systick_now = 0;
+
+    _systick_now = (os_uint32) systick_Get();
+
+    if (_systick_now != _systick_prev) {
+        __haddock_increment_time_tick_now(
+            (_systick_now >= _systick_prev) ? (_systick_now - _systick_prev)
+                                            : (0xFFFFFFFF - _systick_prev + _systick_now)
+        ); // 0xFFFFFFFF is MAX_UINT32
+        _systick_prev = _systick_now;
+    }
+
+    if (t != &haddock_time_tick_now) {
+        HDK_CRITICAL_STATEMENTS(
+            t->s = haddock_time_tick_now.s;
+            t->ms = haddock_time_tick_now.ms;
+        );
+    }
 }
 
 struct timer *haddock_get_next_timer(void)

@@ -71,7 +71,10 @@ int os_timer_start(struct timer *timer);
 void os_timer_stop(struct timer *timer);
 void os_timer_destroy(struct timer *timer);
 
-// called in ISR each 1ms.
+/**
+ * Called in the interrupt service routine each several ms if possible!
+ * \ref \file systick.c systick_Get()
+ */
 void __haddock_increment_time_tick_now(os_uint32 delta_ms);
 
 struct timer *__haddock_timer_create(os_pid_t pid,

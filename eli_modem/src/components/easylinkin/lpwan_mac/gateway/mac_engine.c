@@ -96,6 +96,13 @@ void gateway_mac_engine_init(os_uint8 priority)
     }
 
     lpwan_radio_register_radio_controller_pid(gl_gateway_mac_engine_pid);
+
+#if defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
+    // do nothing
+#elif defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_AUTO_TEST
+    // automatically initialize MAC engine.
+    os_ipc_set_signal(this->_pid, SIGNAL_GW_MAC_ENGINE_START);
+#endif
 }
 
 static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
@@ -302,9 +309,13 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 rbuf_push_back(mac_info.packed_ack_delay_list[expected_packed_ack_list_id],
                                &_ack, sizeof(struct beacon_packed_ack));
 
+#if defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
                 /** sent the currently received frame to CPU */
                 ecp_gw_modem_m2c_send_data(_rx_buf+1, _rx_buf[0],
                                            lpwan_radio_get_snr(), lpwan_radio_get_rssi());
+#elif defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_AUTO_TEST
+                // do nothing
+#endif
             }
 
             break;
@@ -317,7 +328,7 @@ gateway_mac_label_radio_rx_invalid_frame:
     if (signal & SIGNAL_GW_MAC_SEND_BEACON) {
         lpwan_radio_stop_rx();
         _frame_cnter_per_period = 0;
-        
+
         /** restart the beacon timer @{ */
         os_timer_reconfig(beacon_timer, this->_pid,
                 SIGNAL_GW_MAC_SEND_BEACON,
@@ -439,17 +450,15 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
 
     info->bcn_info.packed_ack_delay_num = GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM;
 
-    info->bcn_info._beacon_period_length = BEACON_PERIOD_2S;
-    info->bcn_info.beacon_period_length = _beacon_period_length_list[BEACON_PERIOD_2S];
+    info->bcn_info._beacon_period_length = LPWAN_BEACON_PERIOD;
+    info->bcn_info.beacon_period_length = gl_beacon_period_length_list[LPWAN_BEACON_PERIOD];
 
     info->bcn_info.beacon_seq_id = (os_int8) 0x80;
     info->bcn_info.beacon_class_seq_id = 1; // range [1, @beacon_classes_num]
 
     /*
      * sum(ratio_xxx) == 128
-     * As to the default BEACON_PERIOD_2S, each section is 2000/128 (i.e. 15.625ms).
-     *
-     * todo
+     * \sa gl_beacon_section_length_us
      */
     info->bcn_info.ratio.ratio_beacon       = 6;
     info->bcn_info.ratio.ratio_downlink_msg = 0;

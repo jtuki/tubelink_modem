@@ -12,6 +12,7 @@
 #include "easylinkin_modem_process.h"
 #include "hdk_user_config.h"
 #include "process_hostif.h"
+
 #if defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
 #include "radio_controller/radio_controller.h"
 #include "end_device/mac_engine.h"
@@ -20,6 +21,8 @@
 #include "gateway/mac_engine.h"
 #include "gateway/mac_engine_driver.h"
 #endif
+
+#include "lpwan_config.h"
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -92,7 +95,7 @@ void os_processes_init_easylinkin_modem(void) {
     proc_HostifInit(1);
     gateway_mac_engine_init(0);
     gateway_mac_engine_driver_init(1);
-#endif
+#endif // MODEM_FOR_END_DEVICE or MODEM_FOR_GATEWAY
 }   /* os_processes_init_easylinkin_modem */
 
 

@@ -1130,6 +1130,11 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\frame_defs\gw_join_response.h</FilePath>
             </File>
+            <File>
+              <FileName>gw_beacon.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\frame_defs\gw_beacon.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -254,7 +254,7 @@ void sx1276_Dio2EnableInt( rf_bool a_bEnable )
     else{
         tGpioInit.Mode = GPIO_MODE_IT_RISING;
         HAL_GPIO_Init(DIO2_IOPORT, &tGpioInit);
-        HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
+        HAL_NVIC_SetPriority(EXTI4_15_IRQn, INT_PRIORITY_RADIO, 0);
         HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
     }
     

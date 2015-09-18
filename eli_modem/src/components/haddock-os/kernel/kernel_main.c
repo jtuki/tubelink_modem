@@ -64,9 +64,10 @@ int main ()
     
     while (OS_TRUE) {
         __increment_main_loop_counter();
-        __get_kernel_timetick_now();
         
+        __get_kernel_timetick_now(); // also updated @haddock_time_tick_now
         haddock_timer_update_routine();
+
         proc = schedule_next();
         if (proc) {
 #if defined HDK_CFG_POWER_SAVING_ENABLE && HDK_CFG_POWER_SAVING_ENABLE == OS_TRUE

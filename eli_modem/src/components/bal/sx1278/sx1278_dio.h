@@ -26,6 +26,7 @@
 #if (BAL_USE_SX1278 == BAL_MODULE_ON)
 
 #include "stm32l0xx_hal.h"
+#include "hal/stm32l051/hal_config_stm32l051.h"
 
 /*!
  * DIO state read functions mapping
