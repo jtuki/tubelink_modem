@@ -1,0 +1,2 @@
+pc_delta_ms:48110; mcu_delta_ms:48000; (pc-mcu)/mcu:0.002292
+pc_delta_ms:24031; mcu_delta_ms:24000; (pc-mcu)/mcu:0.001292
