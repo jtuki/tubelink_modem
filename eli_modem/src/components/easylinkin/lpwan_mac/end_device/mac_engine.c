@@ -61,7 +61,7 @@ struct tx_frame_buffer {
  * \sa LPWAN_DEVICE_MAC_UPLINK_BUFFER_MAX_NUM
  * \sa sizeof(struct tx_frame_buffer)
  */
-static struct mem_pool_hdr *_uplink_frame_pool;
+static struct mem_pool_hdr *gl_uplink_frame_pool;
 
 #define DE_MAC_SHORT_ADDR_INVALID   0x0000
 static struct lpwan_device_mac_info mac_info __attribute__((aligned (4)));
@@ -183,17 +183,17 @@ static os_size_t _debug_mark_line_timer_start;
 /*---------------------------------------------------------------------------*/
 /**< MAC related timers. @{ */
 
-static struct timer *_timeout_timer; /**< internal timeout timer
-                                          \sa joining_timer; tx_timer */
-static struct timer *update_beacon_timer; // try to track beacon periodically
+static struct timer *gl_timeout_timer; /**< internal timeout timer
+                                          \sa gl_joining_timer; gl_tx_timer */
+static struct timer *gl_update_beacon_timer; // try to track beacon periodically
 
 /**
- * \remark The two timers below use @_timeout_timer.
+ * \remark The two timers below use @gl_timeout_timer.
  * Only one timer _should_ exist at any time.
- * \sa _timeout_timer
+ * \sa gl_timeout_timer
  */
-static struct timer *joining_timer;
-static struct timer *tx_timer;
+static struct timer *gl_joining_timer;
+static struct timer *gl_tx_timer;
 
 /**< @} */
 /*---------------------------------------------------------------------------*/
@@ -212,19 +212,19 @@ void device_mac_engine_init(os_uint8 priority)
     haddock_memset(& mac_info, 0, sizeof(mac_info));
 
     /**< initialize the MAC timers @{ */
-    _timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+    gl_timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
                                     DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-    haddock_assert(_timeout_timer);
+    haddock_assert(gl_timeout_timer);
 
-    update_beacon_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
+    gl_update_beacon_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
                                     DEVICE_MAC_ENGINE_MAX_TIMER_DELTA_MS);
-    haddock_assert(update_beacon_timer);
+    haddock_assert(gl_update_beacon_timer);
     /**< @} */
 
-    _uplink_frame_pool = \
+    gl_uplink_frame_pool = \
             mem_pool_create(LPWAN_DEVICE_MAC_UPLINK_BUFFER_MAX_NUM,
                             sizeof(struct tx_frame_buffer));
-    haddock_assert(_uplink_frame_pool);
+    haddock_assert(gl_uplink_frame_pool);
 
     list_head_init(& mac_info.wait_ack_frame_buffer_list);
     list_head_init(& mac_info.pending_frame_buffer_list);
@@ -320,15 +320,15 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         if (signal & SIGNAL_MAC_ENGINE_DELAYED_JOINING) {
             mac_joining_state_transfer(DE_JOINING_STATES_DELAY_TO_TRACK_BEACON);
             // delay some time and perform joining
-            haddock_assert(timer_not_started(_timeout_timer));
-            joining_timer = _timeout_timer;
+            haddock_assert(timer_not_started(gl_timeout_timer));
+            gl_joining_timer = gl_timeout_timer;
 
             os_uint32 _delay = hdk_randr(0, 1000) +
                                1000 * hdk_randr(LPWAN_MAC_JOIN_AFTER_INITED_MIN,
                                                 LPWAN_MAC_JOIN_AFTER_INITED_MAX);
-            os_timer_reconfig(joining_timer,
+            os_timer_reconfig(gl_joining_timer,
                               this->_pid, SIGNAL_MAC_ENGINE_START_JOINING, _delay);
-            os_timer_start(joining_timer);
+            os_timer_start(gl_joining_timer);
             print_log(LOG_INFO, "JI: (delay %lds:%dms)", _delay / 1000, _delay % 1000);
 
             process_sleep();
@@ -366,9 +366,9 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 // set up the periodically timer to track beacon
                 os_uint32 _delta = 1000 * _beacon_info.beacon_period_length -
                                    DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS;
-                os_timer_reconfig(update_beacon_timer, this->_pid,
+                os_timer_reconfig(gl_update_beacon_timer, this->_pid,
                                   SIGNAL_MAC_ENGINE_UPDATE_BEACON_INFO, _delta);
-                os_timer_start(update_beacon_timer);
+                os_timer_start(gl_update_beacon_timer);
 
                 update_synced_beacon_info(& _frame_hdr_info,
                                           & _beacon_info,
@@ -438,10 +438,10 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     // set up the periodically timer to track beacon
                     os_uint32 _delta = 1000 * _beacon_info.beacon_period_length -
                                        DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS;
-                    os_timer_stop(update_beacon_timer);
-                    os_timer_reconfig(update_beacon_timer, this->_pid,
+                    os_timer_stop(gl_update_beacon_timer);
+                    os_timer_reconfig(gl_update_beacon_timer, this->_pid,
                                       SIGNAL_MAC_ENGINE_UPDATE_BEACON_INFO, _delta);
-                    os_timer_start(update_beacon_timer);
+                    os_timer_start(gl_update_beacon_timer);
 
                     print_log(LOG_INFO, "JD: @} (%d)", _s_info->beacon_seq_id);
 
@@ -463,11 +463,11 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                         if (_delay == 0) {
                             os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_SEND_FRAME);
                         } else {
-                            haddock_assert(timer_not_started(_timeout_timer));
-                            tx_timer = _timeout_timer;
-                            os_timer_reconfig(tx_timer, this->_pid,
+                            haddock_assert(timer_not_started(gl_timeout_timer));
+                            gl_tx_timer = gl_timeout_timer;
+                            os_timer_reconfig(gl_tx_timer, this->_pid,
                                               SIGNAL_MAC_ENGINE_SEND_FRAME, _delay);
-                            os_timer_start(tx_timer);
+                            os_timer_start(gl_tx_timer);
 
                             if (_delay >= DEVICE_MAC_SLEEP_NEXT_TIMER_LENGTH_MS) {
                                 process_sleep();
@@ -486,14 +486,14 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                                       _s_info->beacon_seq_id,
                                       _s_info->beacon_classes_num,
                                       _s_info->beacon_class_seq_id);
-                    os_timer_stop(update_beacon_timer);
+                    os_timer_stop(gl_update_beacon_timer);
                     os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_TRACK_BEACON_TIMEOUT);
                 }
                 return signal ^ SIGNAL_MAC_ENGINE_BEACON_FOUND;
             }
             else if (signal & SIGNAL_MAC_ENGINE_TRACK_BEACON_TIMEOUT) {
                 print_log(LOG_WARNING, "JD: @} timeout");
-                os_timer_stop(update_beacon_timer);
+                os_timer_stop(gl_update_beacon_timer);
                 _is_lost_beacon = OS_TRUE;
 
                 mac_joined_state_transfer(DE_JOINED_STATES_TRACKING_BEACON_TIMEOUT);
@@ -698,6 +698,7 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
 
     check_info.is_check_packed_ack = mac_info.is_check_packed_ack;
     check_info.short_addr = mac_info.short_addr;
+    check_info.is_check_join_ack = (mac_info.mac_engine_states == DE_MAC_STATES_JOINING);
 
     os_int8 _len = -1;
     if (rx_buf[0] > 0) {
@@ -743,10 +744,10 @@ static inline os_int8 get_expected_beacon_seq_id(os_int8 cur_seq_id,
                                                  os_int8 packed_ack_delay_num)
 {
     haddock_assert(packed_ack_delay_num > 0);
-    if (cur_seq_id < (os_int8) (BEACON_MAX_SEQ_NUM - packed_ack_delay_num))
+    if (cur_seq_id <= (os_int8) (BEACON_MAX_SEQ_NUM - packed_ack_delay_num))
         return cur_seq_id + packed_ack_delay_num;
     else
-        return packed_ack_delay_num - (BEACON_MAX_SEQ_NUM - cur_seq_id);
+        return packed_ack_delay_num - (BEACON_MAX_SEQ_NUM - cur_seq_id) - 1;
 }
 
 /*
@@ -831,12 +832,12 @@ static void device_mac_srand(void)
 
 /**
  * If need to track beacon, set signal @SIGNAL_MAC_ENGINE_TRACK_BEACON
- * Reconfig the @update_beacon_timer timer to periodically update beacon information.
+ * Reconfig the @gl_update_beacon_timer timer to periodically update beacon information.
  */
 static void device_update_beacon_info(os_uint32 next_update_delta)
 {
     mac_info.expected_beacon_seq_id += 1;
-    if (mac_info.expected_beacon_seq_id == BEACON_MAX_SEQ_NUM) {
+    if (mac_info.expected_beacon_seq_id == BEACON_OVERFLOW_SEQ_NUM) {
         mac_info.expected_beacon_seq_id = 0;
     }
 
@@ -850,7 +851,7 @@ static void device_update_beacon_info(os_uint32 next_update_delta)
     os_boolean need_track_beacon = OS_FALSE;
 
     if (mac_info.pending_list_len > 0) {
-        if (((os_uint16) mac_info.short_addr) % mac_info.expected_class_seq_id == 0) {
+        if (((os_uint16) mac_info.suuid) % mac_info.expected_class_seq_id == 0) {
             need_track_beacon = OS_TRUE;
         }
     }
@@ -878,15 +879,15 @@ static void device_update_beacon_info(os_uint32 next_update_delta)
         os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_TRACK_BEACON);
     }
 
-    os_timer_reconfig(update_beacon_timer, this->_pid,
+    os_timer_reconfig(gl_update_beacon_timer, this->_pid,
                       SIGNAL_MAC_ENGINE_UPDATE_BEACON_INFO, next_update_delta);
-    os_timer_start(update_beacon_timer);
+    os_timer_start(gl_update_beacon_timer);
 }
 
 static struct tx_frame_buffer *_alloc_tx_frame_buffer(void)
 {
     struct mem_pool_blk *blk = \
-            mem_pool_alloc_blk(_uplink_frame_pool, sizeof(struct tx_frame_buffer));
+            mem_pool_alloc_blk(gl_uplink_frame_pool, sizeof(struct tx_frame_buffer));
     return (blk == NULL) ? NULL : ((struct tx_frame_buffer*) blk->blk);
 }
 
@@ -965,7 +966,7 @@ os_int8 device_mac_send_msg(enum device_message_type type, const os_uint8 msg[],
         return DEVICE_SEND_MSG_ERR_INVALID_LEN;
 
     if (mac_info.pending_list_len >= LPWAN_DEVICE_MAC_PENDING_TX_FRAME_MAX_NUM) {
-        haddock_assert(timer_started(update_beacon_timer));
+        haddock_assert(timer_started(gl_update_beacon_timer));
         print_log(LOG_WARNING, "JD: tx_buf (full)");
         return DEVICE_SEND_MSG_ERR_PENDING_TX_BUFFER_FULL;
     }

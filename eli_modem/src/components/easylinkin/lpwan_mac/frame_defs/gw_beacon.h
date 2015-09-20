@@ -94,13 +94,14 @@ __LPWAN struct beacon_header {
 /**
  * bits 1: is_join_ack?
  * bits 1: is_msg_pending? (besides the ACK, there is also pending msg)
- * bits 3: estimation_down_time (estimated downlink time for the pending message)
+ * bits 3: estimation_downlink_slots (estimated downlink slots reserved for the downlink message)
  * bits 2: preferred_next_tx_power (the recommended next tx power of end-device)
  * bits 1: _reserved
- * 
+ *
  * \remark
- *      eg. for 2s beacon interval, time = 31.25ms * @estimation_down_time
+ *      eg. for 2s beacon interval: downlink_time = (2000ms / 128) * @estimation_downlink_slots
  *      \sa enum beacon_period_section_ratio_t
+ *      \sa LPWAN_BEACON_SECTION_DEFAULT_DOWNLINK_SLOTS
  */
 typedef os_uint8 packed_ack_header_t;
 

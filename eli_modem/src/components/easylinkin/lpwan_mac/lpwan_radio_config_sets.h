@@ -25,9 +25,15 @@ extern "C"
 #define LPWAN_RADIO_CONFIGURATION   LPWAN_RADIO_CONFIG_SET_SF8
 
 #if defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF7
-#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_2S
+/**< 125khz, SF7.
+ * \sa global lora settings @LoRaSettings */
+#define LPWAN_BEACON_PERIOD     BEACON_PERIOD_4S
+#define LPWAN_BEACON_SECTION_DEFAULT_DOWNLINK_SLOTS  6  // (4000/128)*6 = 187.5ms (beacon / downlink+ACK)
 #elif defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF8
-#define LPWAN_BEACON_PERIOD         BEACON_PERIOD_8S
+/**< 125khz, SF8.
+ * \sa global lora settings @LoRaSettings */
+#define LPWAN_BEACON_PERIOD     BEACON_PERIOD_8S
+#define LPWAN_BEACON_SECTION_DEFAULT_DOWNLINK_SLOTS  6  // (8000/128)*13 = 375ms (beacon / downlink+ACK)
 #endif
 
 /*---------------------------------------------------------------------------*/

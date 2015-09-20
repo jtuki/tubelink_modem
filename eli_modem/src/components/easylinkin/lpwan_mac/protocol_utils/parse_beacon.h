@@ -20,7 +20,7 @@ struct parsed_beacon_info {
     version_t required_min_version;
     version_t lpwan_protocol_version;
     
-    os_int8 beacon_seq_id; /**< range [0, BEACON_MAX_SEQ_NUM) */
+    os_int8 beacon_seq_id; /**< range [0, BEACON_MAX_SEQ_NUM] */
     os_uint8 beacon_class_seq_id; /**< range [1, ::beacon_classes_num] */
     
     os_uint8 packed_ack_delay_num;
@@ -48,7 +48,7 @@ struct parsed_beacon_info {
      * @{ */
     os_uint32 beacon_section_length_us;    /**< \sa _beacon_section_length_us
                                                 \sa enum _beacon_period */
-    os_uint8 beacon_period_length;     /**< \sa enum _beacon_period */
+    os_uint8 beacon_period_length;     /**< beacon period in seconds. \sa enum _beacon_period */
     /**< @} */
 
     os_uint8 beacon_classes_num; /**< \sa struct beacon_info_t::beacon_classes_num
@@ -76,8 +76,7 @@ struct parsed_beacon_packed_ack_to_me {
     os_boolean has_ack; /**< has received ACK? */
     os_boolean is_msg_pending;
     
-    /**< If set to 0, listen through the BEACON period, all the time. */
-    os_uint8 total_estimation_down_time;
+    os_uint8 total_estimation_downlink_slots;
     
     os_uint8 confirmed_seq;
     os_uint8 preferred_next_tx_power;
@@ -85,6 +84,7 @@ struct parsed_beacon_packed_ack_to_me {
 
 struct parse_beacon_check_info {
     os_boolean is_check_packed_ack;
+    os_boolean is_check_join_ack;   // if is joining, we only check join ACK.
     short_addr_t short_addr;
     modem_uuid_t uuid;
     short_modem_uuid_t suuid;

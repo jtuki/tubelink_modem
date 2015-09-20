@@ -344,7 +344,7 @@ gateway_mac_label_radio_rx_invalid_frame:
         }
         // beacon seq id
         mac_info.bcn_info.beacon_seq_id += 1;
-        if (mac_info.bcn_info.beacon_seq_id >= BEACON_MAX_SEQ_NUM) {
+        if (mac_info.bcn_info.beacon_seq_id == BEACON_OVERFLOW_SEQ_NUM) {
             mac_info.bcn_info.beacon_seq_id = 0;
         }
         /** @} */

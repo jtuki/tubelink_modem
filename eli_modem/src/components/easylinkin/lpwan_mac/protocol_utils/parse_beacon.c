@@ -77,7 +77,6 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
         info->ratio.ratio_downlink_msg + info->ratio.ratio_uplink_msg)
         return -1;
 
-
     const os_uint8 *bcn_seq_id = bcn_hdr->seq;
     info->beacon_seq_id         = (os_int8) bcn_seq_id[0];
     // range [1, info->beacon_classes_num]
@@ -96,23 +95,26 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
          */
         os_boolean _is_join_ack;
         os_boolean _is_msg_pending;
-        os_uint8 _estimatioon_downtime;
+        os_uint8 _estimatioon_downlink_slots;
         os_uint8 _preferred_tx_power;
 
-        os_uint8 _total_estimation_downtime = 0;
+        os_uint8 _total_estimation_downlink_slots = 0;
 
         for (os_uint8 i=0; i < _packed_ack_num; ++i) {
             cur_ack = (struct beacon_packed_ack *) & beacon[_offset];
 
-            _is_join_ack            = get_bits(cur_ack->hdr, 7, 7);
-            _is_msg_pending         = get_bits(cur_ack->hdr, 6, 6);
-            _estimatioon_downtime   = get_bits(cur_ack->hdr, 5, 3);
-            _preferred_tx_power     = get_bits(cur_ack->hdr, 2, 1);
+            _is_join_ack                = get_bits(cur_ack->hdr, 7, 7);
+            _is_msg_pending             = get_bits(cur_ack->hdr, 6, 6);
+            _estimatioon_downlink_slots = get_bits(cur_ack->hdr, 5, 3);
+            _preferred_tx_power         = get_bits(cur_ack->hdr, 2, 1);
 
-            _total_estimation_downtime += _estimatioon_downtime;
+            _total_estimation_downlink_slots += _estimatioon_downlink_slots;
 
-            if ((_is_join_ack && cur_ack->addr.short_uuid == check_info->suuid)
-                || (!_is_join_ack && cur_ack->addr.short_addr == check_info->short_addr))
+            if ((check_info->is_check_join_ack
+                 && _is_join_ack && cur_ack->addr.short_uuid == check_info->suuid)
+                ||
+                (!check_info->is_check_join_ack
+                 && !_is_join_ack && cur_ack->addr.short_addr == check_info->short_addr))
             {
                 /**
                  * \remark
@@ -123,7 +125,7 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
                  *  listen all the ack through the BEACON period.
                  */
                 ack->has_ack = OS_TRUE;
-                ack->total_estimation_down_time = _total_estimation_downtime;
+                ack->total_estimation_downlink_slots = _total_estimation_downlink_slots;
                 ack->preferred_next_tx_power = _preferred_tx_power;
                 ack->is_msg_pending = _is_msg_pending;
                 ack->confirmed_seq = cur_ack->confirmed_seq;
