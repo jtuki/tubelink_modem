@@ -31,8 +31,6 @@
 #include "protocol_utils/construct_frame_hdr.h"
 #include "protocol_utils/construct_de_uplink_msg.h"
 
-#include "lib_util/crc/crc.h"
-
 #include "mac_engine.h"
 
 /*---------------------------------------------------------------------------*/
@@ -93,9 +91,9 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
                     struct parsed_beacon_info *beacon_info,
                     struct parsed_beacon_packed_ack_to_me *beacon_packed_ack);
 
-static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
-                                      struct parsed_beacon_info *info,
-                                      struct parsed_beacon_packed_ack_to_me *ack);
+static void update_synced_beacon_info(const struct parsed_frame_hdr_info *f_hdr,
+                                      const struct parsed_beacon_info *info,
+                                      const struct parsed_beacon_packed_ack_to_me *ack);
 
 static inline os_int8 get_expected_beacon_seq_id(os_int8 cur_seq_id,
                                                  os_int8 packed_ack_delay_num);
@@ -283,7 +281,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
             } else {
 #ifndef LPWAN_DEBUG_ONLY_TRACK_BEACON
-                print_log(LOG_INFO, "JD: rx not beacon");
+                print_log(LOG_INFO, "tracking_beacon: rx not beacon");
 #endif
             }
             return signal ^ SIGNAL_RLC_RX_OK;
@@ -720,9 +718,9 @@ static os_int8 rx_handler_is_it_a_beacon(const os_uint8 *rx_buf, os_uint8 len,
     return _len;
 }
 
-static void update_synced_beacon_info(struct parsed_frame_hdr_info *f_hdr,
-                                      struct parsed_beacon_info *info,
-                                      struct parsed_beacon_packed_ack_to_me *ack)
+static void update_synced_beacon_info(const struct parsed_frame_hdr_info *f_hdr,
+                                      const struct parsed_beacon_info *info,
+                                      const struct parsed_beacon_packed_ack_to_me *ack)
 {
     mac_info.synced_beacon_info = *info;
     mac_info.synced_beacon_packed_ack_to_me = *ack;

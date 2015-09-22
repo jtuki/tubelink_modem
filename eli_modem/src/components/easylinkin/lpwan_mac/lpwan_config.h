@@ -43,7 +43,7 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
  * \sa http://en.wikipedia.org/wiki/Lollipop_sequence_numbering
  */
 #define BEACON_MAX_SEQ_NUM      0x7F
-#define BEACON_OVERFLOW_SEQ_NUM 0x80
+#define BEACON_OVERFLOW_SEQ_NUM ((os_int8) (0x80))
 
 /**
  * At most 16 classes.
