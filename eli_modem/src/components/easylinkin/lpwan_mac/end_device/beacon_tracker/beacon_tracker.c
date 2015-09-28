@@ -230,7 +230,7 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
                  * with the timing of btracker_handle_track_bcn_ok().
                  */
                 if (! is_match_expected_beacon) {
-                    print_log(LOG_WARNING, "BTR: mis-match (E:%d; R:%d)",
+                    print_log(LOG_WARNING, "BTR (track): mis-match (E:%d; R:%d)",
                               seq.expected_seq_id,
                               seq.seq_id);
                 }
@@ -729,6 +729,8 @@ static void btracker_handle_track_bcn_timeout(void)
     /* Notify MAC engine to handle the lost beacon situation */
     os_ipc_set_signal(gl_registered_mac_engine_pid,
                       SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON);
+    
+    print_log(LOG_WARNING, "BTR (track): lost beacon");
 }
 
 /**
@@ -761,24 +763,25 @@ static void btracker_handle_track_search_timeout(void)
     haddock_assert(gl_btracker_states == BCN_TRACKER_BCN_TRACKING_SEARCH);
     btracker_reset();
     os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED);
+    print_log(LOG_WARNING, "BTR (track-search): timeout");
 }
 
 /** Return the synced frame header. */
 const struct parsed_frame_hdr_info *btracker_get_parsed_frame_hdr_info(void)
 {
-    return & gl_synced_fhdr;
+    return & btracker_frame_hdr_info;
 }
 
 /** Return the synced beacon body's information. */
 const struct parsed_beacon_info *btracker_get_parsed_beacon_info(void)
 {
-    return & gl_synced_bcn;
+    return & btracker_beacon_info;
 }
 
 /** Return the synced packed ACK. */
 const struct parsed_beacon_packed_ack_to_me *btracker_get_parsed_packed_ack(void)
 {
-    return & gl_synced_ack;
+    return & btracker_beacon_packed_ack;
 }
 
 const struct beacon_tracker_info_base *btracker_get_info_base(void)

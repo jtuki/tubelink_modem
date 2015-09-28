@@ -29,6 +29,7 @@ os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 /**
  * The begin and end time of the last rx frame.
  */
+static struct time tmp_rx_time;
 static struct time rx_begin_time;
 static struct time rx_end_time;
 
@@ -75,7 +76,7 @@ os_int8 lpwan_radio_start_rx(void)
 {
     haddock_assert(Rf_GetCurState() == RF_STANDBY);
     Rf_ReceiveStart();
-    haddock_get_time_tick_now_cached(& rx_begin_time);
+    haddock_get_time_tick_now_cached(& tmp_rx_time);
     return 0;
 }
 
@@ -200,6 +201,7 @@ void lpwan_radio_event__(RF_EVT_e a_eEvt)
         break;
     case RF_EVT_RX_OK:
         os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_OK);
+        rx_begin_time = tmp_rx_time;
         haddock_get_time_tick_now_cached(& rx_end_time);
         break;
     case RF_EVT_RX_TMO:

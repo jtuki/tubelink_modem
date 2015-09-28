@@ -246,6 +246,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     // no downlink or pending uplink frames, remains in DE_JOINED_STATES_IDLE
                 }
 
+                print_log(LOG_INFO, "JD: tracked (%d)", gl_bcn_info->beacon_seq_id);
                 return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACKED;
             }
 
