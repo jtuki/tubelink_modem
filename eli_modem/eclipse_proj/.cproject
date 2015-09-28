@@ -47,8 +47,8 @@
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=0"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.939033963" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>
@@ -124,10 +124,10 @@
 								<option id="gnu.c.compiler.mingw.exe.release.option.debugging.level.1038867205" name="Debug Level" superClass="gnu.c.compiler.mingw.exe.release.option.debugging.level" value="gnu.c.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1418305512" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__MCU_8051=1"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=0"/>
-									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=1"/>
 									<listOptionValue builtIn="false" value="__ICCSTM8__=1"/>
 									<listOptionValue builtIn="false" value="LPWAN_DEBUG=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_END_DEVICE=1"/>
+									<listOptionValue builtIn="false" value="MODEM_FOR_GATEWAY=0"/>
 								</option>
 								<option id="gnu.c.compiler.option.include.paths.215447858" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../src/&quot;"/>

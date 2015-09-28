@@ -25,7 +25,7 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
     os_uint8 *info = bcn_hdr->info;  /**< \sa beacon_info_t */
 
     /** bcn_info[0] @{ */
-    set_bits(info[0], 7, 6, bcn_info->_beacon_period_length);
+    set_bits(info[0], 7, 6, bcn_info->beacon_period_enum);
     set_bits(info[0], 3, 0, bcn_info->beacon_classes_num - 1); // highest value is @BEACON_MAX_CLASSES_NUM
     /** @} */
 
@@ -42,15 +42,15 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
     /** @} */
 
     /** bcn_info[3] @{ */
-    set_bits(info[3], 7, 0, bcn_info->nearby_channels);
+    set_bits(info[3], 7, 0, 0); // reserved byte
     /** @} */
 
     // construct the @period_ratio
     os_uint8 *bcn_ratio = bcn_hdr->period_ratio;
 
-    set_bits(bcn_ratio[0], 7, 0, bcn_info->ratio.ratio_beacon);
-    set_bits(bcn_ratio[1], 7, 0, bcn_info->ratio.ratio_downlink_msg);
-    set_bits(bcn_ratio[2], 7, 0, bcn_info->ratio.ratio_uplink_msg);
+    set_bits(bcn_ratio[0], 7, 0, bcn_info->ratio.slots_beacon);
+    set_bits(bcn_ratio[1], 7, 0, bcn_info->ratio.slots_downlink_msg);
+    set_bits(bcn_ratio[2], 7, 0, bcn_info->ratio.slots_uplink_msg);
 
     // construct the @seq
     os_uint8 *bcn_seq_id = bcn_hdr->seq;

@@ -22,12 +22,4 @@
  */
 #define SIGNAL_SYS_MSG                  (((os_uint32)1) << 31)
 
-/**
- * When a process is blocked to wait for some signal/message to leave "wait" 
- * mode (i.e. transit to "ready" mode for scheuler to schedule), we use this bit 
- * to indicate that the block period is timeout (leave "wait" mode not because 
- * of the arriving of a signal/message but due to timeout).
- */
-#define SIGNAL_SYS_BLOCK_TIMEOUT        (((os_uint32)1) << 30)
-
 #endif /* HADDOCK_SYS_SIGNAL_DEFS_H_ */

@@ -139,7 +139,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
         os_timer_reconfig(beacon_timer, this->_pid,
                           SIGNAL_GW_MAC_SEND_BEACON,
-                          1000 * mac_info.bcn_info.beacon_period_length);
+                          1000 * mac_info.bcn_info.beacon_period_length_s);
 
         os_timer_reconfig(radio_check_timer, this->_pid,
                           SIGNAL_GW_MAC_ENGINE_CHECK_RADIO_TIMEOUT,
@@ -332,7 +332,7 @@ gateway_mac_label_radio_rx_invalid_frame:
         /** restart the beacon timer @{ */
         os_timer_reconfig(beacon_timer, this->_pid,
                 SIGNAL_GW_MAC_SEND_BEACON,
-                1000 * mac_info.bcn_info.beacon_period_length);
+                1000 * mac_info.bcn_info.beacon_period_length_s);
         os_timer_start(beacon_timer);
         /** @} */
         
@@ -443,26 +443,23 @@ static void gateway_init_beacon_info(struct lpwan_gateway_mac_info *info)
     info->bcn_info.required_min_version = 0x0;
     info->bcn_info.lpwan_protocol_version = 0x0;
 
-    info->bcn_info.nearby_channels = 0x00;
-    /**< @} */
-
     info->bcn_info.has_packed_ack = OS_FALSE;
 
     info->bcn_info.packed_ack_delay_num = GATEWAY_DEFAULT_PACKED_ACK_DELAY_NUM;
 
-    info->bcn_info._beacon_period_length = LPWAN_BEACON_PERIOD;
-    info->bcn_info.beacon_period_length = gl_beacon_period_length_list[LPWAN_BEACON_PERIOD];
+    info->bcn_info.beacon_period_enum = LPWAN_BEACON_PERIOD;
+    info->bcn_info.beacon_period_length_s = gl_beacon_period_length_list[LPWAN_BEACON_PERIOD];
 
     info->bcn_info.beacon_seq_id = (os_int8) 0x80;
     info->bcn_info.beacon_class_seq_id = 1; // range [1, @beacon_classes_num]
 
     /*
-     * sum(ratio_xxx) == 128
+     * sum(slots_xyz) == 128
      * \sa gl_beacon_section_length_us
      */
-    info->bcn_info.ratio.ratio_beacon       = 6;
-    info->bcn_info.ratio.ratio_downlink_msg = 0;
-    info->bcn_info.ratio.ratio_uplink_msg   = 122;
+    info->bcn_info.ratio.slots_beacon       = 6;
+    info->bcn_info.ratio.slots_downlink_msg = 0;
+    info->bcn_info.ratio.slots_uplink_msg   = 122;
 
     /**
      * obtain information from MAC engine driver's configuration.

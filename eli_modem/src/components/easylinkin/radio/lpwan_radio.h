@@ -15,6 +15,7 @@ extern "C"
 
 #include "haddock_types.h"
 #include "kernel/process.h"
+#include "kernel/timer.h"
 #include "radio_config.h"
 
 extern os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
@@ -45,6 +46,20 @@ void lpwan_radio_change_base_frequency(os_uint32 freq);
 
 os_int16 lpwan_radio_get_rssi(void);
 os_int16 lpwan_radio_get_snr(void);
+
+struct lpwan_last_rx_frame_rssi_snr {
+    os_int16 rssi;
+    os_int16 snr;
+};
+
+struct lpwan_last_rx_frame_rssi_snr lpwan_radio_get_last_rx_rssi_snr(void);
+
+struct lpwan_last_rx_frame_time {
+    struct time tx; /**< the _approximated_ time when the last received frame is sent */
+    struct time rx; /**< the time when the last received frame is received */
+};
+
+void lpwan_radio_get_last_rx_frame_time(struct lpwan_last_rx_frame_time *t);
 
 #ifdef __cplusplus
 }

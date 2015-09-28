@@ -20,6 +20,7 @@
 #include "lpwan_mac/gateway/mac_engine.h"
 #endif
 
+#include "lpwan_config.h"
 #include "radio_controller.h"
 
 static enum radio_controller_states _radio_cur_state;
@@ -34,15 +35,15 @@ static os_int8 rlc_sleep_cleanup_callback(void);
 #define put_radio_to_sleep() do {         \
     lpwan_radio_stop_rx();                \
     stop_radio_check_timer();             \
-    _radio_cur_state = RADIO_STATES_IDLE; \
     process_sleep();                      \
 } while (0)
 
 os_pid_t gl_radio_controller_pid;
-static os_pid_t _registered_mac_engine_pid = PROCESS_ID_RESERVED;
 haddock_process("radio_controller_proc");
 
-static struct timer *radio_controller_timeout_timer;
+static os_pid_t gl_registered_caller_pid = PROCESS_ID_RESERVED;
+
+static struct timer *radio_controller_timeout_timer; // used both for tx_rand_delay and rx_continuously
 static struct timer *radio_check_timer;
 
 /**
@@ -50,22 +51,22 @@ static struct timer *radio_check_timer;
  */
 static struct {
     os_uint8 len;
-    os_uint8 *frame;
+    const os_uint8 *frame;
     struct time try_tx_time;
     os_uint16 try_tx_duration;
-} _cur_tx_frame;
+} gl_cur_tx_frame;
 
 static struct {
     os_boolean is_continuous;
-} _radio_rx_buffer_config;
+} gl_radio_rx_config;
 
 static struct {
     os_uint8 _padding1, _padding2, _padding3;
     os_uint8 buffer_size; // for back-level compatibility
     os_uint8 buffer[LPWAN_RADIO_RX_BUFFER_MAX_LEN] __attribute__((aligned (4)));
-} __radio_rx_buffer;
+} _radio_rx_buffer;
 
-os_uint8 *radio_rx_buffer;
+os_uint8 *gl_radio_rx_buffer;
 
 void radio_controller_init(os_uint8 priority)
 {
@@ -74,7 +75,7 @@ void radio_controller_init(os_uint8 priority)
     haddock_assert(proc_radio_controller);
     gl_radio_controller_pid = proc_radio_controller->_pid;
 
-    radio_rx_buffer = (os_uint8 *) &__radio_rx_buffer.buffer_size;
+    gl_radio_rx_buffer = (os_uint8 *) &_radio_rx_buffer.buffer_size;
 
     radio_controller_timeout_timer = os_timer_create(this->_pid, SIGNAL_SYS_MSG,
                                                      RADIO_CONTROLLER_MAX_TIMER_DELTA_MS);
@@ -97,18 +98,16 @@ void radio_controller_init(os_uint8 priority)
 }
 
 /**
- * \remark @rx_buffer is the rx buffer of MAC engine.
+ * The corresponding signal will send to the @caller_pid.
  */
-void radio_controller_register_mac_engine(os_pid_t mac_engine_pid)
+void rlc_register_caller(os_pid_t caller_pid)
 {
-    haddock_assert(_registered_mac_engine_pid == PROCESS_ID_RESERVED);
-    _registered_mac_engine_pid = mac_engine_pid;
+    gl_registered_caller_pid = caller_pid;
 }
 
 static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
 {
     haddock_assert(pid == this->_pid);
-    haddock_assert(_registered_mac_engine_pid != PROCESS_ID_RESERVED);
 
     if (signal & SIGNAL_RADIO_CONTROLLER_ROUTINE_CHECK_TIMER) {
         start_radio_check_timer();
@@ -126,10 +125,12 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
     switch ((int) _radio_cur_state) {
     case RADIO_STATES_RX:
         if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
-            lpwan_radio_read(radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
-            os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_RX_OK);
+            lpwan_radio_read(gl_radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
 
-            if (_radio_rx_buffer_config.is_continuous) {
+            haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+            os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_RX_OK);
+
+            if (gl_radio_rx_config.is_continuous) {
                 lpwan_radio_start_rx();
             } else {
                 radio_controller_rx_stop();
@@ -149,24 +150,31 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
     case RADIO_STATES_TX_CCA:
         if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
             // we cannot send the frame now, notify the mac engine.
-            lpwan_radio_read(radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
+            lpwan_radio_read(gl_radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
 
-            os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_TX_CCA_FAILED);
+            haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+            os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_CCA_FAILED);
 
-            _cur_tx_frame.frame = NULL;
+            gl_cur_tx_frame.frame = NULL;
+            _radio_cur_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
+
             return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
         }
         if (signal & SIGNAL_LPWAN_RADIO_RX_CRC_ERROR) {
             // we regard it as CCA failed too.
-            os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_TX_CCA_CRC_FAIL);
-            _cur_tx_frame.frame = NULL;
+            haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+            os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_CCA_CRC_FAIL);
+
+            gl_cur_tx_frame.frame = NULL;
+            _radio_cur_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
+
             return signal ^ SIGNAL_LPWAN_RADIO_RX_CRC_ERROR;
         }
         if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
             // we can send the frame now!
-            lpwan_radio_tx(_cur_tx_frame.frame, _cur_tx_frame.len);
+            lpwan_radio_tx(gl_cur_tx_frame.frame, gl_cur_tx_frame.len);
             _radio_cur_state = RADIO_STATES_TX_ING;
             return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
         }
@@ -174,21 +182,31 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
         break;
     case RADIO_STATES_TX_ING:
         if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
-            os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_TX_OK);
-            _cur_tx_frame.frame = NULL;
+            haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+            os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_OK);
+
+            gl_cur_tx_frame.frame = NULL;
+            _radio_cur_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
+
             return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
         }
         if (signal & SIGNAL_LPWAN_RADIO_TX_TIMEOUT) {
-            os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_TX_TIMEOUT);
-            _cur_tx_frame.frame = NULL;
+            haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+            os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_TIMEOUT);
+
+            gl_cur_tx_frame.frame = NULL;
+            _radio_cur_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
+
             return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
         }
         __should_never_fall_here();
         break;
-    case RADIO_STATES_TX:
     case RADIO_STATES_IDLE:
+        print_log(LOG_INFO, "rlc(IDLE) rx signal (race condition)");
+        break;
+    case RADIO_STATES_TX:
     default:
         __should_never_fall_here();
         break;
@@ -199,22 +217,26 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
 radio_controller_signals_handling:
 
     if (signal & SIGNAL_RADIO_CONTROLLER_INITED) {
-        lpwan_radio_stop_rx();
+
         _radio_cur_state = RADIO_STATES_IDLE;
-        process_sleep(); // wait radio state change signal.
+        put_radio_to_sleep();
+
         return signal ^ SIGNAL_RADIO_CONTROLLER_INITED;
     }
 
     if (signal & SIGNAL_RADIO_CONTROLLER_TX_START) {
         haddock_assert(_radio_cur_state == RADIO_STATES_TX);
 
-        os_uint32 _rand_tx_delay = hdk_randr(1, \
-                (os_uint32) _cur_tx_frame.try_tx_duration - RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE);
+        os_uint32 _rand_tx_delay = \
+                hdk_randr(10, (os_uint32) gl_cur_tx_frame.try_tx_duration - RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE);
         os_timer_reconfig(radio_controller_timeout_timer, this->_pid,
                           SIGNAL_RADIO_CONTROLLER_TX_RAND_WAIT_TIMEOUT, _rand_tx_delay);
-        print_log(LOG_INFO, "JD: rlc_tx rand_delay (%ldms)", _rand_tx_delay);
         os_timer_start(radio_controller_timeout_timer);
 
+        if (_rand_tx_delay > LPWAN_DE_SLEEP_MIN_NEXT_TIMER_LENGTH_MS)
+            put_radio_to_sleep();
+
+        print_log(LOG_INFO, "rlc_tx: rand_delay (%ldms)", _rand_tx_delay);
         return signal ^ SIGNAL_RADIO_CONTROLLER_TX_START;
     }
 
@@ -230,8 +252,10 @@ radio_controller_signals_handling:
 
     if (signal & SIGNAL_RADIO_CONTROLLER_RX_DURATION_TIMEOUT) {
         lpwan_radio_stop_rx();
-        os_ipc_set_signal(_registered_mac_engine_pid, SIGNAL_RLC_RX_DURATION_TIMEOUT);
+        haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
+        os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_RX_DURATION_TIMEOUT);
 
+        _radio_cur_state = RADIO_STATES_IDLE;
         put_radio_to_sleep();
 
         return signal ^ SIGNAL_RADIO_CONTROLLER_RX_DURATION_TIMEOUT;
@@ -246,7 +270,10 @@ enum radio_controller_states get_radio_controller_states(void)
     return _radio_cur_state;
 }
 
-os_int8 radio_controller_tx(os_uint8 frame[], os_uint8 len,
+/**
+ * Try to send @frame during @try_tx_duration.
+ */
+os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
                             os_uint16 try_tx_duration)
 {
     if (_radio_cur_state != RADIO_STATES_IDLE)
@@ -254,13 +281,13 @@ os_int8 radio_controller_tx(os_uint8 frame[], os_uint8 len,
     if (len > LPWAN_RADIO_TX_BUFFER_MAX_LEN)
         return RADIO_CONTROLLER_TX_ERR_INVALID_LEN;
 
-    haddock_assert(_cur_tx_frame.frame == NULL);
+    haddock_assert(gl_cur_tx_frame.frame == NULL);
     haddock_assert(try_tx_duration >= RADIO_CONTROLLER_MIN_TRY_TX_DURATION);
 
-    _cur_tx_frame.frame = frame;
-    _cur_tx_frame.len = len;
-    _cur_tx_frame.try_tx_duration = try_tx_duration;
-    haddock_get_time_tick_now(& _cur_tx_frame.try_tx_time);
+    gl_cur_tx_frame.frame = frame;
+    gl_cur_tx_frame.len = len;
+    gl_cur_tx_frame.try_tx_duration = try_tx_duration;
+    haddock_get_time_tick_now(& gl_cur_tx_frame.try_tx_time);
 
     _radio_cur_state = RADIO_STATES_TX;
     os_ipc_set_signal(this->_pid, SIGNAL_RADIO_CONTROLLER_TX_START);
@@ -289,7 +316,7 @@ static os_int8 _radio_controller_rx_frame(os_uint16 rx_duration,
     start_radio_check_timer();
 
     _radio_cur_state = RADIO_STATES_RX;
-    _radio_rx_buffer_config.is_continuous = is_continuous;
+    gl_radio_rx_config.is_continuous = is_continuous;
 
     return 0;
 }
@@ -310,6 +337,8 @@ os_int8 radio_controller_rx_stop(void)
         return -1;
 
     os_timer_stop(radio_controller_timeout_timer);
+
+    _radio_cur_state = RADIO_STATES_IDLE;
     put_radio_to_sleep();
 
     return 0;
@@ -337,4 +366,18 @@ static os_int8 rlc_sleep_cleanup_callback(void)
 {
     lpwan_radio_sleep();
     return 0;
+}
+
+/**
+ * Reset radio link controller layer, stop all possible timers and return to
+ * IDLE state.
+ * \sa btracker_reset()
+ */
+void rlc_reset(void)
+{
+    _radio_cur_state = RADIO_STATES_IDLE;
+    put_radio_to_sleep();
+
+    gl_cur_tx_frame.frame = NULL;
+    os_timer_stop(radio_controller_timeout_timer);
 }

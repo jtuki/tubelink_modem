@@ -26,7 +26,7 @@ haddock_process("proc_test_end_device_app");
 
 static struct timer *period_uplink_msg_timer = NULL;
 
-#define UPLINK_PERIOD_DELAY_MS (1000 * hdk_randr(10, 30))
+#define UPLINK_PERIOD_DELAY_MS (1000 * hdk_randr(20, 40))
 
 void proc_test_end_device_app_init(os_uint8 priority)
 {
@@ -50,7 +50,7 @@ static signal_bv_t proc_test_end_device_app_entry(os_pid_t pid, signal_bv_t sign
     static os_uint8 uplink_msg_buffer[20] = "-hi, easylinkin!";
 
     if (signal & SIGNAL_USER_APP_UPLINK_MSG_PERIODICALLY) {
-        enum device_mac_states _state = device_get_mac_states();
+        enum device_mac_states _state = mac_info_get_mac_states();
         // we only try to send message when the end-device has joined the network.
         if (_state == DE_MAC_STATES_JOINED) {
             uplink_msg_buffer[0] = uplink_msg_seq_id;

@@ -67,8 +67,11 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
 
 #define LPWAN_MAX_PAYLAOD_LEN           20
 
-#define LPWAN_MAX_RETRANSMIT_NUM        2
-#define LPWAN_MAX_CHANNEL_BACKOFF_NUM   5
+#define LPWAN_DE_MAX_RETRANSMIT_NUM     2   // max value: 3 (2 bits)
+#define LPWAN_DE_MAX_TX_FAIL_NUM        4   // max value: 7 (2 bits)
+
+/**< If the MCU will be idle for at least 12ms, we put it into low-power mode. */
+#define LPWAN_DE_SLEEP_MIN_NEXT_TIMER_LENGTH_MS     12
 
 /**< @} */
 /*---------------------------------------------------------------------------*/

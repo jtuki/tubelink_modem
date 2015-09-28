@@ -20,7 +20,7 @@ os_int8 lpwan_parse_device_uplink_msg(struct device_uplink_msg *up_msg,
     info->beacon_seq_id = up_msg->hdr.beacon_seq[0];
     info->beacon_class_seq_id = get_bits(up_msg->hdr.beacon_seq[1], 3, 0);
 
-    info->beacon_lqi = up_msg->hdr.beacon_lqi;
+    info->beacon_snr = up_msg->hdr.beacon_snr;
     info->beacon_rssi = up_msg->hdr.beacon_rssi;
 
     info->type = (enum device_message_type) get_bits(up_msg->type_and_len, 7, 6);
@@ -30,10 +30,8 @@ os_int8 lpwan_parse_device_uplink_msg(struct device_uplink_msg *up_msg,
 
     /** parse the @device_uplink_common_hdr_t */
     info->is_need_ack = get_bits(up_msg->hdr.hdr, 7, 7);
-    info->contain_multicast_ack = get_bits(up_msg->hdr.hdr, 6, 6);
-    info->contain_debug_information = get_bits(up_msg->hdr.hdr, 5, 5);
     info->retransmit_num = get_bits(up_msg->hdr.hdr, 4, 3);
-    info->channel_backoff_num = get_bits(up_msg->hdr.hdr, 2, 0);
+    info->tx_fail_num = get_bits(up_msg->hdr.hdr, 2, 0);
 
     return 0;
 }

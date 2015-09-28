@@ -36,7 +36,7 @@ struct parsed_frame_hdr_info {
 };
 
 __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uint8 len,
-                                       struct parsed_frame_hdr_info *info);
+                                          struct parsed_frame_hdr_info *info);
 
 #ifdef __cplusplus
 }

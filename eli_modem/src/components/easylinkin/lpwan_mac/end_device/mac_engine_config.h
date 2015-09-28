@@ -13,20 +13,19 @@ extern "C"
 {
 #endif
 
-#define LPWAN_DEVICE_MAC_PENDING_TX_FRAME_MAX_NUM   5
-#define LPWAN_DEVICE_MAC_WAIT_ACK_FRAME_MAX_NUM     1
 
-#define LPWAN_DEVICE_MAC_UPLINK_BUFFER_MAX_NUM          \
-            (LPWAN_DEVICE_MAC_PENDING_TX_FRAME_MAX_NUM  \
-             + LPWAN_DEVICE_MAC_WAIT_ACK_FRAME_MAX_NUM)
+#define LPWAN_DEVICE_MAC_TX_FBUF_MAX_NUM    5
 
-#define LPWAN_DEVICE_MAC_UPLINK_MTU             40
+#define LPWAN_DEVICE_MAC_UPLINK_MTU         40
 
 /**
  * \sa device_mac_engine_entry()
  */
-#define LPWAN_MAC_JOIN_AFTER_INITED_MIN     5
-#define LPWAN_MAC_JOIN_AFTER_INITED_MAX     20
+#define LPWAN_MAC_JOIN_AFTER_INITED_MIN     1
+#define LPWAN_MAC_JOIN_AFTER_INITED_MAX     10
+
+/** If search beacon timeout, delay 300s to search again. */
+#define LPWAN_MAC_SEARCH_BCN_AGAIN_MS       (300*1000)
 
 #ifdef __cplusplus
 }

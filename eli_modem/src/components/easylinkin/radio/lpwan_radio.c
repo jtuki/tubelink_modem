@@ -26,7 +26,11 @@
  */
 os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 
-static os_boolean _radio_is_rx = OS_FALSE;
+/**
+ * The begin and end time of the last rx frame.
+ */
+static struct time rx_begin_time;
+static struct time rx_end_time;
 
 /***************************************************************************************************
  * @fn      lpwan_radio_event__()
@@ -70,19 +74,14 @@ os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
 os_int8 lpwan_radio_start_rx(void)
 {
     haddock_assert(Rf_GetCurState() == RF_STANDBY);
-    if (! _radio_is_rx) {
-        // print_log(LOG_INFO, "RRxStart");
-        _radio_is_rx = OS_TRUE;
-    }
     Rf_ReceiveStart();
+    haddock_get_time_tick_now_cached(& rx_begin_time);
     return 0;
 }
 
 os_int8 lpwan_radio_stop_rx(void)
 {
     Rf_Stop();
-    // print_log(LOG_INFO, "RRxStop");
-    _radio_is_rx = OS_FALSE;
     return 0;
 }
 
@@ -119,6 +118,20 @@ os_int16 lpwan_radio_get_snr(void)
 os_int16 lpwan_radio_get_rssi(void)
 {
     return (os_int16) Rf_GetPacketRssi();
+}
+
+struct lpwan_last_rx_frame_rssi_snr lpwan_radio_get_last_rx_rssi_snr(void)
+{
+    struct lpwan_last_rx_frame_rssi_snr signal_strength;
+    signal_strength.rssi = lpwan_radio_get_rssi();
+    signal_strength.snr  = lpwan_radio_get_snr();
+    return signal_strength;
+}
+
+void lpwan_radio_get_last_rx_frame_time(struct lpwan_last_rx_frame_time *t)
+{
+    t->tx = rx_begin_time;
+    t->rx = rx_end_time;
 }
 
 /**
@@ -187,6 +200,7 @@ void lpwan_radio_event__(RF_EVT_e a_eEvt)
         break;
     case RF_EVT_RX_OK:
         os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_OK);
+        haddock_get_time_tick_now_cached(& rx_end_time);
         break;
     case RF_EVT_RX_TMO:
         os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);

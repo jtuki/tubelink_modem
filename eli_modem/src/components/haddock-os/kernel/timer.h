@@ -43,6 +43,7 @@ void haddock_timer_update_routine(void);
 void haddock_timer_sync(const struct time *sync_time);
 
 void haddock_get_time_tick_now(struct time *t);
+void haddock_get_time_tick_now_cached(struct time *t);
 
 typedef void (*timer_out_of_sync_callback_t) (os_uint32 delta_s, os_uint16 delta_ms); 
 void haddock_timer_set_out_of_sync_callback(timer_out_of_sync_callback_t f);
@@ -83,6 +84,11 @@ struct timer *__haddock_timer_create(os_pid_t pid,
 
 struct timer *haddock_get_next_timer(void);
 struct timer *haddock_get_next_atimer(void);
+
+os_int8 haddock_time_calc_delta(const struct time *t1, const struct time *t2,
+                                struct time *delta);
+os_int8 haddock_time_calc_delta_till_now(const struct time *t,
+                                         struct time *delta);
 
 #ifdef __cplusplus
 }

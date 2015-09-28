@@ -39,6 +39,10 @@ typedef struct sLoRaSettings
 
 extern tLoRaSettings LoRaSettings;
 
+/**< Symbol timeout for single rx behavoir.
+ * \ref sx1276's datasheet Page40 (symbol should be range within [4, 1023])
+ * \ref sx1276's datasheet Page113 RegSymbTimeoutLsb */
+#define LORA_SETTINGS_RX_SYMBOL_TIMEOUT     7
 
 #ifdef __cplusplus
 }

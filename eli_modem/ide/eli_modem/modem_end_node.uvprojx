@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls>--C99</MiscControls>
-              <Define>xLPWAN_DEBUG_ONLY_TRACK_BEACON, STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE,</Define>
+              <Define>LPWAN_DEBUG_ONLY_TRACK_BEACON, STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE,</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\src\components\;..\..\src\components\mcal\cmsis\Include;..\..\src\components\mcal\cmsis\Device\ST\STM32L0xx\Include;..\..\src;..\..\src\apps;..\..\src\components\bal;..\..\src\components\lib_util;..\..\src\components\mcal\conf;..\..\src\components\mcal\driver\Inc;..\..\src\components\os;..\..\src\components\haddock-os;..\..\src\components\easylinkin;..\..\src\components\easylinkin\lpwan_mac;..\..\src\components\easylinkin\radio</IncludePath>
             </VariousControls>
@@ -1185,6 +1185,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parsed_common_defs.h</FilePath>
             </File>
+            <File>
+              <FileName>construct_de_uplink_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_uplink_common.c</FilePath>
+            </File>
+            <File>
+              <FileName>construct_de_uplink_common.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_uplink_common.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1599,6 +1609,36 @@
               <FileName>ecp_sn_modem.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\src\components\external_comm_protocol\ecp_sn_modem.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>components/easylinkin/llpwan_mac/end_device/beacon_tracker</GroupName>
+          <Files>
+            <File>
+              <FileName>beacon_tracker.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\end_device\beacon_tracker\beacon_tracker.c</FilePath>
+            </File>
+            <File>
+              <FileName>beacon_tracker.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\end_device\beacon_tracker\beacon_tracker.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>components/easylinkin/llpwan_mac/end_device/tx_frames_mgmt</GroupName>
+          <Files>
+            <File>
+              <FileName>tx_frames_mgmt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\end_device\tx_frames_mgmt\tx_frames_mgmt.c</FilePath>
+            </File>
+            <File>
+              <FileName>tx_frames_mgmt.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\end_device\tx_frames_mgmt\tx_frames_mgmt.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -61,7 +61,6 @@ __LPWAN struct gw_cmd_force_leave {
  *
  * @GW_FORCE_LEAVE_REASON_JOIN_NEARBY_GW
  *      There may exists some better alternatives for modems to join.
- *      \sa beacon_info_t::nearby_channels
  *
  * @GW_FORCE_LEAVE_INVALID_SHORT_ADDR
  *      The modem's short address can not be found in the joined modem table.

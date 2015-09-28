@@ -34,7 +34,7 @@ extern "C"
  * \brief Packed bits-field which contains the beacon's information.
  * 
  * byte 1:
- *      bits 2: beacon_period_length (~ constant) \sa enum _beacon_period
+ *      bits 2: beacon_period_enum (~ constant) \sa enum _beacon_period
  *      bits 2: _reserved
  *      bits 4: beacon_classes_num (var, but nearly constant, at most @BEACON_MAX_CLASSES_NUM classes)
  * byte 2:
@@ -49,7 +49,7 @@ extern "C"
  *      bits 2: allowable_max_tx_power (~ constant) \sa lpwan_radio_tx_power_list
  *      bits 1: _reserved
  * byte 4:
- *      bits 8: nearby_channels (~ constant, bit-vector) \sa lpwan_radio_channels_list
+ *      bits 8: _reserved (*obsolete* nearby_channels)
  * 
  * \remark
  *      @packed_ack_delay_num is the number of beacon periods to be delayed to
@@ -67,19 +67,19 @@ typedef os_uint8 beacon_info_t[4];
  */
 typedef os_uint8 beacon_seq_t[2];
 
-#define BEACON_PERIOD_SECTIONS_NUM      128
+#define BEACON_PERIOD_SLOTS_NUM      128
 
 /**
- * byte 1: ratio_beacon (contain packed ACK)
- * byte 2: ratio_downlink_msg
- * byte 3: ratio_uplink_msg (\sa DEVICE_MAC_MIN_CF_RATIO)
+ * byte 1: slots_beacon (contain packed ACK)
+ * byte 2: slots_downlink_msg
+ * byte 3: slots_uplink_msg (\sa DE_MAC_ENGINE_MIN_UPLINK_SLOTS)
  * 
  * \remark We segment the beacon period into 128 sections.
  *         If beacon period is 2 seconds (i.e. 2000ms), and each second means 
  *         32k (32*1024=32768) clock ticks, so each section is 512 ticks (15.625ms).
- * \remark beacon + downlink + uplink = 128;
+ * \remark slots(beacon + downlink + uplink) = 128;
  *
- * \sa BEACON_PERIOD_SECTIONS_NUM
+ * \sa BEACON_PERIOD_SLOTS_NUM
  */
 typedef os_uint8 beacon_period_section_ratio_t[3];
 
@@ -100,8 +100,8 @@ __LPWAN struct beacon_header {
  *
  * \remark
  *      eg. for 2s beacon interval: downlink_time = (2000ms / 128) * @estimation_downlink_slots
- *      \sa enum beacon_period_section_ratio_t
- *      \sa LPWAN_BEACON_SECTION_DEFAULT_DOWNLINK_SLOTS
+ *      \sa beacon_period_section_ratio_t
+ *      \sa LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS
  */
 typedef os_uint8 packed_ack_header_t;
 

@@ -21,7 +21,7 @@ struct parsed_device_uplink_msg_info {
     os_uint8 beacon_class_seq_id;
 
     os_int8 beacon_rssi;
-    os_uint8 beacon_lqi;
+    os_int8 beacon_snr;
 
     os_uint8 seq;
 
@@ -30,12 +30,8 @@ struct parsed_device_uplink_msg_info {
 
     os_boolean is_need_ack;
 
-    // todo - we only care @is_need_ack currently.
-    os_boolean contain_multicast_ack;
-    os_boolean contain_debug_information;
-
     os_uint8 retransmit_num;
-    os_uint8 channel_backoff_num;
+    os_uint8 tx_fail_num;
 };
 
 __LPWAN os_int8 lpwan_parse_device_uplink_msg(struct device_uplink_msg *up_msg,

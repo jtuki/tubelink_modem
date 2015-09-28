@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "bal_lora_settings.h"
+
 
 /***************************************************************************************************
  * DEBUG SWITCH MACROS
@@ -470,11 +472,9 @@ void sx1278_RxInit( void )
     
     SX1276LoRaSetPreambleLength(LoRaSettings.u16PreambleLength);    /* set preamble length */
 
-    /**< jt - set timeout value.
-     * \ref sx1276's datasheet Page40
-     * \ref sx1276's datasheet Page113 RegSymbTimeoutLsb
+    /**< jt - set single rx timeout value.
      * */
-    SX1276LoRaSetSymbTimeout(2 + 5); // the next 5 is for extra 4.25 symbols.
+    SX1276LoRaSetSymbTimeout(LORA_SETTINGS_RX_SYMBOL_TIMEOUT);
 
     /*
     if(LoRaSettings.u16PreambleLength > 0x3FF)

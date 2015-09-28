@@ -37,8 +37,7 @@ timer_out_of_sync_callback_t haddock_timer_out_of_sync_callback = NULL;
 /** Helper function declarations. @{ */
 static os_boolean is_signal(signal_t sig);
 static inline void __haddock_calc_timeout_value(os_uint32 delta_ms, struct time *t);
-static os_int8 _haddock_time_calc_delta(const struct time *t1, const struct time *t2,
-                                     struct time *delta);
+
 static void _haddock_time_shift(struct time *t,
                                 const struct time *delta, os_boolean is_add);
 /** @} */
@@ -180,7 +179,7 @@ void __os_timer_reconfig(const char* _cur_file, os_uint32 _cur_line,
  */
 int os_timer_start(struct timer *timer)
 {
-    haddock_assert(timer->signal != 0
+    haddock_assert(timer && timer->signal != 0
                    && (timer->timeout_value.s > 0 || timer->timeout_value.ms > 0)
                    && timer_not_started(timer));
     
@@ -215,6 +214,7 @@ int os_timer_start(struct timer *timer)
 
 void os_timer_stop(struct timer *timer)
 {
+    haddock_assert(timer);
     if (timer_not_started(timer)) {
         return;
     }
@@ -255,7 +255,7 @@ struct time *haddock_check_next_timeout(void)
     if (! list_empty(& haddock_timer_list)) {
         delta1_exist = OS_TRUE;
         t = list_entry(haddock_timer_list.next, struct timer, hdr);
-        delta_comparison = _haddock_time_calc_delta(& t->timeout_value,
+        delta_comparison = haddock_time_calc_delta(& t->timeout_value,
                                                     & _now, & delta1); 
         if (delta_comparison == -1) {
             /* next timeout _should_ be 0, because the task is about to run. */
@@ -268,7 +268,7 @@ struct time *haddock_check_next_timeout(void)
     if (! list_empty(& haddock_atimer_list)) {
         delta2_exist = OS_TRUE;
         t = list_entry(haddock_atimer_list.next, struct timer, hdr);
-        delta_comparison = _haddock_time_calc_delta(& t->timeout_value,
+        delta_comparison = haddock_time_calc_delta(& t->timeout_value,
                                                     & _now, & delta2);
         if (delta_comparison == -1) {
             delta2.s = 0;
@@ -394,7 +394,7 @@ void haddock_timer_sync(const struct time *sync)
     );
     
     struct time delta;
-    os_int8 is_greater_than = _haddock_time_calc_delta(sync, &_now, &delta);
+    os_int8 is_greater_than = haddock_time_calc_delta(sync, &_now, &delta);
     
     if (is_greater_than == 0)
         return;
@@ -434,7 +434,7 @@ void haddock_timer_sync(const struct time *sync)
     // to avoid compiling warnings.
     (void) sync;
     (void) is_haddock_timer_synchronized;
-    (void) _haddock_time_calc_delta;
+    (void) haddock_time_calc_delta;
     (void) _haddock_time_shift;
 #endif
 }
@@ -465,9 +465,9 @@ static inline void __haddock_calc_timeout_value(os_uint32 delta_ms, struct time 
  * Calculate the delta value between @t1 and @t2.
  * Return 0 if t1 == t2, 1 if t1 > t2, else (t1 < t2) return -1.
  */
-static os_int8 _haddock_time_calc_delta(const struct time *t1,
-                                     const struct time *t2,
-                                     struct time *delta)
+os_int8 haddock_time_calc_delta(const struct time *t1,
+                                const struct time *t2,
+                                struct time *delta)
 {
     if (t1->s > t2->s) {
         delta->s = t1->s - t2->s;
@@ -504,6 +504,13 @@ static os_int8 _haddock_time_calc_delta(const struct time *t1,
     }
 }
 
+os_int8 haddock_time_calc_delta_till_now(const struct time *t,
+                                         struct time *delta)
+{
+    haddock_get_time_tick_now(& haddock_time_tick_now);
+    return haddock_time_calc_delta(& haddock_time_tick_now, t, delta);
+}
+
 /**
  * Shift the @t according to @delta and @is_add.
  * if is_add:
@@ -535,6 +542,7 @@ static void _haddock_time_shift(struct time *t,
 
 /**
  * Get current system time tick, update @haddock_time_tick_now, and assign to @t.
+ * \sa haddock_get_time_tick_now_cached()
  */
 void haddock_get_time_tick_now(struct time *t)
 {
@@ -554,6 +562,20 @@ void haddock_get_time_tick_now(struct time *t)
     }
 
     if (t != &haddock_time_tick_now) {
+        HDK_CRITICAL_STATEMENTS(
+            t->s = haddock_time_tick_now.s;
+            t->ms = haddock_time_tick_now.ms;
+        );
+    }
+}
+
+/**
+ * Don't update @haddock_time_tick_now, simply copy to @t.
+ */
+void haddock_get_time_tick_now_cached(struct time *t)
+{
+    haddock_assert(t);
+    if (t != & haddock_time_tick_now) {
         HDK_CRITICAL_STATEMENTS(
             t->s = haddock_time_tick_now.s;
             t->ms = haddock_time_tick_now.ms;

@@ -1,7 +1,7 @@
 /**
  * linked_list.h
  * 
- * Inspired by (also borrow many code from) Linux Kernel's list implementation.
+ * https://isis.poly.edu/kulesh/stuff/src/klist/
  *
  * \date    
  * \author  jtuki@foxmail.com
@@ -169,7 +169,7 @@ static inline void list_move_tail(struct list_head *entry,
  * list_empty - tests whether a list is empty
  * @list_hdr: the list to test.
  */
-static inline os_boolean list_empty(struct list_head *list_hdr)
+static inline os_boolean list_empty(const struct list_head *list_hdr)
 {
     return list_hdr->next == list_hdr;
 }

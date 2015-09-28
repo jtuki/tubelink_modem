@@ -19,18 +19,25 @@ extern "C"
     
 #include "radio/lpwan_radio.h"
 #include "radio/radio_config.h"
+#include "lpwan_radio_config_sets.h"
 
 /*---------------------------------------------------------------------------*/
 /**< configurations @{ */
 
-#define RADIO_CONTROLLER_MIN_TRY_TX_DURATION        20 // at least 20 ms should be reserved
-#define RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE   10 // should be less than @RADIO_CONTROLLER_MIN_TRY_TX_DURATION
-
+#if defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF7
+#define RADIO_CONTROLLER_MIN_TRY_TX_DURATION        150     // at least 150ms should be reserved \sa LPWAN_DE_MIN_TX_RESERVED_SLOTS
+#define RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE   30      // listen before tx.
+                                                            // should be less than @RADIO_CONTROLLER_MIN_TRY_TX_DURATION.
 #define RADIO_CONTROLLER_RX_DURATION_MIN_SPAN       20
+#elif defined (LPWAN_RADIO_CONFIGURATION) && LPWAN_RADIO_CONFIGURATION == LPWAN_RADIO_CONFIG_SET_SF8
+#define RADIO_CONTROLLER_MIN_TRY_TX_DURATION        300     // at least 300ms should be reserved \sa LPWAN_DE_MIN_TX_RESERVED_SLOTS
+#define RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE   60      // listen before tx.
+                                                            // should be less than @RADIO_CONTROLLER_MIN_TRY_TX_DURATION
+#define RADIO_CONTROLLER_RX_DURATION_MIN_SPAN       40
+#endif
 
-#define RADIO_CONTROLLER_RADIO_ROUTINE_CHECK_PERIOD 3 // radio routine checker period: 3ms
-
-#define RADIO_CONTROLLER_MAX_TIMER_DELTA_MS         (((os_uint32)1)<<31)
+#define RADIO_CONTROLLER_RADIO_ROUTINE_CHECK_PERIOD     3 // radio routine checker period: 3ms
+#define RADIO_CONTROLLER_MAX_TIMER_DELTA_MS             (((os_uint32)1)<<31)
 
 /**< @} */
 /*---------------------------------------------------------------------------*/
@@ -66,7 +73,10 @@ enum radio_controller_states get_radio_controller_states(void);
 #define RADIO_CONTROLLER_TX_ERR_NOT_IDLE       -1
 #define RADIO_CONTROLLER_TX_ERR_INVALID_LEN    -2
 
-void radio_controller_register_mac_engine(os_pid_t mac_engine_pid);
+#define switch_rlc_caller() rlc_register_caller(this->_pid)
+void rlc_register_caller(os_pid_t caller_pid);
+
+void rlc_reset(void);
 
 /**
  * \return
@@ -76,7 +86,7 @@ void radio_controller_register_mac_engine(os_pid_t mac_engine_pid);
  *      if len is too long.
  *  0 if ok.
  */
-os_int8 radio_controller_tx(os_uint8 frame[], os_uint8 len,
+os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
                             os_uint16 try_tx_duration);
 
 #define RADIO_CONTROLLER_RX_ERR_NOT_IDLE    -1
@@ -105,7 +115,12 @@ os_int8 radio_controller_rx_stop(void);
 
 void radio_controller_init(os_uint8 priority);
 
-extern os_uint8 *radio_rx_buffer; /** \ref __radio_rx_buffer */
+/**
+ * RLC's rx buffer.
+ * \note gl_radio_rx_buffer[0] is the received length.
+ * \sa _radio_rx_buffer
+ */
+extern os_uint8 *gl_radio_rx_buffer;
 
 #ifdef __cplusplus
 }

@@ -38,9 +38,14 @@ static char _debug_str[HOSTIF_UART_TX_MSG_MAXLEN];
 
 #define xPRINT_LOG_DUTY_CYCLE_ENABLED // only for debug purpose
 
-/* refer to:
-    http://www.velocityreviews.com/forums/t437343-printf-wrapper.html
-    http://www.cplusplus.com/reference/cstdio/vprintf/
+/** Refer to:
+ * http://www.velocityreviews.com/forums/t437343-printf-wrapper.html
+ * http://www.cplusplus.com/reference/cstdio/vprintf/
+ *
+ * \note print_log() may invoke IO operation (UART interruption etc.) which will
+ * seemingly block some time, which will in thus will cause some delay.
+ * \note So remember to put print_log() to the end of a block of operations/statements,
+ * to avoid breaking the timing needs.
  */
 void print_log(enum log_type type, const char *log, ...)
 {

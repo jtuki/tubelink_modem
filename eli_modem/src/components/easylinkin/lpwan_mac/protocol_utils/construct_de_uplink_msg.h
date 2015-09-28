@@ -22,6 +22,12 @@ void construct_device_uplink_msg(enum device_message_type type,
                                  const os_uint8 msg[], os_uint8 msg_len,
                                  void *buffer, os_uint8 buffer_len);
 
+void update_device_uplink_msg(struct device_uplink_msg *msg,
+                              os_uint8 frame_seq_id,
+                              os_uint8 retrans, os_uint8 tx_fail,
+                              os_int8 bcn_seq_id, os_uint8 bcn_class_seq_id,
+                              os_int16 bcn_rssi, os_int16 bcn_snr);
+
 #ifdef __cplusplus
 }
 #endif
