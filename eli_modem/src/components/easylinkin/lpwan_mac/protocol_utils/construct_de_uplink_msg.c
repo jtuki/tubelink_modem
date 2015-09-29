@@ -40,7 +40,7 @@ void construct_device_uplink_msg(enum device_message_type type,
     haddock_memcpy(up->msg, msg, len);
 
     // all messages require the packed ACK from gateway.
-    set_bits(((os_uint8) up->hdr.hdr), 7, 7, OS_TRUE);
+    set_bits(up->hdr.hdr, 7, 7, OS_TRUE);
 }
 
 /**

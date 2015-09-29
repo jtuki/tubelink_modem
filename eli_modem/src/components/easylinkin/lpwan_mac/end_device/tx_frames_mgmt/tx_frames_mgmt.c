@@ -265,7 +265,7 @@ void mac_tx_frames_handle_check_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq)
             mac_tx_fbuf_free(fbuf);
             gl_wait_ack_list_len -= 1;
 
-            print_log(LOG_INFO_COOL, "tx_mgmt: ack(%d)", confirm_seq);
+            print_log(LOG_INFO_COOL, "tx_mgmt: ack\t\t<%d", confirm_seq);
         } else if (cmp == 0) {
             // odd condition! (confirm_seq != seq)
             has_no_ack = OS_TRUE;

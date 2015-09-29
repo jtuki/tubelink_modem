@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls>--C99</MiscControls>
-              <Define>LPWAN_DEBUG_ONLY_TRACK_BEACON, STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE,</Define>
+              <Define>xLPWAN_DEBUG_ONLY_TRACK_BEACON, STM32L051xx,USE_HAL_DRIVER, __ARM_CORTEX_M, MODEM_FOR_END_DEVICE,</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\src\components\;..\..\src\components\mcal\cmsis\Include;..\..\src\components\mcal\cmsis\Device\ST\STM32L0xx\Include;..\..\src;..\..\src\apps;..\..\src\components\bal;..\..\src\components\lib_util;..\..\src\components\mcal\conf;..\..\src\components\mcal\driver\Inc;..\..\src\components\os;..\..\src\components\haddock-os;..\..\src\components\easylinkin;..\..\src\components\easylinkin\lpwan_mac;..\..\src\components\easylinkin\radio</IncludePath>
             </VariousControls>
