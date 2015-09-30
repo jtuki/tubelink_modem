@@ -23,6 +23,7 @@ extern "C"
 #include "protocol_utils/construct_de_uplink_common.h"
 #include "protocol_utils/construct_de_uplink_msg.h"
 #include "protocol_utils/parse_beacon.h"
+#include "protocol_utils/construct_de_join_req.h"
 
 #include "end_device/mac_engine.h"
 #include "tx_frames_mgmt.h"
@@ -76,21 +77,50 @@ void mac_tx_frames_mgmt_init(void)
 }
 
 /**
- * Init the global tx frame seq ID after join network.
+ * Init the global tx frame seq ID.
+ * \sa struct device_join_request::init_seq_id
  */
 static void mac_tx_frames_mgmt_init_frame_seq_id(void)
 {
-    gl_tx_frame_seq_id = hdk_randr(0, 255);
+    static os_boolean run_first_time = OS_TRUE;
+    if (run_first_time) {
+        gl_tx_frame_seq_id = hdk_randr(0, 255);
+        run_first_time = OS_FALSE;
+    } else {
+        // not the first time joining
+        gl_tx_frame_seq_id += 1;
+    }
 }
 
 /**
  * Callback function of joined network (mac engine has successfully joined network).
  */
-void mac_tx_frames_mgmt_handle_join_ok(void)
+void mac_tx_frames_handle_join_ok(short_addr_t my_addr, short_addr_t gw_addr)
 {
     haddock_assert(gl_wait_ack_list_len == 0);
 
-    mac_tx_frames_mgmt_init_frame_seq_id();
+    static struct lpwan_addr f_src;   // change to a new short addr
+    static struct lpwan_addr f_dest;  // change to a new gateway cluster addr
+
+    f_dest.type = ADDR_TYPE_SHORT_ADDRESS;
+    f_src.type = ADDR_TYPE_SHORT_ADDRESS;
+    f_dest.addr.short_addr = gw_addr;
+    f_src.addr.short_addr = my_addr;
+
+    struct list_head *pos;
+    struct tx_fbuf *fbuf;
+
+    list_for_each(pos, & gl_pending_tx_frame_buffer_list) {
+        fbuf = list_entry(pos, struct tx_fbuf, hdr);
+
+        fbuf->transmit_times = 0;
+        fbuf->tx_fail_times = 0;
+
+        update_device_frame_header_addr((struct frame_header *) fbuf->frame, FRAME_HDR_LEN_NORMAL,
+                                        FTYPE_DEVICE_MSG, & f_src, & f_dest);
+    }
+
+    haddock_assert(gl_wait_ack_list_len == 0); /* \sa mac_tx_frames_handle_lost_beacon() */
 
     gl_tx_join_req.has_join_req = OS_FALSE;
     gl_tx_join_req.has_been_tx = OS_FALSE;
@@ -98,6 +128,10 @@ void mac_tx_frames_mgmt_handle_join_ok(void)
 
 /**
  * Try to put a message into the tx message frame buffer.
+ *
+ * \note All the src and dest _should_ be changed if the end-device has changed
+ *       its parent gateway (after a new JOIN, has a new source short_addr etc.).
+ *       \sa mac_tx_frames_handle_join_ok()
  *
  * \return -1 if frame buffer is full, frame's total length otherwise (successfully
  * put the message into the tx frame buffer).
@@ -319,6 +353,44 @@ void mac_tx_frames_handle_no_ack(os_int8 bcn_seq_id)
     }
 }
 
+const struct tx_fbuf *mac_tx_frames_get_join_frame(void)
+{
+    haddock_assert(gl_tx_join_req.fbuf.ftype == FTYPE_DEVICE_JOIN);
+    return & gl_tx_join_req.fbuf;
+}
+
+/**
+ * \return TRUE if is valid JOIN_REQ ACK, FALSE otherwise.
+ * \note suuid is a 2 byte hash of modem_uuid_t, and may conflict with 2 byte short_addr,
+ *       if conflict occurs (rare condition), we regard the JOIN_REQ ACK as invalid.
+ */
+os_boolean mac_tx_frames_handle_join_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq)
+{
+    haddock_assert(mac_tx_frames_has_waiting_join_confirm(bcn_seq_id));
+    gl_tx_join_req.has_been_tx = OS_FALSE;
+    return (gl_tx_join_req.fbuf.seq == confirm_seq) ? OS_TRUE : OS_FALSE;
+}
+
+void mac_tx_frames_handle_no_join_ack(os_int8 bcn_seq_id)
+{
+    haddock_assert(mac_tx_frames_has_waiting_join_confirm(bcn_seq_id));
+    gl_tx_join_req.has_been_tx = OS_FALSE;
+}
+
+void mac_tx_frames_handle_tx_join_ok(void)
+{
+    haddock_assert(gl_tx_join_req.has_join_req == OS_TRUE
+                   && gl_tx_join_req.has_been_tx == OS_FALSE);
+    gl_tx_join_req.has_been_tx = OS_TRUE;
+}
+
+void mac_tx_frames_handle_tx_join_failed(void)
+{
+    haddock_assert(gl_tx_join_req.has_join_req == OS_TRUE
+                   && gl_tx_join_req.has_been_tx == OS_FALSE);
+    gl_tx_join_req.has_been_tx = OS_FALSE; // remain unchanged.
+}
+
 /**
  * \remark If lost beacon during beacon tracking, there is no need to wait for
  * gateway's packed ACK.
@@ -440,6 +512,67 @@ static void mac_tx_fbuf_init_msg(struct tx_fbuf *fbuf,
                                 & fbuf->frame[FRAME_HDR_LEN_NORMAL],
                                 LPWAN_DEVICE_MAC_UPLINK_MTU - FRAME_HDR_LEN_NORMAL);
     fbuf->len = FRAME_HDR_LEN_NORMAL + sizeof(struct device_uplink_msg) + len;
+}
+
+/**
+ * Init the JOIN_REQ frame.
+ * \sa mac_tx_frames_prepare_join_req()
+ */
+void mac_tx_frames_init_join_req(void) {
+    haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINING);
+
+    static struct lpwan_addr f_dest;
+    static struct lpwan_addr f_src;
+
+    // init the frame seq id.
+    mac_tx_frames_mgmt_init_frame_seq_id();
+
+    gl_tx_join_req.fbuf.ftype = FTYPE_DEVICE_JOIN;
+    gl_tx_join_req.fbuf.transmit_times = 0;
+    gl_tx_join_req.fbuf.tx_fail_times = 0;
+    gl_tx_join_req.fbuf.seq = gl_tx_frame_seq_id;
+
+    // construct the JOIN_REQ frame header
+    f_dest.type = ADDR_TYPE_SHORT_ADDRESS;
+    f_src.type = ADDR_TYPE_MODEM_UUID;
+    f_dest.addr.short_addr = mac_info_get_short_addr();
+    mac_info_get_uuid(& f_src.addr.uuid);
+
+    construct_device_frame_header(gl_tx_join_req.fbuf.frame, LPWAN_DEVICE_MAC_UPLINK_MTU,
+                                  FTYPE_DEVICE_JOIN,
+                                  & f_src, & f_dest,
+                                  OS_FALSE, // is_mobile?
+                                  RADIO_TX_POWER_LEVELS_NUM-1);
+
+    // construct the JOIN_REQ body
+    construct_device_join_req((void *) & gl_tx_join_req.fbuf.frame[FRAME_HDR_LEN_JOIN],
+                              gl_tx_join_req.fbuf.seq, JOIN_REASON_DEFAULT,
+                              mac_info_get_app_id());
+
+    // notify the beacon tracker that the JOIN_REQ frame is ready.
+    gl_tx_join_req.has_join_req = OS_TRUE;
+    gl_tx_join_req.has_been_tx = OS_FALSE;
+}
+
+/**
+ * \note make sure mac_tx_frames_init_join_req() has been called previously.
+ */
+void mac_tx_frames_prepare_join_req(const struct tx_fbuf *c_fbuf,
+                                    os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id,
+                                    os_uint8 bcn_class_seq_id,
+                                    os_int16 bcn_rssi, os_int16 bcn_snr)
+{
+    haddock_assert(c_fbuf == & gl_tx_join_req.fbuf);
+    haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINING
+                   && gl_tx_join_req.has_join_req == OS_TRUE
+                   && gl_tx_join_req.has_been_tx == OS_FALSE);
+
+    gl_tx_join_req.fbuf.beacon_seq_id = bcn_seq_id;
+    gl_tx_join_req.fbuf.expected_beacon_seq_id = expected_bcn_seq_id;
+
+    update_device_join_req((void *) & gl_tx_join_req.fbuf.frame[FRAME_HDR_LEN_JOIN],
+                           bcn_seq_id, bcn_class_seq_id,
+                           bcn_rssi, bcn_snr);
 }
 
 /**

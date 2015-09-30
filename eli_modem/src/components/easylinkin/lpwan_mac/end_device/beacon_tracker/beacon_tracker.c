@@ -51,8 +51,8 @@ static struct parsed_beacon_info                btracker_beacon_info;
 static struct parsed_beacon_packed_ack_to_me    btracker_beacon_packed_ack;
 
 static struct {
-    struct lpwan_last_rx_frame_rssi_snr signal_strength;
-    struct lpwan_last_rx_frame_time time;
+    struct lpwan_last_rx_frame_rssi_snr signal_strength;    /**< last sync beacon's RSSI/SNR */
+    struct lpwan_last_rx_frame_time time;                   /**< last sync beacon time */
 } btracker_beacon_meta_info;
 
 /**
@@ -88,10 +88,6 @@ static void btracker_handle_beacon_not_found(void);
 
 static void btracker_start_periodical_track_timer(os_uint16 delay_ms);
 static void btracker_stop_periodical_track_timer(void);
-
-static os_uint16 btracker_calc_beacon_span(void);
-static os_uint16 btracker_calc_beacon_rx_till_now_delta(void);
-static os_uint16 btracker_calc_beacon_tx_till_now_delta(void);
 
 static void btracker_do_begin_bcn_tracking(void);
 static void btracker_do_bcn_tracking(void);
@@ -150,25 +146,23 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
         }
 
         if (signal & SIGNAL_RLC_RX_OK) {
-            if (signal & SIGNAL_RLC_RX_OK) {
-                os_int8 len = btracker_is_valid_beacon(gl_radio_rx_buffer,
-                                                       1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
-                                                       NULL);
-                if (len > 0) {
-                    // valid beacon frame
-                    radio_controller_rx_stop();
-                    os_timer_stop(btracker_search_timeout_timer);
+            os_int8 len = btracker_is_valid_beacon(gl_radio_rx_buffer,
+                                                   1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
+                                                   NULL);
+            if (len > 0) {
+                // valid beacon frame
+                radio_controller_rx_stop();
+                os_timer_stop(btracker_search_timeout_timer);
 
-                    btracker_beacon_meta_info.signal_strength = lpwan_radio_get_last_rx_rssi_snr();
-                    lpwan_radio_get_last_rx_frame_time(& btracker_beacon_meta_info.time);
+                btracker_beacon_meta_info.signal_strength = lpwan_radio_get_last_rx_rssi_snr();
+                lpwan_radio_get_last_rx_frame_time(& btracker_beacon_meta_info.time);
 
-                    os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
-                    gl_btracker_states = BCN_TRACKER_BEACON_FOUND;
-                } else {
-                    print_log(LOG_INFO, "BTR (search): rx not beacon");
-                }
-                return signal ^ SIGNAL_RLC_RX_OK;
+                os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
+                gl_btracker_states = BCN_TRACKER_BEACON_FOUND;
+            } else {
+                print_log(LOG_INFO, "BTR (search): rx not beacon");
             }
+            return signal ^ SIGNAL_RLC_RX_OK;
         }
         __should_never_fall_here();
         break;
@@ -365,7 +359,7 @@ static void btracker_parse_beacon_config(struct parse_beacon_check_info *info)
     static os_boolean run_first_time = OS_TRUE;
     if (run_first_time) {
         mac_info_get_uuid(& info->uuid);
-        mac_info_get_suuid(& info->suuid);
+        info->suuid = mac_info_get_suuid();
         run_first_time = OS_FALSE;
     }
 
@@ -384,7 +378,7 @@ static void btracker_parse_beacon_config(struct parse_beacon_check_info *info)
         info->is_check_join_ack = btracker_info_base.is_check_join_ack;
 
         if (mac_info_get_mac_states() == DE_MAC_STATES_JOINED) {
-            mac_info_get_short_addr(& info->short_addr);
+            info->short_addr = mac_info_get_short_addr();
         }
         return;
     }
@@ -495,8 +489,6 @@ static void btracker_sync_beacon_frame_info(void)
  */
 static void btracker_sync_info_base(void)
 {
-    btracker_info_base.last_sync_beacon_time = btracker_beacon_meta_info.time;
-
     btracker_info_base.expected_beacon_seq_id = gl_synced_bcn.beacon_seq_id;
     btracker_info_base.expected_class_seq_id = gl_synced_bcn.beacon_class_seq_id;
     btracker_info_base.expected_beacon_classes_num = gl_synced_bcn.beacon_classes_num;
@@ -580,8 +572,6 @@ static os_boolean btracker_is_virtual_track_beacon(void)
     * btracker_beacon_info.beacon_section_length_us /* each slot length (unit: us) */   \
     / 1000)
 
-#define MAX_BCN_PROCESSING_DELAY    50
-
 /**
  * Calculate the beacon's on-the-air time.
  * \note A approximate calculation due to routinely radio rx behavior.
@@ -591,13 +581,13 @@ static os_boolean btracker_is_virtual_track_beacon(void)
  *
  * \sa LORA_SETTINGS_RX_SYMBOL_TIMEOUT
  */
-static os_uint16 btracker_calc_beacon_span(void)
+os_uint16 btracker_calc_beacon_span(void)
 {
     struct time bcn_span;   // beacon span = beacon rx time - beacon tx time
     os_uint32 bcn_span_ms;
 
-    haddock_time_calc_delta(& btracker_info_base.last_sync_beacon_time.tx,
-                            & btracker_info_base.last_sync_beacon_time.rx,
+    haddock_time_calc_delta(& btracker_beacon_meta_info.time.tx,
+                            & btracker_beacon_meta_info.time.rx,
                             & bcn_span);
     bcn_span_ms = bcn_span.s * 1000 + bcn_span.ms;
 
@@ -609,33 +599,44 @@ static os_uint16 btracker_calc_beacon_span(void)
  * Calculate the beacon processing delay:
  *  time delta between beacon's rx time and current time.
  */
-static os_uint16 btracker_calc_beacon_rx_till_now_delta(void)
+os_uint16 btracker_calc_beacon_rx_till_now_delta(void)
 {
     struct time delta;
     os_uint32 delta_ms;
 
-    haddock_time_calc_delta_till_now(& btracker_info_base.last_sync_beacon_time.rx,
+    haddock_time_calc_delta_till_now(& btracker_beacon_meta_info.time.rx,
                                      & delta);
     delta_ms = delta.s * 1000 + delta.ms;
 
-    haddock_assert(delta_ms <= MAX_BCN_PROCESSING_DELAY);
+    haddock_assert(delta_ms <= (1000 * btracker_beacon_info.beacon_period_length_s));
     return (os_uint16) delta_ms;
 }
 
 /**
  * Calculate the time delta between beacon's tx time and current time.
  */
-static os_uint16 btracker_calc_beacon_tx_till_now_delta(void)
+os_uint16 btracker_calc_beacon_tx_till_now_delta(void)
 {
     struct time delta;
     os_uint32 delta_ms;
 
-    haddock_time_calc_delta_till_now(& btracker_info_base.last_sync_beacon_time.tx,
+    haddock_time_calc_delta_till_now(& btracker_beacon_meta_info.time.tx,
                                      & delta);
     delta_ms = delta.s * 1000 + delta.ms;
 
-    haddock_assert(delta_ms <= (MAX_BCN_SPAN_MS + MAX_BCN_PROCESSING_DELAY));
+    haddock_assert(delta_ms <= (1000 * btracker_beacon_info.beacon_period_length_s));
     return (os_uint16) delta_ms;
+}
+
+/**
+ * Calculate the remains of beacon period's BEACON section.
+ */
+os_uint16 btracker_calc_beacon_span_remains(void)
+{
+    os_uint16 tx_till_now = btracker_calc_beacon_tx_till_now_delta();
+    return (os_uint16) ((btracker_beacon_info.beacon_section_length_us
+                        * btracker_beacon_info.ratio.slots_beacon / 1000)
+                        - tx_till_now);
 }
 
 /**

@@ -31,11 +31,14 @@ extern "C"{
 #define CFG_MAC_LENGTH          (13)    /* 6byte mac address = 12 byte in character + end character */
 #define CFG_SN_LENGTH           (17)    /* 8byte sn address = 12 byte in character + end character */
 
+#define DEVICE_APP_ID   0x1234ABCD
+
 /***************************************************************************************************
  * TYPEDEFS
  */
 typedef char cfgChar;
 typedef unsigned char cfgUint8;
+typedef unsigned long cfgUint32;
 
 /***************************************************************************************************
  * CONSTANTS
@@ -90,6 +93,8 @@ void cfg_GetMac( cfgChar *a_pcData, cfgUint8 a_u8Length );
  */
 void cfg_GetSerialNumber( cfgChar *a_pcData, cfgUint8 a_u8Length );
 
+
+#define cfg_GetAppID()  ((cfgUint32) DEVICE_APP_ID)
 
 #ifdef __cplusplus
 }

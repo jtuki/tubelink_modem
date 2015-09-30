@@ -151,7 +151,7 @@ os_uint32 os_hton_u32(os_uint32 i)
     if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
         return i;
     else {
-        os_uint8 b1, b2, b3, b4;
+        static os_uint8 b1, b2, b3, b4;
         decompose_u32_4(i, &b1, &b2, &b3, &b4);
         return construct_u32_4(b4, b3, b2, b1);
     }
@@ -163,7 +163,7 @@ os_uint16 os_hton_u16(os_uint16 i)
     if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
         return i;
     else {
-        os_uint8 b1, b2;
+        static os_uint8 b1, b2;
         decompose_u16_2(i, &b1, &b2);
         return construct_u16_2(b2, b1);
     }
@@ -175,7 +175,7 @@ os_uint32 os_ntoh_u32(os_uint32 i)
     if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
         return i;
     else {
-        os_uint8 b1, b2, b3, b4;
+        static os_uint8 b1, b2, b3, b4;
         decompose_u32_4(i, &b1, &b2, &b3, &b4);
         return construct_u32_4(b4, b3, b2, b1);
     }
@@ -187,7 +187,7 @@ os_uint16 os_ntoh_u16(os_uint16 i)
     if (_endian == EXTERNAL_COMMUNICATION_ENDIAN)
         return i;
     else {
-        os_uint8 b1, b2;
+        static os_uint8 b1, b2;
         decompose_u16_2(i, &b1, &b2);
         return construct_u16_2(b2, b1);
     }

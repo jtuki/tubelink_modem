@@ -29,7 +29,7 @@ extern "C"
  */
 __LPWAN struct gw_join_confirmed {
     /**
-     * bits 4: join_confirmed_info (\sa enum _join_confirmed_info)
+     * bits 4: join_confirmed_info (\sa enum gw_join_confirmed_info)
      * btis 4: _reserved
      */
     os_uint8 hdr;
@@ -43,14 +43,14 @@ __LPWAN struct gw_join_confirmed {
  * If not paid, the modem can only send routine messages with minimum
  * interval LPWAN_UNPAID_MINIMUM_ROUTINE_INTERVAL (seconds).
  */
-enum _join_confirmed_info {
+enum gw_join_confirmed_info {
     JOIN_CONFIRMED_PAID         = 0,
     JOIN_CONFIRMED_NOT_PAID     = 1,
     JOIN_DENIED_DEFAULT         = 2, /**< no concrete reason */
     JOIN_DENIED_LOCATION_ERR    = 3, /**< some device may be restricted
                                         to connect to gateways within
                                         specific area */
-    _join_confirmed_info_invalid = 16,
+    _join_confirmed_info_invalid = 4,
 };
 
 #if defined(__CC_ARM) || defined(__GNUC__)

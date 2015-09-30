@@ -25,7 +25,7 @@ extern "C"
  * \remark Devices' join request will generate a random @init_seq_id as
  *  initial session sequence id.
  */
-__LPWAN struct device_join_requst {
+__LPWAN struct device_join_request {
     struct device_uplink_common hdr;
     os_uint8 init_seq_id;
     os_uint8 join_reason;  /**< \sa enum _device_join_reason */

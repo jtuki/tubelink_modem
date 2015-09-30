@@ -23,18 +23,17 @@ extern "C"
  */
 struct parsed_gw_join_confirmed {
     os_uint8 init_seq_id;
-    
-    enum _join_confirmed_info info;
-    
+    enum gw_join_confirmed_info info;
     short_addr_t distributed_short_addr;
-    multicast_addr_t distributed_multi_addr;
-    token_code_t rejoin_token;
 };
 
+/**
+ * \return -1 if parse failed, len otherwise.
+ */
 __LPWAN
-os_int8 lpwan_parse_gw_join_confirmed (const os_uint8 join_confirmed[],
-                                    os_uint8 len,
-                                    struct parsed_gw_join_confirmed *confirmed);
+os_int8 lpwan_parse_gw_join_confirmed (const void *join_confirmed,
+                                       os_uint8 len,
+                                       struct parsed_gw_join_confirmed *confirmed);
 
 #ifdef __cplusplus
 }

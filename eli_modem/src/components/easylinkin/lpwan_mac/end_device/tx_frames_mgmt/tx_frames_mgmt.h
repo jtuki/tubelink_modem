@@ -48,21 +48,48 @@ struct tx_fbuf {
 
 void mac_tx_frames_mgmt_init(void);
 
-void mac_tx_frames_mgmt_handle_join_ok(void);
+/**
+ * \sa mac_tx_frames_prepare_join_req()
+ * \sa mac_tx_frames_prepare_tx_msg()
+ */
+typedef void (*mac_tx_frames_prepare_frame_func_t)(const struct tx_fbuf *c_fbuf,
+                                                   os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id,
+                                                   os_uint8 bcn_class_seq_id,
+                                                   os_int16 bcn_rssi, os_int16 bcn_snr);
+/**< join related @{ */
+const struct tx_fbuf *mac_tx_frames_get_join_frame(void);
+void mac_tx_frames_init_join_req(void);
+void mac_tx_frames_prepare_join_req(const struct tx_fbuf *c_fbuf,
+                                    os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id,
+                                    os_uint8 bcn_class_seq_id,
+                                    os_int16 bcn_rssi, os_int16 bcn_snr);
+void mac_tx_frames_handle_join_ok(short_addr_t my_addr, short_addr_t gw_addr);
 
+os_boolean mac_tx_frames_handle_join_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq);
+void mac_tx_frames_handle_no_join_ack(os_int8 bcn_seq_id);
+
+void mac_tx_frames_handle_tx_join_ok(void);
+void mac_tx_frames_handle_tx_join_failed(void);
+/**< @} */
+
+/**< device's uplink messages related @{ */
 os_int8 mac_tx_frames_put_msg(enum device_message_type type,
                               const os_uint8 msg[], os_uint8 len,
                               short_addr_t src, short_addr_t dest);
 const struct tx_fbuf *mac_tx_frames_get_msg(void);
 
 void mac_tx_frames_prepare_tx_msg(const struct tx_fbuf *c_fbuf,
-                                  os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id, os_uint8 bcn_class_seq_id,
+                                  os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id,
+                                  os_uint8 bcn_class_seq_id,
                                   os_int16 bcn_rssi, os_int16 bcn_snr);
 void mac_tx_frames_handle_tx_msg_ok(const struct tx_fbuf *c_fbuf);
 void mac_tx_frames_handle_tx_msg_failed(const struct tx_fbuf *c_fbuf);
+/**< @} */
 
+/**< check packed ACK for device's uplink messages @{ */
 void mac_tx_frames_handle_check_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq);
 void mac_tx_frames_handle_no_ack(os_int8 bcn_seq_id);
+/**< @} */
 
 void mac_tx_frames_handle_lost_beacon(void);
 

@@ -1255,6 +1255,16 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_uplink_common.h</FilePath>
             </File>
+            <File>
+              <FileName>construct_de_join_req.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_join_req.c</FilePath>
+            </File>
+            <File>
+              <FileName>construct_de_join_req.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_join_req.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

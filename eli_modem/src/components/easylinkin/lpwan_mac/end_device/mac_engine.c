@@ -30,10 +30,12 @@
 #include "protocol_utils/parse_beacon.h"
 #include "protocol_utils/construct_frame_hdr.h"
 #include "protocol_utils/construct_de_uplink_msg.h"
+#include "protocol_utils/parse_gw_join_response.h"
 
 #include "beacon_tracker/beacon_tracker.h"
 #include "tx_frames_mgmt/tx_frames_mgmt.h"
 
+#include "app_config.h"
 #include "mac_engine.h"
 
 /*---------------------------------------------------------------------------*/
@@ -44,7 +46,6 @@ static struct lpwan_device_mac_info mac_info __attribute__((aligned (4)));
 static const struct parsed_beacon_info *gl_bcn_info;
 static const struct parsed_beacon_packed_ack_to_me *gl_bcn_ack;
 static const struct beacon_tracker_info_base *gl_btracker_info_base;
-static const struct lpwan_last_rx_frame_time *gl_bcn_time;
 static const struct lpwan_last_rx_frame_rssi_snr *gl_bcn_signal_strength;
 
 /**< @} */
@@ -59,12 +60,21 @@ static inline void mac_joined_state_transfer(enum device_mac_joined_states state
 static inline os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
                                                  os_int8 packed_ack_delay_num);
 
+static os_int8 mac_engine_is_valid_gw_join_confirm(const os_uint8 *rx_buf, os_uint8 buf_len,
+                                                   short_addr_t expected_gw_addr,
+                                                   struct parsed_gw_join_confirmed *confirmed);
+
+static void mac_engine_handle_join_confirmed(enum gw_join_confirmed_info info,
+                                             short_addr_t distributed_short_addr);
+static void mac_engine_handle_join_denied(enum gw_join_confirmed_info info);
+
 static void mac_engine_delayed_rx_downlink_frame(void);
 static void mac_engine_delayed_tx_pending_frame(void);
-static void mac_engine_do_tx_msg(const struct tx_fbuf *fbuf);
+static void mac_engine_do_rx_frame(os_uint16 duration);
+static void mac_engine_do_tx_frame(const struct tx_fbuf *fbuf);
 
-static void mac_engine_handle_tx_msg_fail(const struct tx_fbuf *fbuf, signal_bv_t signal);
-static void mac_engine_handle_tx_msg_ok(const struct tx_fbuf *fbuf);
+static void mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal);
+static void mac_engine_handle_tx_frame_ok(const struct tx_fbuf *fbuf);
 
 static void mac_engine_delayed_start_joining(os_uint32 delay_ms);
 static void mac_engine_init_join_req(void);
@@ -102,6 +112,7 @@ void device_mac_engine_init(os_uint8 priority)
 
     mac_tx_frames_mgmt_init();
 
+    mac_info.app_id = (app_id_t) cfg_GetAppID();
     device_mac_get_uuid(& mac_info.uuid);
     device_mac_calculate_suuid();
 
@@ -116,7 +127,6 @@ void device_mac_engine_init(os_uint8 priority)
     gl_bcn_info = btracker_get_parsed_beacon_info();
     gl_bcn_ack = btracker_get_parsed_packed_ack();
     gl_btracker_info_base = btracker_get_info_base();
-    gl_bcn_time = btacker_get_last_bcn_time();
     gl_bcn_signal_strength = btracker_get_last_bcn_signal_strength();
 }
 
@@ -142,6 +152,8 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
         if (signal & SIGNAL_MAC_ENGINE_START_JOINING) {
             mac_state_transfer(DE_MAC_STATES_JOINING);
+            mac_joining_state_transfer(DE_JOINING_STATES_SEARCH_BEACON);
+
             os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_SEARCH_BEACON);
             return signal ^ SIGNAL_MAC_ENGINE_START_JOINING;
         }
@@ -149,72 +161,199 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         __should_never_fall_here();
         break;
     case DE_MAC_STATES_JOINING:
-        if (signal & SIGNAL_MAC_ENGINE_SEARCH_BEACON) {
-            // beginning of the joining process (search beacon, send join request ...)
-            mac_joining_state_transfer(DE_JOINING_STATES_SEARCH_BEACON);
+        switch ((int) mac_info.joining_states) {
+        case DE_JOINING_STATES_SEARCH_BEACON:
+            if (signal & SIGNAL_MAC_ENGINE_SEARCH_BEACON) {
+                // beginning of the joining process (search beacon, send join request ...)
+                mac_joining_state_transfer(DE_JOINING_STATES_SEARCH_BEACON);
 
-            btracker_search_beacon(DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS);
+                btracker_search_beacon(DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS);
 
-            print_log(LOG_INFO, "JI: @{ (%lds:%ldms)",
-                      ((os_uint32) DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS) / 1000,
-                      ((os_uint32) DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS) % 1000);
+                print_log(LOG_INFO, "JI: @{ (%lds:%ldms)",
+                          ((os_uint32) DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS) / 1000,
+                          ((os_uint32) DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS) % 1000);
 
-            return signal ^ SIGNAL_MAC_ENGINE_SEARCH_BEACON;
-        }
+                return signal ^ SIGNAL_MAC_ENGINE_SEARCH_BEACON;
+            }
 
-        if (signal & SIGNAL_MAC_ENGINE_BEACON_NOT_FOUND) {
-            mac_state_transfer(DE_MAC_STATES_INITED);
-            mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
-
-            print_log(LOG_WARNING, "JI: @} delayJI %lds:%dms",
-                      LPWAN_MAC_SEARCH_BCN_AGAIN_MS / 1000, LPWAN_MAC_SEARCH_BCN_AGAIN_MS % 1000);
-            return signal ^ SIGNAL_MAC_ENGINE_BEACON_NOT_FOUND;
-        }
-
-        if (signal & SIGNAL_MAC_ENGINE_BEACON_FOUND) {
-            mac_joining_state_transfer(DE_JOINING_STATES_BEACON_FOUND);
-
-            if (gl_bcn_info->is_join_allowed)
-            {
-                // valid beacon found which allows for joining.
-                os_ipc_set_signal(gl_btracker_pid, SIGNAL_BTRACKER_BEGIN_BEACON_TRACKING);
-                mac_engine_init_join_req();
-                process_sleep();
-
-                print_log(LOG_INFO, "JI: @} (%d)", gl_bcn_info->beacon_seq_id);
-            } else {
-                // valid beacon found but don't allow joining.
-                btracker_reset();
+            if (signal & SIGNAL_MAC_ENGINE_BEACON_NOT_FOUND) {
                 mac_state_transfer(DE_MAC_STATES_INITED);
                 mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
 
                 print_log(LOG_WARNING, "JI: @} delayJI %lds:%dms",
                           LPWAN_MAC_SEARCH_BCN_AGAIN_MS / 1000, LPWAN_MAC_SEARCH_BCN_AGAIN_MS % 1000);
+                return signal ^ SIGNAL_MAC_ENGINE_BEACON_NOT_FOUND;
             }
-            return signal ^ SIGNAL_MAC_ENGINE_BEACON_FOUND;
+
+            if (signal & SIGNAL_MAC_ENGINE_BEACON_FOUND) {
+                mac_joining_state_transfer(DE_JOINING_STATES_BEACON_FOUND);
+
+                if (gl_bcn_info->is_join_allowed)
+                {
+                    // Valid beacon found which allows for joining. Get ready to tx JOIN_REQ.
+                    os_ipc_set_signal(gl_btracker_pid, SIGNAL_BTRACKER_BEGIN_BEACON_TRACKING);
+
+                    mac_joining_state_transfer(DE_JOINING_STATES_BEACON_FOUND);
+                    mac_engine_init_join_req();
+                    process_sleep();
+
+                    print_log(LOG_INFO, "JI: @} (%d)", gl_bcn_info->beacon_seq_id);
+                } else {
+                    // valid beacon found but don't allow joining.
+                    btracker_reset();
+                    mac_state_transfer(DE_MAC_STATES_INITED);
+                    mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
+
+                    print_log(LOG_WARNING, "JI: @} delayJI %lds:%dms",
+                              LPWAN_MAC_SEARCH_BCN_AGAIN_MS / 1000, LPWAN_MAC_SEARCH_BCN_AGAIN_MS % 1000);
+                }
+                return signal ^ SIGNAL_MAC_ENGINE_BEACON_FOUND;
+            }
+            break;
+        case DE_JOINING_STATES_BEACON_FOUND:
+            if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACKED) {
+                /* Beacon tracked, check if is waiting for JOIN_CONFIRM,
+                 * else check if has JOIN_REQ. */
+                if (mac_tx_frames_has_waiting_join_confirm(gl_bcn_info->beacon_seq_id)) {
+                    if (gl_bcn_ack->has_ack && gl_bcn_ack->is_msg_pending) {
+                        if (mac_tx_frames_handle_join_ack(gl_bcn_info->beacon_seq_id,
+                                                          gl_bcn_ack->confirmed_seq)) {
+                            // get ready to receive downlink JOIN_CONFIRM frame
+                            mac_engine_delayed_rx_downlink_frame();
+
+                            print_log(LOG_INFO_COOL, "JI: tracked (%d) join_req ACK(%d)",
+                                      gl_bcn_info->beacon_seq_id,
+                                      gl_bcn_ack->confirmed_seq);
+                        } else {
+                            /**
+                             * \note suuid and short_addr conflict, discard it.
+                             * \ref mac_tx_frames_handle_join_ack() */
+
+                            print_log(LOG_WARNING, "JI: tracked (%d) possible suuid conflict",
+                                      gl_bcn_info->beacon_seq_id);
+                        }
+                    } else {
+                        // no valid JOIN_CONFIRM ACK received
+                        mac_tx_frames_handle_no_join_ack(gl_bcn_info->beacon_seq_id);
+
+                        print_log(LOG_WARNING, "JI: tracked (%d) no join_req ACK",
+                                  gl_bcn_info->beacon_seq_id);
+                    }
+                } else if (mac_tx_frames_has_pending_join_req()
+                           && gl_bcn_info->ratio.slots_uplink_msg >= DE_MAC_ENGINE_MIN_UPLINK_SLOTS) {
+                    // has pending JOIN_REQ, try to tx JOIN_REQ.
+                    mac_engine_delayed_tx_pending_frame();
+
+                    print_log(LOG_INFO, "JI: tracked (%d) try tx join_req",
+                              gl_bcn_info->beacon_seq_id);
+                }
+                return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACKED;
+            }
+
+            if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON) {
+                mac_tx_frames_handle_lost_beacon();
+                return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON;
+            }
+
+            if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED) {
+                mac_state_transfer(DE_MAC_STATES_INITED);
+                mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
+
+                print_log(LOG_WARNING, "JI: track failed. delayJI %lds:%dms",
+                          LPWAN_MAC_SEARCH_BCN_AGAIN_MS / 1000, LPWAN_MAC_SEARCH_BCN_AGAIN_MS % 1000);
+                return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED;
+            }
+            break;
+        case DE_JOINING_STATES_TX_JOIN_REQ:
+            if (signal & SIGNAL_MAC_ENGINE_SEND_FRAME) {
+                // assert that there is no awaiting JOIN_CONFIRM and pending JOIN_REQ
+                haddock_assert(mac_tx_frames_has_pending_join_req()
+                               && !mac_tx_frames_has_waiting_join_confirm(gl_bcn_info->beacon_seq_id));
+
+                cur_tx.tx_frame = mac_tx_frames_get_join_frame();
+                mac_engine_do_tx_frame(cur_tx.tx_frame);
+
+                print_log(LOG_INFO, "JI: rlc_tx join_req >%d",
+                          cur_tx.tx_frame->seq);
+                return signal ^ SIGNAL_MAC_ENGINE_SEND_FRAME;
+            }
+            else if (signal & SIGNAL_RLC_TX_OK) {
+                mac_engine_handle_tx_frame_ok(cur_tx.tx_frame);
+
+                print_log(LOG_INFO, "JI: rlc_tx ok >%d",
+                          cur_tx.tx_frame->seq);
+                return signal ^ SIGNAL_RLC_TX_OK;
+            }
+            else if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
+                return signal ^ SIGNAL_RLC_TX_CCA_FAILED;
+            }
+            else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
+                return signal ^ SIGNAL_RLC_TX_CCA_CRC_FAIL;
+            }
+            else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
+                return signal ^ SIGNAL_RLC_TX_TIMEOUT;
+            }
+            __should_never_fall_here();
+            break;
+        case DE_JOINING_STATES_RX_JOIN_CONFIRM:
+            if (signal & SIGNAL_MAC_ENGINE_RECV_FRAME) {
+                // start to try to receive downlink frame
+                mac_engine_do_rx_frame(DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS);
+                return signal ^ SIGNAL_MAC_ENGINE_RECV_FRAME;
+            }
+
+            if (signal & SIGNAL_RLC_RX_OK) {
+                static struct parsed_gw_join_confirmed confirmed;
+                os_int8 len = mac_engine_is_valid_gw_join_confirm(gl_radio_rx_buffer,
+                                                       1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
+                                                       gl_bcn_info->gateway_cluster_addr,
+                                                       & confirmed);
+                if (len > 0) {
+                    // valid JOIN_CONFIRM from gateway
+                    radio_controller_rx_stop();
+                    os_timer_stop(gl_timeout_timer);
+
+                    switch (confirmed.info) {
+                    case JOIN_CONFIRMED_PAID:
+                    case JOIN_CONFIRMED_NOT_PAID:
+                        mac_engine_handle_join_confirmed(confirmed.info,
+                                                         confirmed.distributed_short_addr);
+                        break;
+                    case JOIN_DENIED_DEFAULT:
+                    case JOIN_DENIED_LOCATION_ERR:
+                        // we don't handle them seperately currently.
+                        mac_engine_handle_join_denied(confirmed.info);
+                        break;
+                    default:
+                        __should_never_fall_here();
+                        break;
+                    }
+                } else {
+                    print_log(LOG_INFO, "JI: rx not join_confirm");
+                }
+
+                return signal ^ SIGNAL_RLC_RX_OK;
+            }
+
+            if (signal & SIGNAL_RLC_RX_DURATION_TIMEOUT) {
+                os_timer_stop(gl_timeout_timer);
+                print_log(LOG_WARNING, "JI: rlc_rx timeout");
+                return signal ^ SIGNAL_RLC_RX_DURATION_TIMEOUT;
+            }
+
+            if (signal & SIGNAL_MAC_ENGINE_RECV_TIMEOUT) {
+                radio_controller_rx_stop();
+                print_log(LOG_WARNING, "JI: rlc_rx timeout");
+                return signal ^ SIGNAL_MAC_ENGINE_RECV_TIMEOUT;
+            }
+
+            __should_never_fall_here();
+            break;
         }
 
-        if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACKED) {
-            /**
-             * beacon tracked, check if has JOIN_REQ, send it. todo
-             */
-            print_log(LOG_INFO, "JI: tracked (%d)", gl_bcn_info->beacon_seq_id);
-            return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACKED;
-        }
-
-        if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON) {
-            mac_tx_frames_handle_lost_beacon();
-            return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON;
-        }
-
-        if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED) {
-            mac_state_transfer(DE_MAC_STATES_INITED);
-            mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
-
-            print_log(LOG_WARNING, "JI: track failed. delayJI %lds:%dms",
-                      LPWAN_MAC_SEARCH_BCN_AGAIN_MS / 1000, LPWAN_MAC_SEARCH_BCN_AGAIN_MS % 1000);
-            return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED;
-        }
         __should_never_fall_here();
         break;
     case DE_MAC_STATES_JOINED:
@@ -270,8 +409,31 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             __should_never_fall_here();
             break;
         case DE_JOINED_STATES_RX_FRAME:
-            // todo
-            return 0;
+            if (signal & SIGNAL_MAC_ENGINE_RECV_FRAME) {
+                mac_engine_do_rx_frame(DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS);
+
+                return signal ^ SIGNAL_MAC_ENGINE_RECV_FRAME;
+            }
+
+            if (signal & SIGNAL_RLC_RX_OK) {
+                // todo
+                return signal ^ SIGNAL_RLC_RX_OK;
+            }
+
+            if (signal & SIGNAL_RLC_RX_DURATION_TIMEOUT) {
+                os_timer_stop(gl_timeout_timer);
+                print_log(LOG_WARNING, "JD: rlc_rx timeout");
+                return signal ^ SIGNAL_RLC_RX_DURATION_TIMEOUT;
+            }
+
+            if (signal & SIGNAL_MAC_ENGINE_RECV_TIMEOUT) {
+                radio_controller_rx_stop();
+                print_log(LOG_WARNING, "JD: rlc_rx timeout");
+                return signal ^ SIGNAL_MAC_ENGINE_RECV_TIMEOUT;
+            }
+
+            __should_never_fall_here();
+            break;
         case DE_JOINED_STATES_TX_FRAME:
             if (signal & SIGNAL_MAC_ENGINE_SEND_FRAME) {
                 if (! mac_tx_frames_has_pending_tx()
@@ -280,7 +442,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     return signal ^ SIGNAL_MAC_ENGINE_SEND_FRAME;
                 }
 
-                mac_engine_do_tx_msg(cur_tx.tx_frame);
+                mac_engine_do_tx_frame(cur_tx.tx_frame);
 
                 print_log(LOG_INFO, "JD: rlc_tx (%s %dB %dT %dTF) >%d",
                           device_msg_type_string[(int) cur_tx.tx_frame->msg_type],
@@ -291,24 +453,22 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                 return signal ^ SIGNAL_MAC_ENGINE_SEND_FRAME;
             }
             else if (signal & SIGNAL_RLC_TX_OK) {
-                mac_engine_handle_tx_msg_ok(cur_tx.tx_frame);
+                mac_engine_handle_tx_frame_ok(cur_tx.tx_frame);
 
                 print_log(LOG_INFO, "JD: rlc_tx ok >%d",
                           cur_tx.tx_frame->seq);
                 return signal ^ SIGNAL_RLC_TX_OK;
             }
             else if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
-                // discard whatever received ... try to tx in next beacon period.
-                mac_engine_handle_tx_msg_fail(cur_tx.tx_frame, signal);
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
                 return signal ^ SIGNAL_RLC_TX_CCA_FAILED;
             }
             else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
-                // we regard it as CCA failed too (tx next time).
-                mac_engine_handle_tx_msg_fail(cur_tx.tx_frame, signal);
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
                 return signal ^ SIGNAL_RLC_TX_CCA_CRC_FAIL;
             }
             else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
-                mac_engine_handle_tx_msg_fail(cur_tx.tx_frame, signal);
+                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
                 return signal ^ SIGNAL_RLC_TX_TIMEOUT;
             }
             __should_never_fall_here();
@@ -353,34 +513,38 @@ static inline os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
 /** If there is pending downlink frame, prepare to receive it. */
 static void mac_engine_delayed_rx_downlink_frame(void)
 {
-    haddock_assert(mac_info.mac_engine_states == DE_MAC_STATES_JOINED
-                   && mac_info.joined_states == DE_JOINED_STATES_IDLE);
+    haddock_assert((mac_info.mac_engine_states == DE_MAC_STATES_JOINED
+                    && mac_info.joined_states == DE_JOINED_STATES_IDLE)
+                   ||
+                   (mac_info.mac_engine_states == DE_MAC_STATES_JOINING
+                    && mac_info.joining_states == DE_JOINING_STATES_BEACON_FOUND));
 
     if (! (gl_bcn_ack->has_ack && gl_bcn_ack->is_msg_pending))
         return;
 
-    static os_uint32 bcn_span;
-    static os_uint32 prev_downlink_span;
+    switch (mac_info.mac_engine_states) {
+    case DE_MAC_STATES_JOINED:
+        mac_joined_state_transfer(DE_JOINED_STATES_RX_FRAME);
+        break;
+    case DE_MAC_STATES_JOINING:
+        mac_joining_state_transfer(DE_JOINING_STATES_RX_JOIN_CONFIRM);
+        break;
+    default:
+        __should_never_fall_here();
+    }
 
-    static struct time bcn_to_now;
-    static os_uint32 bcn_to_now_ms;
+    static os_uint32 bcn_remains_ms;
+    static os_uint32 prev_downlink_span;
 
     static os_uint32 delay_ms;
 
-    bcn_span = gl_bcn_info->beacon_section_length_us *
-               gl_bcn_info->ratio.slots_beacon / 1000;
+    bcn_remains_ms = btracker_calc_beacon_span_remains();
     prev_downlink_span = gl_bcn_info->beacon_section_length_us *
                          gl_bcn_ack->total_prev_downlink_slots / 1000;
 
-    haddock_time_calc_delta_till_now(& gl_bcn_time->tx, & bcn_to_now);
-    bcn_to_now_ms = (bcn_to_now.s * 1000) + bcn_to_now.ms;
-    bcn_to_now_ms = (bcn_to_now_ms > bcn_span) ? bcn_span : bcn_to_now_ms;
-
-    delay_ms = (bcn_span - bcn_to_now_ms) + prev_downlink_span;
+    delay_ms = bcn_remains_ms + prev_downlink_span;
     delay_ms = (delay_ms > DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS) ?
                (delay_ms - DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS) : 0;
-
-    mac_joined_state_transfer(DE_JOINED_STATES_RX_FRAME);
 
     if (delay_ms == 0) {
         os_ipc_set_signal(this->_pid, SIGNAL_MAC_ENGINE_RECV_FRAME);
@@ -395,34 +559,40 @@ static void mac_engine_delayed_rx_downlink_frame(void)
     }
 }
 
-/** \note If no downlink frame, try to tx pending frames.
+/** \note Only if there is no downlink frame, try to tx pending frames.
  * \sa mac_engine_delayed_rx_downlink_frame() */
 static void mac_engine_delayed_tx_pending_frame(void)
 {
-    haddock_assert(mac_info.mac_engine_states == DE_MAC_STATES_JOINED
-                   && mac_info.joined_states == DE_JOINED_STATES_IDLE);
+    haddock_assert((mac_info.mac_engine_states == DE_MAC_STATES_JOINED
+                    && mac_info.joined_states == DE_JOINED_STATES_IDLE)
+                   ||
+                   (mac_info.mac_engine_states == DE_MAC_STATES_JOINING
+                    && mac_info.joining_states == DE_JOINING_STATES_BEACON_FOUND));
 
     if (! mac_tx_frames_has_pending_tx())
         return;
 
-    static os_uint32 bcn_span;
+    switch (mac_info.mac_engine_states) {
+    case DE_MAC_STATES_JOINED:
+        mac_joined_state_transfer(DE_JOINED_STATES_TX_FRAME);
+        break;
+    case DE_MAC_STATES_JOINING:
+        mac_joining_state_transfer(DE_JOINING_STATES_TX_JOIN_REQ);
+        break;
+    default:
+        __should_never_fall_here();
+    }
+
+    static os_uint32 bcn_remains_ms;
     static os_uint32 downlink_span;
-    
-    static struct time bcn_to_now;
-    static os_uint32 bcn_to_now_ms;
 
     static os_uint32 delay_ms;
 
+    bcn_remains_ms = btracker_calc_beacon_span_remains();
     downlink_span = gl_bcn_info->beacon_section_length_us *
                     gl_bcn_info->ratio.slots_downlink_msg / 1000;
-    bcn_span = gl_bcn_info->beacon_section_length_us *
-               gl_bcn_info->ratio.slots_beacon / 1000;
 
-    haddock_time_calc_delta_till_now(& gl_bcn_time->tx, & bcn_to_now);
-    bcn_to_now_ms = (bcn_to_now.s * 1000) + bcn_to_now.ms;
-    bcn_to_now_ms = (bcn_to_now_ms > bcn_span) ? bcn_span : bcn_to_now_ms;
-
-    delay_ms = (bcn_span - bcn_to_now_ms) + downlink_span;
+    delay_ms = bcn_remains_ms + downlink_span;
 
     mac_joined_state_transfer(DE_JOINED_STATES_TX_FRAME);
 
@@ -440,9 +610,26 @@ static void mac_engine_delayed_tx_pending_frame(void)
 }
 
 /**
+ * Try to perform rx (downlink JOIN_CONFIRM / message) during @duration ms.
+ */
+static void mac_engine_do_rx_frame(os_uint16 duration)
+{
+    haddock_assert(duration <= (gl_bcn_info->beacon_section_length_us
+                                * LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS / 1000));
+
+    os_timer_reconfig(gl_timeout_timer, this->_pid,
+                      SIGNAL_MAC_ENGINE_RECV_TIMEOUT, duration);
+    os_timer_start(gl_timeout_timer);
+
+    switch_rlc_caller();
+    // a little longer duration to avoid race condition.
+    radio_controller_rx_continuously(duration + 10);
+}
+
+/**
  * Tx message @fbuf during the beacon period's uplink sections.
  */
-static void mac_engine_do_tx_msg(const struct tx_fbuf *fbuf)
+static void mac_engine_do_tx_frame(const struct tx_fbuf *fbuf)
 {
     static os_uint32 uplink_span;       /**< total uplink slots' time */
     static os_uint32 tx_min_span;       /**< the minimum time that should be reserved for tx */
@@ -451,8 +638,19 @@ static void mac_engine_do_tx_msg(const struct tx_fbuf *fbuf)
                                              1) delay rand(1, try_tx_duration) ms;
                                              2) then perform CCA and tx. */
 
-    mac_tx_frames_prepare_tx_msg(
-            fbuf, gl_bcn_info->beacon_seq_id,
+    mac_tx_frames_prepare_frame_func_t prepare_frame_func = NULL;
+    switch (fbuf->ftype) {
+    case FTYPE_DEVICE_JOIN:
+        prepare_frame_func = mac_tx_frames_prepare_join_req;
+        break;
+    case FTYPE_DEVICE_MSG:
+        prepare_frame_func = mac_tx_frames_prepare_tx_msg;
+        break;
+    default:
+        __should_never_fall_here();
+    }
+
+    prepare_frame_func(fbuf, gl_bcn_info->beacon_seq_id,
             calc_expected_beacon_seq_id(gl_bcn_info->beacon_seq_id, gl_bcn_info->packed_ack_delay_num),
             gl_bcn_info->beacon_class_seq_id,
             gl_bcn_signal_strength->rssi, gl_bcn_signal_strength->snr);
@@ -473,31 +671,59 @@ static void mac_engine_do_tx_msg(const struct tx_fbuf *fbuf)
 /**
  * \ref radio link controller's tx fail signals: \file rlc_callback_signals.h
  */
-static void mac_engine_handle_tx_msg_fail(const struct tx_fbuf *fbuf, signal_bv_t signal)
+static void mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal)
 {
-    haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINED);
 
     if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
         print_log(LOG_WARNING, "rlc_tx CCA fail >%d", fbuf->seq);
     }
     else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
-        print_log(LOG_WARNING, "JD: rlc_tx CCA CRC fail >%d", fbuf->seq);
+        print_log(LOG_WARNING, "rlc_tx CCA CRC fail >%d", fbuf->seq);
     }
     else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
-        print_log(LOG_WARNING, "JD: rlc_tx timeout >%d", fbuf->seq);
+        print_log(LOG_WARNING, "rlc_tx timeout >%d", fbuf->seq);
     } else {
         __should_never_fall_here();
     }
-    mac_tx_frames_handle_tx_msg_failed(fbuf);
-    mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
+
+    switch (fbuf->ftype) {
+    case FTYPE_DEVICE_MSG:
+        haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINED
+                       && mac_info.joined_states == DE_JOINED_STATES_TX_FRAME);
+        mac_tx_frames_handle_tx_msg_failed(fbuf);
+        mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
+        break;
+    case FTYPE_DEVICE_JOIN:
+        haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINING
+                       && mac_info.joining_states == DE_JOINING_STATES_TX_JOIN_REQ);
+        mac_tx_frames_handle_tx_join_failed();
+        mac_joining_state_transfer(DE_JOINING_STATES_BEACON_FOUND);
+        break;
+    default:
+        __should_never_fall_here();
+    }
     process_sleep();
 }
 
-static void mac_engine_handle_tx_msg_ok(const struct tx_fbuf *fbuf)
+static void mac_engine_handle_tx_frame_ok(const struct tx_fbuf *fbuf)
 {
-    mac_tx_frames_handle_tx_msg_ok(fbuf);
+    switch (fbuf->ftype) {
+    case FTYPE_DEVICE_MSG:
+        haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINED
+                       && mac_info.joined_states == DE_JOINED_STATES_TX_FRAME);
+        mac_tx_frames_handle_tx_msg_ok(fbuf);
+        mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
+        break;
+    case FTYPE_DEVICE_JOIN:
+        haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINING
+                       && mac_info.joining_states == DE_JOINING_STATES_TX_JOIN_REQ);
+        mac_tx_frames_handle_tx_join_ok();
+        mac_joining_state_transfer(DE_JOINING_STATES_BEACON_FOUND);
+        break;
+    default:
+        __should_never_fall_here();
+    }
 
-    mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
     process_sleep();
 }
 
@@ -517,7 +743,7 @@ static void mac_engine_delayed_start_joining(os_uint32 delay_ms)
     }
 }
 
-#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN
+#define xDE_MAC_ENGINE_IS_VIRTUAL_JOIN
 
 /**
  * Init the JOIN_REQ.
@@ -525,31 +751,111 @@ static void mac_engine_delayed_start_joining(os_uint32 delay_ms)
  */
 static void mac_engine_init_join_req(void)
 {
+    haddock_assert(mac_info.mac_engine_states == DE_MAC_STATES_JOINING
+                   && mac_info.joining_states == DE_JOINING_STATES_BEACON_FOUND);
+
 #ifdef LPWAN_DEBUG_ONLY_TRACK_BEACON
 #define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   // if we only need to track beacon, do virtual JOIN_REQ
 #endif
 
-#ifdef DE_MAC_ENGINE_IS_VIRTUAL_JOIN
+#ifdef DE_MAC_ENGINE_IS_VIRTUAL_JOIN // we assume JOIN ok.
     // app id, uuid, put tx buffer mgmt join req
+    mac_info.gateway_cluster_addr = gl_bcn_info->gateway_cluster_addr;
     mac_info.short_addr = (os_uint16) mac_info.suuid;
-    mac_tx_frames_mgmt_handle_join_ok();
+
+    mac_tx_frames_handle_join_ok(mac_info.short_addr, mac_info.gateway_cluster_addr);
 
     mac_state_transfer(DE_MAC_STATES_JOINED);
     mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
 
-    print_log(LOG_INFO, "JI: => joined (%04x)", (os_uint16) mac_info.short_addr);
+    print_log(LOG_INFO, "JI: => virtual joined (%04X)", (os_uint16) mac_info.short_addr);
     process_sleep();
 #else
     // perform real JOIN_REQ
-    // todo
+    mac_tx_frames_init_join_req();
 #endif
+}
+
+/**
+ * Check if received valid JOIN_CONFIRM frame from specified gateway @expected_gw_addr.
+ */
+static os_int8 mac_engine_is_valid_gw_join_confirm(const os_uint8 *rx_buf, os_uint8 buf_len,
+                                                   short_addr_t expected_gw_addr,
+                                                   struct parsed_gw_join_confirmed *confirmed)
+{
+    os_int8 len = -1;
+    static struct parsed_frame_hdr_info frame_hdr;
+
+    if (rx_buf[0] > 0) {
+        len = lpwan_parse_frame_header((void *) (rx_buf+1), rx_buf[0],
+                                       & frame_hdr);
+
+        if (len > 0
+            && frame_hdr.frame_origin_type == DEVICE_GATEWAY
+            && frame_hdr.info.gw.frame_type == FTYPE_GW_JOIN_CONFIRMED)
+        {
+            if (frame_hdr.src.addr.short_addr != expected_gw_addr) {
+                // check if the gw_cluster_addr is matched.
+                len = -1;
+                goto mac_engine_is_valid_gw_join_confirm_return;
+            }
+
+            haddock_assert(0 < len && len <= rx_buf[0]);
+            len = lpwan_parse_gw_join_confirmed(rx_buf+1+len, rx_buf[0]-len, confirmed);
+        } else {
+            len = -1;
+        }
+    }
+mac_engine_is_valid_gw_join_confirm_return:
+    return len;
+}
+
+static void mac_engine_handle_join_confirmed(enum gw_join_confirmed_info info,
+                                             short_addr_t distributed_short_addr)
+{
+    switch (info) {
+    case JOIN_CONFIRMED_NOT_PAID:
+        // #mark# handle with the out-of-fee situation.
+        // no break, regard as PAID currently.
+    case JOIN_CONFIRMED_PAID:
+        mac_tx_frames_handle_join_ok(distributed_short_addr,
+                                     gl_bcn_info->gateway_cluster_addr);
+        mac_state_transfer(DE_MAC_STATES_JOINED);
+        mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
+
+        print_log(LOG_INFO_COOL, "JI: => joined (%04X)",
+                  (os_uint16) distributed_short_addr);
+        break;
+    default:
+        __should_never_fall_here();
+        break;
+    }
+}
+
+static void mac_engine_handle_join_denied(enum gw_join_confirmed_info info)
+{
+    switch (info) {
+    case JOIN_DENIED_LOCATION_ERR:
+        // #mark# handle with the location error situation (gateway blacklist).
+        // no break, fall through
+    case JOIN_DENIED_DEFAULT:
+        mac_state_transfer(DE_MAC_STATES_INITED);
+        mac_engine_delayed_start_joining(LPWAN_MAC_SEARCH_BCN_AGAIN_MS);
+
+        print_log(LOG_WARNING, "JI: join denied.");
+        break;
+    default:
+        __should_never_fall_here();
+        break;
+    }
 }
 
 static void device_mac_get_uuid(modem_uuid_t *uuid)
 {
     mcu_read_unique_id(uuid);
 
-    print_log(LOG_INFO, "init: uuid %02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x",
+    print_log(LOG_INFO,
+              "INIT: UUID %02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X",
               uuid->addr[0], uuid->addr[1], uuid->addr[2], uuid->addr[3],
               uuid->addr[4], uuid->addr[5], uuid->addr[6], uuid->addr[7],
               uuid->addr[8], uuid->addr[9], uuid->addr[10], uuid->addr[11]);
@@ -561,7 +867,7 @@ static void device_mac_get_uuid(modem_uuid_t *uuid)
 static void device_mac_calculate_suuid(void)
 {
     mac_info.suuid = short_modem_uuid(& mac_info.uuid);
-    print_log(LOG_INFO, "init: suuid %04x", (os_uint16) mac_info.suuid);
+    print_log(LOG_INFO, "INIT: suuid %04X", (os_uint16) mac_info.suuid);
 }
 
 /**
@@ -622,15 +928,20 @@ void mac_info_get_uuid(modem_uuid_t *uuid)
 /**
  * \remark make sure to call device_mac_get_uuid() and device_mac_calculate_suuid() first.
  */
-void mac_info_get_suuid(short_modem_uuid_t *suuid)
+short_modem_uuid_t mac_info_get_suuid(void)
 {
-    *suuid = mac_info.suuid;
+    return mac_info.suuid;
 }
 
-void mac_info_get_short_addr(short_addr_t *short_addr)
+short_addr_t mac_info_get_short_addr(void)
 {
     haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINED);
-    *short_addr = mac_info.short_addr;
+    return mac_info.short_addr;
+}
+
+app_id_t mac_info_get_app_id(void)
+{
+    return mac_info.app_id;
 }
 
 /**

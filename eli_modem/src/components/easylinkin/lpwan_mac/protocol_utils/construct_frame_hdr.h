@@ -23,10 +23,15 @@ extern "C"
 
 os_int8 construct_device_frame_header(void *frame_buffer, os_uint8 buffer_len,
                                        enum frame_type_end_device type,
-                                       struct lpwan_addr *src,
-                                       struct lpwan_addr *dest,
+                                       const struct lpwan_addr *src,
+                                       const struct lpwan_addr *dest,
                                        os_boolean is_mobile,
                                        os_uint8 tx_power_level);
+
+void update_device_frame_header_addr(struct frame_header *hdr, os_uint8 hdr_len,
+                                     enum frame_type_end_device type,
+                                     const struct lpwan_addr *src,
+                                     const struct lpwan_addr *dest);
 
 os_int8 construct_gateway_frame_header(void *frame_buffer, os_uint8 buffer_len,
                                         enum frame_type_gw type,

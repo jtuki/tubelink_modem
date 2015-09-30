@@ -7,6 +7,7 @@
  */
 
 #include "parse_frame_hdr.h"
+#include "lib/hdk_utilities.h"
 
 /**
  * \return the actual frame header length. -1 if error occurs.
@@ -29,7 +30,7 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
         case FTYPE_DEVICE_REJOIN       :
             info->dest.type = ADDR_TYPE_SHORT_ADDRESS;
             info->src.type = ADDR_TYPE_MODEM_UUID;
-            info->dest.addr.short_addr = hdr->dest_and_src.short_uuid.dest;
+            info->dest.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_uuid.dest);
             info->src.addr.uuid = hdr->dest_and_src.short_uuid.src;
             _len += sizeof(short_addr_t) + sizeof(modem_uuid_t);
             break;
@@ -39,8 +40,8 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
         case FTYPE_DEVICE_MSG          :
             info->dest.type = ADDR_TYPE_SHORT_ADDRESS;
             info->src.type = ADDR_TYPE_SHORT_ADDRESS;
-            info->dest.addr.short_addr = hdr->dest_and_src.short_short.dest;
-            info->src.addr.short_addr = hdr->dest_and_src.short_short.src;
+            info->dest.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.dest);
+            info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.src);
             _len += sizeof(short_addr_t) + sizeof(short_addr_t);
             break;
         }
@@ -58,8 +59,8 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
         case FTYPE_GW_ACK              :
             info->dest.type = ADDR_TYPE_SHORT_ADDRESS;
             info->src.type = ADDR_TYPE_SHORT_ADDRESS;
-            info->dest.addr.short_addr = hdr->dest_and_src.short_short.dest;
-            info->src.addr.short_addr = hdr->dest_and_src.short_short.src;
+            info->dest.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.dest);
+            info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.src);
             _len += sizeof(short_addr_t) + sizeof(short_addr_t);
             break;
         case FTYPE_GW_CMD              :
@@ -67,28 +68,28 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
             info->src.type = ADDR_TYPE_SHORT_ADDRESS;
             if (info->info.gw.is_multicast_dest) {
                 info->dest.type = ADDR_TYPE_MULTICAST_ADDRESS;
-                info->dest.addr.multi_addr = hdr->dest_and_src.multi_short.dest;
-                info->src.addr.short_addr = hdr->dest_and_src.multi_short.src;
+                info->dest.addr.multi_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.multi_short.dest);
+                info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.multi_short.src);
                 _len += sizeof(short_addr_t) + sizeof(multicast_addr_t);
             } else {
                 info->dest.type = ADDR_TYPE_SHORT_ADDRESS;
-                info->dest.addr.short_addr = hdr->dest_and_src.short_short.dest;
-                info->src.addr.short_addr = hdr->dest_and_src.short_short.src;
+                info->dest.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.dest);
+                info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_short.src);
                 _len += sizeof(short_addr_t) + sizeof(short_addr_t);
             }
             break;
         case FTYPE_GW_JOIN_PENDING_ACK :
             info->dest.type = ADDR_TYPE_SHORTENED_MODEM_UUID;
-            info->dest.addr.suuid = hdr->dest_and_src.suuid_short.dest;
+            info->dest.addr.suuid = os_ntoh_u16((os_uint16) hdr->dest_and_src.suuid_short.dest);
             info->src.type = ADDR_TYPE_SHORT_ADDRESS;
-            info->src.addr.short_addr = hdr->dest_and_src.suuid_short.src;
+            info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.suuid_short.src);
             _len += sizeof(short_addr_t) + sizeof(short_modem_uuid_t);
             break;
         case FTYPE_GW_JOIN_CONFIRMED   :
             info->dest.type = ADDR_TYPE_MODEM_UUID;
             info->dest.addr.uuid = hdr->dest_and_src.uuid_short.dest;
             info->src.type = ADDR_TYPE_SHORT_ADDRESS;
-            info->src.addr.short_addr = hdr->dest_and_src.uuid_short.src;
+            info->src.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.uuid_short.src);
             _len += sizeof(short_addr_t) + sizeof(modem_uuid_t);
             break;
         }

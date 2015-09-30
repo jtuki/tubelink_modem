@@ -44,7 +44,7 @@ __LPWAN struct gw_cmd_force_leave {
  *      command, it is not allowed to send any emergent/event message; and the
  *      modem _should_ poll the gateway for downlink join confirmed message with
  *      @JOIN_CONFIRMED_PAID is set (when the subscription fee is paid).
- *      \sa enum _join_confirmed_info
+ *      \sa enum gw_join_confirmed_info
  *
  * @GW_FORCE_LEAVE_REASON_OUT_OF_FEE_LEAVE
  *      With respect to @GW_FORCE_LEAVE_REASON_OUT_OF_FEE, the modem don't need

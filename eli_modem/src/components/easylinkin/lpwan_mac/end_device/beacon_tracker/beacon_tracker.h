@@ -33,10 +33,6 @@ enum beacon_tracker_states {
 };
 
 struct beacon_tracker_info_base {
-    /**< the time of last beacon synchronization
-     * \sa btracker_beacon_meta_info::time */
-    struct lpwan_last_rx_frame_time last_sync_beacon_time;
-
     os_int8 expected_beacon_seq_id;
     os_uint8 expected_beacon_classes_num;   /**< still the same classes number? */
     os_uint8 expected_class_seq_id;
@@ -81,6 +77,11 @@ void btracker_register_mac_engine(os_pid_t mac_engine_pid);
 void btracker_search_beacon(os_uint16 duration);
 
 void btracker_reset(void);
+
+os_uint16 btracker_calc_beacon_span(void);
+os_uint16 btracker_calc_beacon_rx_till_now_delta(void);
+os_uint16 btracker_calc_beacon_tx_till_now_delta(void);
+os_uint16 btracker_calc_beacon_span_remains(void);
 
 const struct parsed_frame_hdr_info *btracker_get_parsed_frame_hdr_info(void);
 const struct parsed_beacon_info *btracker_get_parsed_beacon_info(void);

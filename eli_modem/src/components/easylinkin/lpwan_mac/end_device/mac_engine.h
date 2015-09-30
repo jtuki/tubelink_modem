@@ -48,6 +48,7 @@ extern struct parsed_beacon_info *_s_info;
 /** after joined, tx message or command */
 #define SIGNAL_MAC_ENGINE_SEND_FRAME                    BV(18)
 #define SIGNAL_MAC_ENGINE_RECV_FRAME                    BV(19)
+#define SIGNAL_MAC_ENGINE_RECV_TIMEOUT                  BV(20)
 
 #include "radio_controller/rlc_callback_signals.h"      // range from BV(25) ~ BV(30)
 
@@ -61,6 +62,7 @@ extern struct parsed_beacon_info *_s_info;
 #define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
 
 #define DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS      50
+#define DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS         300
 
 /** BEACON_PERIOD_SLOTS_NUM - (1+10)*LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS;
  * 1 for beacon, 10 for possible downlink frames.
@@ -82,7 +84,8 @@ enum device_mac_states {
 enum device_mac_joining_states {
     DE_JOINING_STATES_SEARCH_BEACON,
     DE_JOINING_STATES_BEACON_FOUND,
-    DE_JOINING_STATES_WAIT_JOIN_RESPONSE,
+    DE_JOINING_STATES_TX_JOIN_REQ,      /**< prepare and tx JOIN_REQ */
+    DE_JOINING_STATES_RX_JOIN_CONFIRM,  /**< get ready to rx JOIN_CONFIRM */
 };
 
 enum device_mac_joined_states {
@@ -102,6 +105,8 @@ struct lpwan_device_mac_info {
     short_modem_uuid_t suuid;       /**< generate from @uuid */
     short_addr_t short_addr;        /**< available after joined the network */
 
+    app_id_t app_id;
+
     short_addr_t gateway_cluster_addr;
 };
 
@@ -109,8 +114,10 @@ void device_mac_engine_init(os_uint8 priority);
 enum device_mac_states mac_info_get_mac_states(void);
 
 void mac_info_get_uuid(modem_uuid_t *uuid);
-void mac_info_get_suuid(short_modem_uuid_t *suuid);
-void mac_info_get_short_addr(short_addr_t *short_addr);
+short_modem_uuid_t mac_info_get_suuid(void);
+short_addr_t mac_info_get_short_addr(void);
+app_id_t mac_info_get_app_id(void);
+
 os_boolean mac_engine_is_allow_tx(os_uint8 class_seq_id);
 
 #define DEVICE_SEND_MSG_ERR_INVALID_LEN             -1
