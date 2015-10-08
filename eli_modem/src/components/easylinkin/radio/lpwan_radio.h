@@ -27,8 +27,6 @@ extern os_uint8 lpwan_radio_rx_buffer[1+LPWAN_RADIO_RX_BUFFER_MAX_LEN];
 /**< \sa lpwan_radio_read() */
 #define LPWAN_RADIO_ERR_READ_BUFFER_LEN_INVALID     -1
 
-#define LPWAN_RADIO_TX_MAX_LEN      128
-
 void lpwan_radio_register_radio_controller_pid(os_pid_t pid);
 
 void lpwan_radio_init(void);
@@ -60,6 +58,13 @@ struct lpwan_last_rx_frame_time {
 };
 
 void lpwan_radio_get_last_rx_frame_time(struct lpwan_last_rx_frame_time *t);
+
+struct lpwan_last_tx_frame_time {
+    struct time tx_begin;
+    struct time tx_end;
+};
+
+void lpwan_radio_get_last_tx_frame_time(struct lpwan_last_tx_frame_time *t);
 
 #ifdef __cplusplus
 }

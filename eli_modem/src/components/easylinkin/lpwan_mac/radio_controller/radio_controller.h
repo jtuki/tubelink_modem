@@ -70,9 +70,6 @@ enum radio_controller_states {
 
 enum radio_controller_states get_radio_controller_states(void);
 
-#define RADIO_CONTROLLER_TX_ERR_NOT_IDLE       -1
-#define RADIO_CONTROLLER_TX_ERR_INVALID_LEN    -2
-
 #define switch_rlc_caller() rlc_register_caller(this->_pid)
 void rlc_register_caller(os_pid_t caller_pid);
 
@@ -88,6 +85,7 @@ void rlc_reset(void);
  */
 os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
                             os_uint16 try_tx_duration);
+os_int8 radio_controller_tx_immediately(const os_uint8 frame[], os_uint8 len);
 
 #define RADIO_CONTROLLER_RX_ERR_NOT_IDLE    -1
 

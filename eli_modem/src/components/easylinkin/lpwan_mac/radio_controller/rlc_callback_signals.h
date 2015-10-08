@@ -24,6 +24,9 @@ extern "C"
 #define SIGNAL_RLC_RX_DURATION_TIMEOUT      BV(26)
 #define SIGNAL_RLC_RX_OK                    BV(25)
 
+#define SIGNALS_RLC_TX_FAILED   \
+        (SIGNAL_RLC_TX_TIMEOUT|SIGNAL_RLC_TX_CCA_FAILED|SIGNAL_RLC_TX_CCA_CRC_FAIL)
+
 #ifdef __cplusplus
 }
 #endif

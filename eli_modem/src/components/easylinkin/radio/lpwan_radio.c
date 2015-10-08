@@ -33,6 +33,12 @@ static struct time tmp_rx_time;
 static struct time rx_begin_time;
 static struct time rx_end_time;
 
+/**
+ * The begin and end time of the last tx frame.
+ */
+static struct time tx_begin_time;
+static struct time tx_end_time;
+
 /***************************************************************************************************
  * @fn      lpwan_radio_event__()
  *
@@ -61,9 +67,10 @@ os_int8 lpwan_radio_tx(const os_uint8 frame[], os_uint16 len)
 {
     haddock_assert(Rf_GetCurState() == RF_STANDBY);
     // print_log(LOG_INFO, "RTx");
-    if (len > LPWAN_RADIO_TX_MAX_LEN)
+    if (len > LPWAN_RADIO_TX_BUFFER_MAX_LEN)
         return LPWAN_RADIO_ERR_TX_LEN_INVALID;
     
+    haddock_get_time_tick_now_cached(& tx_begin_time);
     Rf_Send((rf_char*)frame, len);
     return 0;
 }
@@ -133,6 +140,12 @@ void lpwan_radio_get_last_rx_frame_time(struct lpwan_last_rx_frame_time *t)
 {
     t->tx = rx_begin_time;
     t->rx = rx_end_time;
+}
+
+void lpwan_radio_get_last_tx_frame_time(struct lpwan_last_tx_frame_time *t)
+{
+    t->tx_begin = tx_begin_time;
+    t->tx_end = tx_end_time;
 }
 
 /**
@@ -212,9 +225,13 @@ void lpwan_radio_event__(RF_EVT_e a_eEvt)
         break;
     case RF_EVT_TX_OK:
         os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_TX_OK);
+        haddock_get_time_tick_now_cached(& tx_end_time);
         break;
     case RF_EVT_TX_TMO:
         os_ipc_set_signal(_lpwan_radio_controller_proc_id, SIGNAL_LPWAN_RADIO_TX_TIMEOUT);
+        /** \note
+         * jt - Even if tx timeout, we also record the tx_end_time */
+        haddock_get_time_tick_now_cached(& tx_end_time);
         break;
     default:
         break;

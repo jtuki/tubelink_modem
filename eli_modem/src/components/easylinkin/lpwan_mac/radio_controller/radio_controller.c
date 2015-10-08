@@ -23,7 +23,7 @@
 #include "lpwan_config.h"
 #include "radio_controller.h"
 
-static enum radio_controller_states _radio_cur_state;
+static enum radio_controller_states gl_radio_controller_state;
 static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal);
 
 static void start_radio_check_timer(void);
@@ -122,7 +122,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
         goto radio_controller_signals_handling;
     }
 
-    switch ((int) _radio_cur_state) {
+    switch ((int) gl_radio_controller_state) {
     case RADIO_STATES_RX:
         if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
             lpwan_radio_read(gl_radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
@@ -156,7 +156,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_CCA_FAILED);
 
             gl_cur_tx_frame.frame = NULL;
-            _radio_cur_state = RADIO_STATES_IDLE;
+            gl_radio_controller_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
 
             return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
@@ -167,7 +167,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_CCA_CRC_FAIL);
 
             gl_cur_tx_frame.frame = NULL;
-            _radio_cur_state = RADIO_STATES_IDLE;
+            gl_radio_controller_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
 
             return signal ^ SIGNAL_LPWAN_RADIO_RX_CRC_ERROR;
@@ -175,7 +175,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
         if (signal & SIGNAL_LPWAN_RADIO_RX_TIMEOUT) {
             // we can send the frame now!
             lpwan_radio_tx(gl_cur_tx_frame.frame, gl_cur_tx_frame.len);
-            _radio_cur_state = RADIO_STATES_TX_ING;
+            gl_radio_controller_state = RADIO_STATES_TX_ING;
             return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
         }
         __should_never_fall_here();
@@ -186,7 +186,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_OK);
 
             gl_cur_tx_frame.frame = NULL;
-            _radio_cur_state = RADIO_STATES_IDLE;
+            gl_radio_controller_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
 
             return signal ^ SIGNAL_LPWAN_RADIO_TX_OK;
@@ -196,7 +196,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_TX_TIMEOUT);
 
             gl_cur_tx_frame.frame = NULL;
-            _radio_cur_state = RADIO_STATES_IDLE;
+            gl_radio_controller_state = RADIO_STATES_IDLE;
             put_radio_to_sleep();
 
             return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
@@ -218,14 +218,14 @@ radio_controller_signals_handling:
 
     if (signal & SIGNAL_RADIO_CONTROLLER_INITED) {
 
-        _radio_cur_state = RADIO_STATES_IDLE;
+        gl_radio_controller_state = RADIO_STATES_IDLE;
         put_radio_to_sleep();
 
         return signal ^ SIGNAL_RADIO_CONTROLLER_INITED;
     }
 
     if (signal & SIGNAL_RADIO_CONTROLLER_TX_START) {
-        haddock_assert(_radio_cur_state == RADIO_STATES_TX);
+        haddock_assert(gl_radio_controller_state == RADIO_STATES_TX);
 
         os_uint32 _rand_tx_delay = \
                 hdk_randr(10, (os_uint32) gl_cur_tx_frame.try_tx_duration - RADIO_CONTROLLER_TRY_TX_LISTEN_IN_ADVANCE);
@@ -241,9 +241,9 @@ radio_controller_signals_handling:
     }
 
     if (signal & SIGNAL_RADIO_CONTROLLER_TX_RAND_WAIT_TIMEOUT) {
-        haddock_assert(_radio_cur_state == RADIO_STATES_TX);
+        haddock_assert(gl_radio_controller_state == RADIO_STATES_TX);
 
-        _radio_cur_state = RADIO_STATES_TX_CCA;
+        gl_radio_controller_state = RADIO_STATES_TX_CCA;
         lpwan_radio_start_rx();
         start_radio_check_timer();
 
@@ -255,7 +255,7 @@ radio_controller_signals_handling:
         haddock_assert(gl_registered_caller_pid != PROCESS_ID_RESERVED);
         os_ipc_set_signal(gl_registered_caller_pid, SIGNAL_RLC_RX_DURATION_TIMEOUT);
 
-        _radio_cur_state = RADIO_STATES_IDLE;
+        gl_radio_controller_state = RADIO_STATES_IDLE;
         put_radio_to_sleep();
 
         return signal ^ SIGNAL_RADIO_CONTROLLER_RX_DURATION_TIMEOUT;
@@ -267,30 +267,60 @@ radio_controller_signals_handling:
 
 enum radio_controller_states get_radio_controller_states(void)
 {
-    return _radio_cur_state;
+    return gl_radio_controller_state;
 }
 
 /**
- * Try to send @frame during @try_tx_duration.
+ * Try to tx frame immediately.
+ * \sa radio_controller_tx()
+ *
+ * If the radio controller's state is CCA and receive the RX_TIMEOUT signal, tx
+ * will be immediately launched.
+ * \sa RADIO_STATES_TX_CCA
+ * \sa SIGNAL_LPWAN_RADIO_RX_TIMEOUT
+ */
+os_int8 radio_controller_tx_immediately(const os_uint8 frame[], os_uint8 len)
+{
+    haddock_assert(gl_radio_controller_state == RADIO_STATES_IDLE
+                   && len <= LPWAN_RADIO_TX_BUFFER_MAX_LEN);
+    haddock_assert(gl_cur_tx_frame.frame == NULL);
+
+    gl_cur_tx_frame.frame = frame;
+    gl_cur_tx_frame.len = len;
+
+    // we use the short-cut to immediately launch the TX.
+    gl_radio_controller_state = RADIO_STATES_TX_CCA;
+    os_ipc_set_signal(this->_pid, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
+
+    return 0;
+}
+
+/**
+ * Try to send @frame during @try_tx_duration:
+ * random delay first, then perform CCA, then tx the frame.
  */
 os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
                             os_uint16 try_tx_duration)
 {
-    if (_radio_cur_state != RADIO_STATES_IDLE)
-        return RADIO_CONTROLLER_TX_ERR_NOT_IDLE;
-    if (len > LPWAN_RADIO_TX_BUFFER_MAX_LEN)
-        return RADIO_CONTROLLER_TX_ERR_INVALID_LEN;
+    haddock_assert(gl_radio_controller_state == RADIO_STATES_IDLE
+                   && len <= LPWAN_RADIO_TX_BUFFER_MAX_LEN);
 
     haddock_assert(gl_cur_tx_frame.frame == NULL);
-    haddock_assert(try_tx_duration >= RADIO_CONTROLLER_MIN_TRY_TX_DURATION);
+    haddock_assert(try_tx_duration == 0
+                   || try_tx_duration >= RADIO_CONTROLLER_MIN_TRY_TX_DURATION);
 
-    gl_cur_tx_frame.frame = frame;
-    gl_cur_tx_frame.len = len;
-    gl_cur_tx_frame.try_tx_duration = try_tx_duration;
-    haddock_get_time_tick_now(& gl_cur_tx_frame.try_tx_time);
 
-    _radio_cur_state = RADIO_STATES_TX;
-    os_ipc_set_signal(this->_pid, SIGNAL_RADIO_CONTROLLER_TX_START);
+    if (try_tx_duration == 0) {
+        radio_controller_tx_immediately(frame, len);
+    } else {
+        gl_cur_tx_frame.frame = frame;
+        gl_cur_tx_frame.len = len;
+        gl_cur_tx_frame.try_tx_duration = try_tx_duration;
+        haddock_get_time_tick_now(& gl_cur_tx_frame.try_tx_time);
+
+        gl_radio_controller_state = RADIO_STATES_TX;
+        os_ipc_set_signal(this->_pid, SIGNAL_RADIO_CONTROLLER_TX_START);
+    }
 
     return 0;
 }
@@ -302,7 +332,7 @@ os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
 static os_int8 _radio_controller_rx_frame(os_uint16 rx_duration,
                                           os_boolean is_continuous)
 {
-    if (_radio_cur_state != RADIO_STATES_IDLE)
+    if (gl_radio_controller_state != RADIO_STATES_IDLE)
         return RADIO_CONTROLLER_RX_ERR_NOT_IDLE;
 
     haddock_assert(rx_duration >= RADIO_CONTROLLER_RX_DURATION_MIN_SPAN);
@@ -315,7 +345,7 @@ static os_int8 _radio_controller_rx_frame(os_uint16 rx_duration,
     lpwan_radio_start_rx();
     start_radio_check_timer();
 
-    _radio_cur_state = RADIO_STATES_RX;
+    gl_radio_controller_state = RADIO_STATES_RX;
     gl_radio_rx_config.is_continuous = is_continuous;
 
     return 0;
@@ -333,12 +363,12 @@ os_int8 radio_controller_rx(os_uint16 rx_duration)
 
 os_int8 radio_controller_rx_stop(void)
 {
-    if (_radio_cur_state != RADIO_STATES_RX)
+    if (gl_radio_controller_state != RADIO_STATES_RX)
         return -1;
 
     os_timer_stop(radio_controller_timeout_timer);
 
-    _radio_cur_state = RADIO_STATES_IDLE;
+    gl_radio_controller_state = RADIO_STATES_IDLE;
     put_radio_to_sleep();
 
     return 0;
@@ -375,7 +405,7 @@ static os_int8 rlc_sleep_cleanup_callback(void)
  */
 void rlc_reset(void)
 {
-    _radio_cur_state = RADIO_STATES_IDLE;
+    gl_radio_controller_state = RADIO_STATES_IDLE;
     put_radio_to_sleep();
 
     gl_cur_tx_frame.frame = NULL;
