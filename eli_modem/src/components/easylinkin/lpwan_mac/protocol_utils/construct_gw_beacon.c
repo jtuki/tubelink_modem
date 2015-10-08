@@ -26,7 +26,7 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
 
     /** bcn_info[0] @{ */
     set_bits(info[0], 7, 6, bcn_info->beacon_period_enum);
-    set_bits(info[0], 3, 0, bcn_info->beacon_classes_num - 1); // highest value is @BEACON_MAX_CLASSES_NUM
+    set_bits(info[0], 3, 0, bcn_info->beacon_classes_num - 1); // largest value is @BEACON_MAX_CLASSES_NUM
     /** @} */
 
     /** bcn_info[1] @{ */
@@ -55,8 +55,8 @@ os_int8 construct_gateway_beacon_header(void *bcn_buffer,
     // construct the @seq
     os_uint8 *bcn_seq_id = bcn_hdr->seq;
     bcn_seq_id[0] = (os_uint8) bcn_info->beacon_seq_id;
-    // range [1, info->beacon_classes_num]
-    set_bits(bcn_seq_id[1], 3, 0, bcn_info->beacon_class_seq_id - 1);
+    // range [0, info->beacon_classes_num)
+    set_bits(bcn_seq_id[1], 3, 0, bcn_info->beacon_class_seq_id);
 
     return (os_int8) sizeof(struct beacon_header);
 }

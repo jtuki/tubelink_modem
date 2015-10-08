@@ -524,9 +524,9 @@ static void btracker_info_base_ticktock(void)
     }
 
     btracker_info_base.expected_class_seq_id += 1;
-    if (btracker_info_base.expected_class_seq_id >
+    if (btracker_info_base.expected_class_seq_id >=
         btracker_info_base.expected_beacon_classes_num) {
-        btracker_info_base.expected_class_seq_id = 1;
+        btracker_info_base.expected_class_seq_id = 0;
     }
 }
 
@@ -548,7 +548,8 @@ static os_boolean btracker_is_virtual_track_beacon(void)
     os_boolean is_virtual_tracking = OS_TRUE;
 
     if (mac_tx_frames_has_pending_tx()
-        && mac_engine_is_allow_tx(btracker_info_base.expected_class_seq_id)) {
+        && mac_engine_is_allow_tx(btracker_info_base.expected_beacon_classes_num,
+                                  btracker_info_base.expected_class_seq_id)) {
         // has pending frames to be sent
         is_virtual_tracking = OS_FALSE;
     }

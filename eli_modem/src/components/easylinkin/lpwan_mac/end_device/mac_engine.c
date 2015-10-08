@@ -57,8 +57,8 @@ static inline void mac_state_transfer(enum device_mac_states state);
 static inline void mac_joining_state_transfer(enum device_mac_joining_states state);
 static inline void mac_joined_state_transfer(enum device_mac_joined_states state);
 
-static inline os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
-                                                 os_int8 packed_ack_delay_num);
+static os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
+                                           os_int8 packed_ack_delay_num);
 
 static os_int8 mac_engine_is_valid_gw_join_confirm(const os_uint8 *rx_buf, os_uint8 buf_len,
                                                    short_addr_t expected_gw_addr,
@@ -73,7 +73,7 @@ static void mac_engine_delayed_tx_pending_frame(void);
 static void mac_engine_do_rx_frame(os_uint16 duration);
 static void mac_engine_do_tx_frame(const struct tx_fbuf *fbuf);
 
-static void mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal);
+static signal_t mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal);
 static void mac_engine_handle_tx_frame_ok(const struct tx_fbuf *fbuf);
 
 static void mac_engine_delayed_start_joining(os_uint32 delay_ms);
@@ -284,17 +284,10 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                           cur_tx.tx_frame->seq);
                 return signal ^ SIGNAL_RLC_TX_OK;
             }
-            else if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_CCA_FAILED;
-            }
-            else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_CCA_CRC_FAIL;
-            }
-            else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_TIMEOUT;
+            else if (signal & SIGNALS_RLC_TX_FAILED) {
+                signal_t processed_signal = \
+                        mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
+                return signal ^ processed_signal;
             }
             __should_never_fall_here();
             break;
@@ -459,17 +452,10 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                           cur_tx.tx_frame->seq);
                 return signal ^ SIGNAL_RLC_TX_OK;
             }
-            else if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_CCA_FAILED;
-            }
-            else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_CCA_CRC_FAIL;
-            }
-            else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
-                mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
-                return signal ^ SIGNAL_RLC_TX_TIMEOUT;
+            else if (signal & SIGNALS_RLC_TX_FAILED) {
+                signal_t processed_signal = \
+                        mac_engine_handle_tx_frame_fail(cur_tx.tx_frame, signal);
+                return signal ^ processed_signal;
             }
             __should_never_fall_here();
             break;
@@ -500,8 +486,8 @@ static inline void mac_joined_state_transfer(enum device_mac_joined_states state
     mac_info.joined_states = state;
 }
 
-static inline os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
-                                                 os_int8 packed_ack_delay_num)
+static os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
+                                           os_int8 packed_ack_delay_num)
 {
     haddock_assert(packed_ack_delay_num > 0);
     if (cur_seq_id <= (os_int8) (BEACON_MAX_SEQ_NUM - packed_ack_delay_num))
@@ -671,17 +657,20 @@ static void mac_engine_do_tx_frame(const struct tx_fbuf *fbuf)
 /**
  * \ref radio link controller's tx fail signals: \file rlc_callback_signals.h
  */
-static void mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal)
+static signal_t mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_bv_t signal)
 {
-
+    signal_t processed_signal;
     if (signal & SIGNAL_RLC_TX_CCA_FAILED) {
         print_log(LOG_WARNING, "rlc_tx CCA fail >%d", fbuf->seq);
+        processed_signal = SIGNAL_RLC_TX_CCA_FAILED;
     }
     else if (signal & SIGNAL_RLC_TX_CCA_CRC_FAIL) {
         print_log(LOG_WARNING, "rlc_tx CCA CRC fail >%d", fbuf->seq);
+        processed_signal = SIGNAL_RLC_TX_CCA_CRC_FAIL;
     }
     else if (signal & SIGNAL_RLC_TX_TIMEOUT) {
         print_log(LOG_WARNING, "rlc_tx timeout >%d", fbuf->seq);
+        processed_signal = SIGNAL_RLC_TX_TIMEOUT;
     } else {
         __should_never_fall_here();
     }
@@ -703,6 +692,7 @@ static void mac_engine_handle_tx_frame_fail(const struct tx_fbuf *fbuf, signal_b
         __should_never_fall_here();
     }
     process_sleep();
+    return processed_signal;
 }
 
 static void mac_engine_handle_tx_frame_ok(const struct tx_fbuf *fbuf)
@@ -743,8 +733,6 @@ static void mac_engine_delayed_start_joining(os_uint32 delay_ms)
     }
 }
 
-#define xDE_MAC_ENGINE_IS_VIRTUAL_JOIN
-
 /**
  * Init the JOIN_REQ.
  * \sa DE_MAC_ENGINE_IS_VIRTUAL_JOIN
@@ -755,11 +743,14 @@ static void mac_engine_init_join_req(void)
                    && mac_info.joining_states == DE_JOINING_STATES_BEACON_FOUND);
 
 #ifdef LPWAN_DEBUG_ONLY_TRACK_BEACON
-#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   // if we only need to track beacon, do virtual JOIN_REQ
+// if we only need to track beacon, do virtual JOIN_REQ
+#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_TRUE
 #endif
 
-#ifdef DE_MAC_ENGINE_IS_VIRTUAL_JOIN // we assume JOIN ok.
-    // app id, uuid, put tx buffer mgmt join req
+#if defined (DE_MAC_ENGINE_IS_VIRTUAL_JOIN) && DE_MAC_ENGINE_IS_VIRTUAL_JOIN == OS_TRUE
+    /**
+     * We assume JOIN ok.
+     * Automatically set the distributed short address as shortened UUID. */
     mac_info.gateway_cluster_addr = gl_bcn_info->gateway_cluster_addr;
     mac_info.short_addr = (os_uint16) mac_info.suuid;
 
@@ -771,7 +762,7 @@ static void mac_engine_init_join_req(void)
     print_log(LOG_INFO, "JI: => virtual joined (%04X)", (os_uint16) mac_info.short_addr);
     process_sleep();
 #else
-    // perform real JOIN_REQ
+    /** perform the real JOIN_REQ */
     mac_tx_frames_init_join_req();
 #endif
 }
@@ -945,12 +936,12 @@ app_id_t mac_info_get_app_id(void)
 }
 
 /**
- * If end-device's SUUID % beacon's class_seq_id == 0, the end-device is allowed
+ * If end-device's SUUID % beacon's classes_num == beacon's class_seq_id, the end-device is allowed
  * to perform tx during the uplink contention field.
  */
-os_boolean mac_engine_is_allow_tx(os_uint8 class_seq_id)
+os_boolean mac_engine_is_allow_tx(os_uint8 classes_num, os_uint8 class_seq_id)
 {
-    if (((os_uint16) mac_info.suuid) % class_seq_id == 0)
+    if (((os_uint16) mac_info.suuid) % classes_num == class_seq_id)
         return OS_TRUE;
     else
         return OS_FALSE;

@@ -20,8 +20,12 @@ extern "C"
 /**< Gateway modem running mode selection. */
 #define LPWAN_GW_RUNNING_MODE_AUTO_TEST         0   // auto initialize and print_log() enabled
 #define LPWAN_GW_RUNNING_MODE_CPU_CONNECTED     1   // need external CPU to initialize gateway modem
-#define LPWAN_GW_RUNNING_MODE       LPWAN_GW_RUNNING_MODE_AUTO_TEST
+#define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_AUTO_TEST
+// #define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
 
+/**< End-device modem running mode - is virtual JOIN or real JOIN? */
+#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_TRUE
+// #define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_FALSE
 
 /*---------------------------------------------------------------------------*/
 /**< Radio configuration @{ */
@@ -42,8 +46,10 @@ extern const os_int8 lpwan_radio_tx_power_list[RADIO_TX_POWER_LEVELS_NUM];
  * \brief Use lollipop sequence counter for beacon seq number counting.
  * \sa http://en.wikipedia.org/wiki/Lollipop_sequence_numbering
  */
-#define BEACON_MAX_SEQ_NUM      0x7F
+#define BEACON_MAX_SEQ_NUM      ((os_int8) 0x7F)
 #define BEACON_OVERFLOW_SEQ_NUM ((os_int8) (0x80))
+
+#define LPWAN_BEACON_PERIOD_SLOTS_NUM      128
 
 /**
  * At most 16 classes.

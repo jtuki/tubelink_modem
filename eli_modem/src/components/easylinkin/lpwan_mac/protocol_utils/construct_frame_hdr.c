@@ -23,7 +23,6 @@ os_int8 construct_device_frame_header(void *frame_buffer, os_uint8 buffer_len,
 
     switch ((int) type) {
     case FTYPE_DEVICE_JOIN        :
-    case FTYPE_DEVICE_REJOIN      :
         _len = FRAME_HDR_LEN_JOIN;
         if (buffer_len < _len)
             return -1;
@@ -66,7 +65,6 @@ void update_device_frame_header_addr(struct frame_header *hdr, os_uint8 hdr_len,
 {
     switch ((int) type) {
     case FTYPE_DEVICE_JOIN        :
-    case FTYPE_DEVICE_REJOIN      :
         haddock_assert(hdr_len == FRAME_HDR_LEN_JOIN);
         haddock_assert(src == NULL // cannot change JOIN req's uuid
                        && dest->type == ADDR_TYPE_SHORT_ADDRESS);
@@ -89,11 +87,9 @@ void update_device_frame_header_addr(struct frame_header *hdr, os_uint8 hdr_len,
 
 os_int8 construct_gateway_frame_header(void *frame_buffer, os_uint8 buffer_len,
                                         enum frame_type_gw type,
-                                        struct lpwan_addr *src,
-                                        struct lpwan_addr *dest,
-                                        os_boolean is_multicast_dest,
-                                        os_boolean is_end_of_section,
-                                        enum _beacon_period_section end_of_beacon_section)
+                                        const struct lpwan_addr *src,
+                                        const struct lpwan_addr *dest,
+                                        os_boolean is_multicast_dest)
 {
     struct frame_header *hdr = frame_buffer;
     os_uint8 _len;
@@ -147,8 +143,6 @@ os_int8 construct_gateway_frame_header(void *frame_buffer, os_uint8 buffer_len,
     }
 
     set_bits(hdr->hdr, 7, 7, DEVICE_GATEWAY);
-    set_bits(hdr->hdr, 6, 6, is_end_of_section);
-    set_bits(hdr->hdr, 5, 4, end_of_beacon_section);
     set_bits(hdr->hdr, 3, 1, type);
 
     return _len;

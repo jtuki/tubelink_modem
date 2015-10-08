@@ -46,9 +46,9 @@ struct parsed_beacon_info {
     os_uint8 beacon_class_seq_id;   /**< range [1, ::beacon_classes_num] */
 
     /**
-     * \note sum(slots_xyz) == BEACON_PERIOD_SLOTS_NUM
+     * \note sum(slots_xyz) == LPWAN_BEACON_PERIOD_SLOTS_NUM
      * \sa beacon_period_section_ratio_t
-     * \sa BEACON_PERIOD_SLOTS_NUM
+     * \sa LPWAN_BEACON_PERIOD_SLOTS_NUM
      */
     struct {
         os_uint8 slots_beacon;
@@ -94,7 +94,11 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
                                     const struct parse_beacon_check_info *check_info,
                                     struct parsed_beacon_info *info,
                                     struct parsed_beacon_packed_ack_to_me *ack);
-os_int8 beacon_seq_id_cmp(os_int8 seq1, os_int8 seq2);
+
+__LPWAN os_boolean bcn_packed_ack_hdr_is_join(packed_ack_header_t hdr);
+__LPWAN void bcn_packed_ack_hdr_set_pending_msg(packed_ack_header_t *hdr,
+                                                os_boolean is_msg_pending,
+                                                os_uint8 estimation_downlink_slots);
 
 #ifdef __cplusplus
 }

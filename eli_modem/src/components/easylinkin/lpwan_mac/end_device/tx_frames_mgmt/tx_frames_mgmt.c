@@ -18,6 +18,7 @@ extern "C"
 #include "lib/assert.h"
 
 #include "lpwan_config.h"
+#include "lpwan_utils.h"
 
 #include "protocol_utils/construct_frame_hdr.h"
 #include "protocol_utils/construct_de_uplink_common.h"
@@ -290,8 +291,8 @@ void mac_tx_frames_handle_check_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq)
     list_for_each_safe(pos, n, & gl_wait_ack_frame_buffer_list) {
         fbuf = list_entry(pos, struct tx_fbuf, hdr);
 
-        os_int8 cmp = beacon_seq_id_cmp(fbuf->expected_beacon_seq_id, bcn_seq_id);
-        haddock_assert(cmp != -1);
+        os_int16 cmp = calc_bcn_seq_delta(fbuf->expected_beacon_seq_id, bcn_seq_id);
+        haddock_assert(cmp >= 0);
 
         if (cmp == 0 && fbuf->seq == confirm_seq) {
             // matched! expect ACK and ACK received.
@@ -324,8 +325,8 @@ void mac_tx_frames_handle_no_ack(os_int8 bcn_seq_id)
     list_for_each_safe(pos, n, & gl_wait_ack_frame_buffer_list) {
         fbuf = list_entry(pos, struct tx_fbuf, hdr);
 
-        os_int8 cmp = beacon_seq_id_cmp(fbuf->expected_beacon_seq_id, bcn_seq_id);
-        haddock_assert(cmp != -1);
+        os_int16 cmp = calc_bcn_seq_delta(fbuf->expected_beacon_seq_id, bcn_seq_id);
+        haddock_assert(cmp >= 0);
 
         if (cmp == 0) {
             // matched! expect ACK but no ACK received.

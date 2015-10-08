@@ -26,6 +26,8 @@ os_uint32 mcu_generate_seed_from_uuid(const modem_uuid_t *uuid);
 os_boolean lpwan_uuid_is_equal(const modem_uuid_t *self, const modem_uuid_t *uuid);
 os_boolean lpwan_uuid_is_broadcast(const modem_uuid_t *uuid);
 
+os_int16 calc_bcn_seq_delta(os_int8 _seq1, os_int8 _seq2);
+
 #ifdef __cplusplus
 }
 #endif

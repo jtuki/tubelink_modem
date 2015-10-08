@@ -1265,6 +1265,26 @@
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_de_join_req.h</FilePath>
             </File>
+            <File>
+              <FileName>construct_gw_join_response.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_gw_join_response.c</FilePath>
+            </File>
+            <File>
+              <FileName>construct_gw_join_response.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\construct_gw_join_response.h</FilePath>
+            </File>
+            <File>
+              <FileName>parse_device_uplink_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_device_uplink_common.c</FilePath>
+            </File>
+            <File>
+              <FileName>parse_device_uplink_common.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\protocol_utils\parse_device_uplink_common.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1709,6 +1729,21 @@
               <FileName>tx_frames_mgmt.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\src\components\easylinkin\lpwan_mac\end_device\tx_frames_mgmt\tx_frames_mgmt.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>components/easylinkin/llpwan_mac/gateway/packed_ack_frames_mgmt</GroupName>
+          <Files>
+            <File>
+              <FileName>packed_ack_frames_mgmt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\packed_ack_frames_mgmt\packed_ack_frames_mgmt.c</FilePath>
+            </File>
+            <File>
+              <FileName>packed_ack_frames_mgmt.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\src\components\easylinkin\lpwan_mac\gateway\packed_ack_frames_mgmt\packed_ack_frames_mgmt.h</FilePath>
             </File>
           </Files>
         </Group>

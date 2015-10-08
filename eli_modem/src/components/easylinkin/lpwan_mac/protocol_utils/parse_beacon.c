@@ -69,15 +69,15 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
     bcn->ratio.slots_beacon        = get_bits(bcn_ratio[0], 7, 0);
     bcn->ratio.slots_downlink_msg  = get_bits(bcn_ratio[1], 7, 0);
     bcn->ratio.slots_uplink_msg    = get_bits(bcn_ratio[2], 7, 0);
-    if (BEACON_PERIOD_SLOTS_NUM !=
+    if (LPWAN_BEACON_PERIOD_SLOTS_NUM !=
         bcn->ratio.slots_beacon +
         bcn->ratio.slots_downlink_msg + bcn->ratio.slots_uplink_msg)
         return -1;
 
     const os_uint8 *bcn_seq_id = bcn_hdr->seq;
     bcn->beacon_seq_id         = (os_int8) bcn_seq_id[0];
-    // range [1, info->beacon_classes_num]
-    bcn->beacon_class_seq_id   = get_bits(bcn_seq_id[1], 3, 0) + 1;
+    // range [0, info->beacon_classes_num)
+    bcn->beacon_class_seq_id   = get_bits(bcn_seq_id[1], 3, 0);
 
     static struct beacon_packed_ack *cur_ack;
     if (check_info->is_check_packed_ack && bcn->has_packed_ack) {
@@ -138,6 +138,20 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
     return len;
 }
 
+__LPWAN
+os_boolean bcn_packed_ack_hdr_is_join(packed_ack_header_t hdr)
+{
+    return (os_boolean) get_bits(hdr, 7, 7);
+}
+
+__LPWAN
+void bcn_packed_ack_hdr_set_pending_msg(packed_ack_header_t *hdr,
+                                        os_boolean is_msg_pending,
+                                        os_uint8 estimation_downlink_slots)
+{
+    set_bits(*hdr, 6, 6, is_msg_pending);
+    set_bits(*hdr, 5, 3, estimation_downlink_slots);
+}
 
 static void expected_beacon_length(const os_uint8 beacon[],
                                    struct beacon_frame_offsets *offsets)
@@ -159,19 +173,4 @@ static void expected_beacon_length(const os_uint8 beacon[],
     }
 
     offsets->total_frame_len = len;
-}
-
-/*
- * If seq1 is later(greater) than seq2, return 1;
- * else if equal, return 0;
- * else, return -1.
- */
-os_int8 beacon_seq_id_cmp(os_int8 seq1, os_int8 seq2)
-{
-    if (seq1 == seq2)
-        return 0;
-    else if (seq1 > seq2 && (seq1-seq2) < (BEACON_MAX_SEQ_NUM/2))
-        return 1;
-    else
-        return -1;
 }

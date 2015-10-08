@@ -35,11 +35,9 @@ void update_device_frame_header_addr(struct frame_header *hdr, os_uint8 hdr_len,
 
 os_int8 construct_gateway_frame_header(void *frame_buffer, os_uint8 buffer_len,
                                         enum frame_type_gw type,
-                                        struct lpwan_addr *src,
-                                        struct lpwan_addr *dest,
-                                        os_boolean is_multicast_dest,
-                                        os_boolean is_end_of_section,
-                                        enum _beacon_period_section end_of_beacon_section);
+                                        const struct lpwan_addr *src,
+                                        const struct lpwan_addr *dest,
+                                        os_boolean is_multicast_dest);
 
 #ifdef __cplusplus
 }

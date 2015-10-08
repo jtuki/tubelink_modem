@@ -134,6 +134,9 @@ static signal_bv_t gateway_mac_engine_driver_entry(os_pid_t pid, signal_bv_t sig
  *      [control_code]              \sa enum ecp_gw_c2m_control_code
  *      [optional: control_payload] \sa ecp_gw_c2m_control_payload_len[]
  *  }
+ *
+ * \return 0 if ok, -1 if failed.
+ * \sa _gw_c2m_control_cb()
  */
 static os_int8 mac_driver_handle_c2m_control_payload(os_uint8 *control, os_uint16 len)
 {
@@ -235,11 +238,50 @@ static os_int8 mac_driver_handle_c2m_control_payload(os_uint8 *control, os_uint1
 
 /**
  * Handle downlink data frames from server->gateway cpu->gateway modem.
- * todo
+ * Frame payload format:
+ *  1. JOIN_CONFIRM frame:  \sa lpwan_parse_gw_join_confirmed()
+ *      [1B] type                   \sa enum frame_type_gw
+ *      [1B] tx_bcn_seq_id
+ *      [12B] dest_modem_uuid
+ *      [4B] struct gw_join_confirmed
+ *           ([1B] confirm_info, [1B] init_seq_id, [2B] distributed_short_addr)
+ *
+ *  2. downlink message frame:
+ *      [1B] type                   \sa enum frame_type_gw
+ *      [1B] tx_bcn_seq_id
+ *      [2B] dest_modem_short_addr
+ *      [1B] seq_id
+ *      [1B] len
+ *      [@len] msg
+ *
+ * \return 0 if ok, -1 if failed.
+ * \sa _gw_c2m_data_cb()
  */
 static os_int8 mac_driver_handle_c2m_data_payload(os_uint8 *data, os_uint16 len)
 {
-    return 0;
+    if (data[0] == FTYPE_GW_JOIN_CONFIRMED) {
+        if (len != (1+1+12+4))
+            return -1;
+
+        os_int8 tx_bcn_seq_id;
+        modem_uuid_t dest_uuid;
+        struct gw_join_confirmed join_response;
+
+        tx_bcn_seq_id = (os_int8) data[1];
+        haddock_memcpy(dest_uuid.addr, & data[2], sizeof(modem_uuid_t));
+        haddock_memcpy(& join_response, & data[14], sizeof(struct gw_join_confirmed));
+
+        // we don't care the return value of @gw_mac_prepare_tx_join_confirm()
+        gw_mac_prepare_tx_join_confirm(& dest_uuid, & join_response, tx_bcn_seq_id);
+
+        return 0;
+    }
+
+    if (data[0] == FTYPE_GW_MSG) {
+        return 0;
+    }
+
+    return -1;
 }
 
 void mac_driver_config_set(enum ecp_gw_c2m_control_code item, void *config_value)

@@ -21,8 +21,6 @@ struct parsed_frame_hdr_info {
     union {
         struct {
             enum frame_type_gw frame_type;
-            os_boolean is_end_of_section;
-            enum _beacon_period_section end_of_beacon_section;
             os_boolean is_multicast_dest;
         } gw;
         struct {

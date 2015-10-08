@@ -27,7 +27,6 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
 
         switch ((int) info->info.de.frame_type) {
         case FTYPE_DEVICE_JOIN         :
-        case FTYPE_DEVICE_REJOIN       :
             info->dest.type = ADDR_TYPE_SHORT_ADDRESS;
             info->src.type = ADDR_TYPE_MODEM_UUID;
             info->dest.addr.short_addr = os_ntoh_u16((os_uint16) hdr->dest_and_src.short_uuid.dest);
@@ -48,9 +47,6 @@ __LPWAN os_int8 lpwan_parse_frame_header (const struct frame_header *hdr, os_uin
         break;
     case DEVICE_GATEWAY:
         info->frame_origin_type = DEVICE_GATEWAY;
-        info->info.gw.is_end_of_section = get_bits(hdr->hdr, 6, 6);
-        info->info.gw.end_of_beacon_section = \
-                (enum _beacon_period_section) get_bits(hdr->hdr, 5, 4);
         info->info.gw.frame_type = (enum frame_type_gw) get_bits(hdr->hdr, 3, 1);
         info->info.gw.is_multicast_dest = get_bits(hdr->hdr, 0, 0);
 

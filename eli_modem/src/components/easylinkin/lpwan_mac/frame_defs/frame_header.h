@@ -34,10 +34,10 @@ __LPWAN struct frame_header {
     /**
      * bits 1: frame_origin_type \sa enum _device_type
      * bits 1:
-     *      gw: is_end_of_section (for frame_type_gw)
+     *      gw: _reserved
      *      de: is_mobile (for frame_type_end_device)
      * bits 2:
-     *      gw: end_of_beacon_section (for frame_type_gw \sa enum _beacon_period_section)
+     *      gw: _reserved
      *      de: tx_power_level (for frame_type_end_device \sa lpwan_radio_tx_power_list)
      *
      * bits 3: frame_type \sa enum frame_type_gw, enum frame_type_end_device
@@ -60,7 +60,7 @@ __LPWAN struct frame_header {
         struct {
             short_addr_t dest;
             modem_uuid_t src;
-        } short_uuid;   /**< eg. FTYPE_DEVICE_JOIN, FTYPE_DEVICE_REJOIN */
+        } short_uuid;   /**< eg. FTYPE_DEVICE_JOIN */
         struct {
             modem_uuid_t dest;
             short_addr_t src;

@@ -67,8 +67,6 @@ typedef os_uint8 beacon_info_t[4];
  */
 typedef os_uint8 beacon_seq_t[2];
 
-#define BEACON_PERIOD_SLOTS_NUM      128
-
 /**
  * byte 1: slots_beacon (contain packed ACK)
  * byte 2: slots_downlink_msg
@@ -79,7 +77,7 @@ typedef os_uint8 beacon_seq_t[2];
  *         32k (32*1024=32768) clock ticks, so each section is 512 ticks (15.625ms).
  * \remark slots(beacon + downlink + uplink) = 128;
  *
- * \sa BEACON_PERIOD_SLOTS_NUM
+ * \sa LPWAN_BEACON_PERIOD_SLOTS_NUM
  */
 typedef os_uint8 beacon_period_section_ratio_t[3];
 

@@ -64,11 +64,11 @@ extern struct parsed_beacon_info *_s_info;
 #define DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS      50
 #define DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS         300
 
-/** BEACON_PERIOD_SLOTS_NUM - (1+10)*LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS;
+/** LPWAN_BEACON_PERIOD_SLOTS_NUM - (1+10)*LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS;
  * 1 for beacon, 10 for possible downlink frames.
  *
  * \sa LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS
- * \sa BEACON_PERIOD_SLOTS_NUM
+ * \sa LPWAN_BEACON_PERIOD_SLOTS_NUM
  */
 #define DE_MAC_ENGINE_MIN_UPLINK_SLOTS              60
 
@@ -118,7 +118,7 @@ short_modem_uuid_t mac_info_get_suuid(void);
 short_addr_t mac_info_get_short_addr(void);
 app_id_t mac_info_get_app_id(void);
 
-os_boolean mac_engine_is_allow_tx(os_uint8 class_seq_id);
+os_boolean mac_engine_is_allow_tx(os_uint8 classes_num, os_uint8 class_seq_id);
 
 #define DEVICE_SEND_MSG_ERR_INVALID_LEN             -1
 #define DEVICE_SEND_MSG_ERR_NOT_JOINED              -2

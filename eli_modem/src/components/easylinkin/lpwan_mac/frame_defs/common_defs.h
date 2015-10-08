@@ -41,6 +41,12 @@ typedef struct {
 typedef os_uint16 short_modem_uuid_t; /**< used for ack \sa short_modem_uuid */
 #define SHORT_MODEM_UUID(uuid) short_modem_uuid(uuid)
 
+typedef union {
+    short_addr_t short_addr;
+    short_modem_uuid_t suuid;
+    multicast_addr_t multi_addr;
+} modem_short_t;
+
 /**
  * A random-generated 16-bits value.
  */
@@ -90,24 +96,11 @@ enum frame_type_gw {
  */
 enum frame_type_end_device {
     FTYPE_DEVICE_JOIN           = 0,
-    FTYPE_DEVICE_REJOIN         = 1,    // no use currently
-    FTYPE_DEVICE_DATA_REQUEST   = 2,
-    FTYPE_DEVICE_ACK            = 3,    /**< for downlink message acknowledgement. */
-    FTYPE_DEVICE_CMD            = 4,    // no use currently
-    FTYPE_DEVICE_MSG            = 5,
+    FTYPE_DEVICE_DATA_REQUEST   = 1,
+    FTYPE_DEVICE_ACK            = 2,    /**< for downlink message acknowledgement. */
+    FTYPE_DEVICE_CMD            = 3,    // no use currently
+    FTYPE_DEVICE_MSG            = 4,
     _ftype_device_invalid = 8,
-};
-
-/**
- * \brief Different section of beacon period.
- * \sa struct frame_header::end_of_section
- * \sa struct frame_header::is_end_of_section
- */
-enum _beacon_period_section {
-    _beacon_period_section_none = 0,
-    BEACON_SECTION_BEACON = 0,
-    BEACON_SECTION_ALL,
-    _beacon_section_invalid = 4,
 };
 
 enum device_message_type {
