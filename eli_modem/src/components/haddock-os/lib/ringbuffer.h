@@ -45,7 +45,7 @@ struct ringbuffer *rbuf_new(os_size_t capacity, os_size_t elem_size);
  * Push back @data (with length @len) to @rb.
  * @return -1 if @rb is full.
  */
-os_int8 rbuf_push_back(struct ringbuffer *rb, void *data, os_size_t len);
+os_int8 rbuf_push_back(struct ringbuffer *rb, const void *data, os_size_t len);
 
 /**
  * Pop front value (FIFO) to @pop_value (with length @len).

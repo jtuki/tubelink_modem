@@ -504,6 +504,10 @@ os_int8 haddock_time_calc_delta(const struct time *t1,
     }
 }
 
+/**
+ * Calculate the time delta from @t to now.
+ * \return In normal case, return 1 (now > t) or 0 (now == t).
+ */
 os_int8 haddock_time_calc_delta_till_now(const struct time *t,
                                          struct time *delta)
 {

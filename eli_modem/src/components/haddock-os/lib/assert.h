@@ -46,7 +46,12 @@ extern "C"
 extern os_uint32   __haddock_call_function_line;
 extern const char *__haddock_call_function_file;
 #else
-#define haddock_assert(condition)
+// #define haddock_assert(condition)
+#define haddock_assert(condition) do { \
+    if (!(condition)) { \
+        while (1) {} \
+    } \
+} while (0)
 #endif
 
 #ifdef __cplusplus

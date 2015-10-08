@@ -36,7 +36,7 @@ struct ringbuffer *rbuf_new(os_size_t capacity, os_size_t elem_size)
         if ((idx) == (capacity)) (idx) = 0; \
     } while(0)
 
-os_int8 rbuf_push_back(struct ringbuffer *rb, void *data, os_size_t len)
+os_int8 rbuf_push_back(struct ringbuffer *rb, const void *data, os_size_t len)
 {
     haddock_assert(rb && rb->buf && data && len == rb->hdr.blk_size);
     if (rb->hdr.len == rb->hdr.capacity)

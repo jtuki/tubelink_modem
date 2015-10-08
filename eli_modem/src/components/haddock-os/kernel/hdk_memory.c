@@ -76,9 +76,14 @@ void haddock_free(void *ptr)
     // we actually do not allow memory free currently todo
 }
 
+/**
+ * @dest and @src should not overlap.
+ */
 void *haddock_memcpy(void *dest, const void *src, os_size_t len)
 {
     haddock_assert(dest && src);
+    if (dest == src)
+        return dest;
     
     char *_dest = dest;
     const char *_src = src;

@@ -67,6 +67,9 @@ typedef os_uint32 os_size_t;
  */
 #define ALIGNED_SIZE(size)     (((size)%4 == 0) ? (size) : (4*((size)/4+1)))
 
+#define MAX_OS_UINT16       0xFFFF
+#define MAX_OS_UINT32       0xFFFFFFFF
+
 #ifdef __cplusplus
 }
 #endif
