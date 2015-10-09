@@ -35,9 +35,9 @@
 /*!
  * SX1276 RESET I/O definitions
  */
-#define RESET_IOPORT                                GPIOA
-#define RESET_PIN                                   GPIO_PIN_15
-#define RESET_CLK_ENABLE()                          __GPIOA_CLK_ENABLE()
+#define RESET_IOPORT                                GPIOB
+#define RESET_PIN                                   GPIO_PIN_3
+#define RESET_CLK_ENABLE()                          __GPIOB_CLK_ENABLE()
 
 /*!
  * SX1276 DIO pins  I/O definitions
@@ -71,9 +71,9 @@
 #define CTRL1_PIN                                    GPIO_PIN_4
 #define CTRL1_CLK_ENABLE()                          __GPIOB_CLK_ENABLE()
 
-#define CTRL2_IOPORT                                 GPIOA
-#define CTRL2_PIN                                    GPIO_PIN_4
-#define CTRL2_CLK_ENABLE()                          __GPIOA_CLK_ENABLE()
+#define CTRL2_IOPORT                                 GPIOB
+#define CTRL2_PIN                                    GPIO_PIN_5
+#define CTRL2_CLK_ENABLE()                          __GPIOB_CLK_ENABLE()
 
 #endif      /* ( PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0 ) */
 
@@ -410,7 +410,7 @@ inline void sx1278_DioSetDioCtrl( rf_bool a_bTxEnable )
     /* do not understand this function's use */
     
 #if(PLATFORM_SX1278_SELECT == PLATFORM_SX1278_STM32_LORA_V1_0)
-    if(rf_false == a_bTxEnable)
+    if(rf_true == a_bTxEnable)
     {
         HAL_GPIO_WritePin(CTRL1_IOPORT, CTRL1_PIN, GPIO_PIN_RESET);                     /* nss pin = low level */
         HAL_GPIO_WritePin(CTRL2_IOPORT, CTRL2_PIN, GPIO_PIN_SET);                    /* nss pin = high level */
