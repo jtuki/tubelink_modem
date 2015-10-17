@@ -292,6 +292,8 @@ os_int8 radio_controller_tx_immediately(const os_uint8 frame[], os_uint8 len)
     gl_radio_controller_state = RADIO_STATES_TX_CCA;
     os_ipc_set_signal(this->_pid, SIGNAL_LPWAN_RADIO_RX_TIMEOUT);
 
+    start_radio_check_timer();
+
     return 0;
 }
 

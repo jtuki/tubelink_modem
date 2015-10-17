@@ -19,6 +19,7 @@
 #include "end_device/mac_engine.h"
 #include "process_test_end_device_app.h"
 #elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+#include "radio_controller/radio_controller.h"
 #include "gateway/mac_engine.h"
 #include "gateway/mac_engine_driver.h"
 #endif
@@ -95,6 +96,7 @@ void os_processes_init_easylinkin_modem(void) {
     
 #elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
     proc_HostifInit(1);
+    radio_controller_init(0);
     gateway_mac_engine_init(0);
     gateway_mac_engine_driver_init(1);
 #endif // MODEM_FOR_END_DEVICE or MODEM_FOR_GATEWAY

@@ -94,6 +94,7 @@ void downlink_frames_mgmt_init(void)
         list_head_init(& gl_downlink_frame_lists[i].flist);
         gl_downlink_frame_lists[i].list_len = 0;
     }
+    list_head_init(& gl_downlink_tx_list);
 
     gl_downlink_frames_pool = mem_pool_create(GATEWAY_DOWNLINK_FRAME_BUF_NUM,
                                               sizeof(struct gw_downlink_fbuf));

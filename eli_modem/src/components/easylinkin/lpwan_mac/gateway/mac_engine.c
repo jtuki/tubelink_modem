@@ -126,6 +126,7 @@ void gateway_mac_engine_init(os_uint8 priority)
     gateway_mac_srand();
 
     packed_ack_mgmt_alloc_buffer();
+    downlink_frames_mgmt_init();
 
     gl_gw_mac_engine_state = GW_MAC_STATE_INITED;
 

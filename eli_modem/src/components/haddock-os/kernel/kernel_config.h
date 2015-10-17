@@ -70,7 +70,11 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
 /** Memory reserevd for allocation, in bytes.
  * \note must be a multiple of 4, for byte alignment.
  * \sa haddock_malloc() */
+#if defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
 #define HDK_CFG_MEMORY_FOR_MALLOC       (4 * 500)
+#elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+#define HDK_CFG_MEMORY_FOR_MALLOC       (6 * 500)
+#endif
 
 /******************************************************************************
  * Timer related configuration.
