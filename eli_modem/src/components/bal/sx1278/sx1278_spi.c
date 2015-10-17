@@ -59,9 +59,9 @@
 /*!
  * spi nss I/O definitions
  */
-#define NSS_PORT                        GPIOB
-#define NSS_PIN                         GPIO_PIN_0
-#define NSS_CLK_ENABLE()                __GPIOB_CLK_ENABLE()
+#define NSS_PORT                        GPIOA
+#define NSS_PIN                         GPIO_PIN_4
+#define NSS_CLK_ENABLE()                __GPIOA_CLK_ENABLE()
 
 #endif
 

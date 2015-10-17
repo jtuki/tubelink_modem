@@ -35,7 +35,19 @@
 #define SYSTICK_SLEEP_CNT_TO_US(_tick)  (_tick*1000*1000 >> 15 )
 
 
-#define SYSTICK_GET_COUNT()     SysTick->VAL
+
+#define SYSTICK_LPTIME_CLOCK_PRESCALE       (LPTIM_PRESCALER_DIV32)        /* clock = 32768 / 32 = 1024 = 2^10 */
+#define SYSTICK_LPTIME_CALC_TIME(__timeUnit)     ((systick_uint32)(__timeUnit) >> 10 )
+#define SYSTICK_LPTIM_WAKE_RELOAD_VALUE             (1)
+#define SYSTICK_LPTIME_SLEEP_MAX_RELOAD_VALUE       (65535)
+/* this value is set to generate a compare interrupt to wakeup cpu, in order to set wake reload value, beacuse reload value should set before reload */
+#define SYSTICK_LPTIME_SLEEP_CMP_RELOAD_DELTA_VALUE          (5)    
+#define SYSTICK_LPTIME_CALC_SLEEP_RELOAD_VALUE( __ms )      (((systick_uint32)(__ms)<<10)/1000)
+
+/* when __reload = 1024, period is 1 second, 1 lptim count is 1/1024/1000 ms, here, time unit cnt is for ms unit */
+#define SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT( __reload )      ( (__reload) * 1000 )
+
+
 /***************************************************************************************************
  * CONSTANTS
  */
@@ -61,7 +73,7 @@ typedef struct
 /***************************************************************************************************
  * GLOBAL VARIABLES
  */
-
+LPTIM_HandleTypeDef hlptim1;
 
 /***************************************************************************************************
  * STATIC VARIABLES
@@ -70,6 +82,11 @@ volatile static systickTime_t gs_tSystickTimeLastUpdate, gs_tSystickTime;
 static systick_mode gs_eSystickMode;
 static systickRemTick_t gs_tTickRem;
 static systick_uint32 gs_u32SleepTime;
+static systick_uint32 gs_u32CurReloadTimeUnitCnt = 0;
+static systick_uint32 gs_u32LastReloadTimeUnitCnt = 0;
+
+
+
 /***************************************************************************************************
  * EXTERNAL VARIABLES
  */
@@ -100,20 +117,24 @@ static systick_uint32 gs_u32SleepTime;
  */
 void systick_Init( sysTick_UpdateTickCb a_hTickUpdate )
 {
-    gs_tSystickTime.u32delta = 0;
     gs_tSystickTime.u32Ms = 0;
-    gs_tSystickTimeLastUpdate.u32delta = 0;
-    gs_tSystickTimeLastUpdate.u32Ms = 0;
+    gs_tSystickTime.u32delta = 0;
     
-    gs_eSystickMode = systick_mode_run;
-
-    /*Configure the SysTick to have interrupt in 1ms time basis*/
-    HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-    /*Configure the SysTick IRQ priority */
-    HAL_NVIC_SetPriority(SysTick_IRQn, INT_PRIORITY_SYSTICK ,0);
+    /* lptim1 init */
+    hlptim1.Instance = LPTIM1;
+    hlptim1.Init.Clock.Source = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
+    hlptim1.Init.Clock.Prescaler = SYSTICK_LPTIME_CLOCK_PRESCALE;
+    hlptim1.Init.Trigger.Source = LPTIM_TRIGSOURCE_SOFTWARE;
+    hlptim1.Init.OutputPolarity = LPTIM_OUTPUTPOLARITY_HIGH;
+    hlptim1.Init.UpdateMode = LPTIM_UPDATE_IMMEDIATE;
+    hlptim1.Init.CounterSource = LPTIM_COUNTERSOURCE_INTERNAL;
+    HAL_LPTIM_Init(&hlptim1);
     
-    SYSTICK_ENABLE();
+    /* set pwm period */
+    HAL_LPTIM_PWM_Start_IT( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE, 0 );
+    gs_u32LastReloadTimeUnitCnt = gs_u32CurReloadTimeUnitCnt = SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(SYSTICK_LPTIM_WAKE_RELOAD_VALUE + 1);
+    
+    
     
 }   /* systick_Init() */
 
@@ -131,9 +152,8 @@ void systick_Init( sysTick_UpdateTickCb a_hTickUpdate )
  */
 void systick_SetWakeReload( void )
 {
-    gs_tTickRem.u32SleepTick = SYSTICK_GET_COUNT();
-    SYSTICK_DISABLE();
-    HAL_SYSTICK_Config(SYSTICK_WAKE_PERIOD );
+    HAL_LPTIM_PWM_Start_IT( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE, 0 );
+    gs_u32CurReloadTimeUnitCnt = SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(SYSTICK_LPTIM_WAKE_RELOAD_VALUE + 1);
 }   /* systick_SetWakeReload() */
 
 /***************************************************************************************************
@@ -149,59 +169,24 @@ void systick_SetWakeReload( void )
  */
 void systick_SetSleepReload( systick_uint32 a_u32Cnt )
 {
-    /*  */
-    //assert_failed( a_u32Cnt < 100 );
-    /* remember count */
-    gs_u32SleepTime = a_u32Cnt;
-    gs_tTickRem.u32WakeTick = SYSTICK_GET_COUNT();
-    SYSTICK_DISABLE();
-    HAL_SYSTICK_Config(SYSTICK_SLEEP_PERIOD(a_u32Cnt));
-}
-
-/***************************************************************************************************
- * @fn      systick_CalcTick()
- *
- * @brief   calc time escape in sleep
- *
- * @author  chuanpengl
- *
- * @param   none
- *
- * @return  none
- */
-void systick_CalcTick( void )
-{
-    gs_tSystickTime.u32delta += SYSTICK_SLEEP_CNT_TO_US(gs_tTickRem.u32SleepTick);
-    gs_tSystickTime.u32delta += SYSTICK_WAKE_CNT_TO_US(gs_tTickRem.u32WakeTick);
-    gs_tSystickTime.u32Ms += (gs_tSystickTime.u32delta / 100);
-    gs_tSystickTime.u32delta = gs_tSystickTime.u32delta % 100;
-}
-
-
-/***************************************************************************************************
- * @fn      systick_Increase()
- *
- * @brief   system tick increase
- *
- * @author  chuanpengl
- *
- * @param   none
- *
- * @return  none
- */
-void systick_Increase( void )
-{
-
-    if(gs_eSystickMode == systick_mode_run)
-    {
-        gs_tSystickTime.u32Ms ++;
+    systick_uint32 u32Temp = SYSTICK_LPTIME_CALC_SLEEP_RELOAD_VALUE(a_u32Cnt) - 1;
+    
+    if(  u32Temp > SYSTICK_LPTIME_SLEEP_MAX_RELOAD_VALUE ){
+        u32Temp = SYSTICK_LPTIME_SLEEP_MAX_RELOAD_VALUE;
     }
-    else
-    {
-        gs_tSystickTime.u32Ms += gs_u32SleepTime;
+    
+    /* set pwm period */
+    HAL_LPTIM_PWM_Start_IT( &hlptim1, u32Temp, u32Temp - SYSTICK_LPTIME_SLEEP_CMP_RELOAD_DELTA_VALUE );
+    
+    gs_u32CurReloadTimeUnitCnt = SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(u32Temp + 1);
+    
+    /* wait for last wake lptim reload match interrupt, after interrupt, cur value = last value, less then 2 ms */
+    while( gs_u32LastReloadTimeUnitCnt != gs_u32CurReloadTimeUnitCnt ){
+        ;
     }
 
-}   /* systick_Increase() */
+}
+
 
 /***************************************************************************************************
  * @fn      systick_Get()
@@ -220,9 +205,77 @@ systick_uint32 systick_Get( void )
 }   /* systick_Get() */
 
 
-unsigned int HAL_GetTick(void)
+void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef* hlptim)
 {
-    return gs_tSystickTime.u32Ms;
+
+    if(hlptim->Instance==LPTIM1)
+    {
+        /* USER CODE BEGIN LPTIM1_MspInit 0 */
+
+        /* USER CODE END LPTIM1_MspInit 0 */
+        /* Peripheral clock enable */
+        __LPTIM1_CLK_ENABLE();
+        /* Peripheral interrupt init*/
+        HAL_NVIC_SetPriority(LPTIM1_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+        /* USER CODE BEGIN LPTIM1_MspInit 1 */
+
+        /* USER CODE END LPTIM1_MspInit 1 */
+    }
+
+}
+
+void HAL_LPTIM_MspDeInit(LPTIM_HandleTypeDef* hlptim)
+{
+
+    if(hlptim->Instance==LPTIM1)
+    {
+        /* USER CODE BEGIN LPTIM1_MspDeInit 0 */
+
+        /* USER CODE END LPTIM1_MspDeInit 0 */
+        /* Peripheral clock disable */
+        __LPTIM1_CLK_DISABLE();
+
+        /* Peripheral interrupt DeInit*/
+        HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
+
+    }
+    /* USER CODE BEGIN LPTIM1_MspDeInit 1 */
+
+  /* USER CODE END LPTIM1_MspDeInit 1 */
+
+}
+
+void HAL_LPTIM_AutoReloadMatchCallback(LPTIM_HandleTypeDef *hlptim)/* HAL_LPTIM_AutoReloadMatchCallback */
+{
+    unsigned int temp = 0;
+
+    if( hlptim->Instance == LPTIM1 ){
+        gs_tSystickTime.u32delta += gs_u32LastReloadTimeUnitCnt;
+        
+        gs_u32LastReloadTimeUnitCnt = gs_u32CurReloadTimeUnitCnt;
+        
+        temp = SYSTICK_LPTIME_CALC_TIME( gs_tSystickTime.u32delta );
+        
+        gs_tSystickTime.u32Ms += temp;
+        
+        gs_tSystickTime.u32delta &= 0x03FF;
+    }
+}
+
+
+void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
+{
+    if( hlptim->Instance == LPTIM1 ){
+        systick_SetWakeReload();
+    }
+}
+
+
+
+void LPTIM1_IRQHandler(void)
+{
+    HAL_LPTIM_IRQHandler( &hlptim1 );
 }
 /***************************************************************************************************
  * LOCAL FUNCTIONS IMPLEMENTATION

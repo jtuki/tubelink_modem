@@ -51,9 +51,7 @@ void slp_Request( os_uint16 a_u16SleepTime )
     /* set systick in sleep mode */
     systick_SetSleepReload(a_u16SleepTime);
     /* set clock  */
-    clk_SleepConfig();
-    /* enable sys timer */
-    SYSTICK_ENABLE();
+    //clk_SleepConfig();
 
     /* sleep */
     //HAL_PWR_EnterSTANDBYMode();
@@ -61,10 +59,9 @@ void slp_Request( os_uint16 a_u16SleepTime )
     HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     __enable_irq();
     clk_HsiPll32MHz();
-    systick_SetWakeReload();
-    SYSTICK_ENABLE();
-    systick_CalcTick();
     
+    /* lptim recovery in cmp int of lptim */
+
 }   /* slp_Request() */
 
 
