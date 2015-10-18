@@ -157,7 +157,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             os_ipc_set_signal(this->_pid, SIGNAL_GW_MAC_SEND_BEACON);
             return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case GW_MAC_STATE_TX_BEACON:
         if (signal & SIGNAL_GW_MAC_SEND_BEACON) {
@@ -189,7 +189,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_RLC_TX_OK;
         }
 
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case GW_MAC_STATE_TX_DOWNLINK:
         if (signal & SIGNAL_GW_MAC_TX_DOWNLINK_FRAME) {
@@ -216,7 +216,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_RLC_TX_OK;
         }
 
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case GW_MAC_STATE_RX_UPLINK:
         if (signal & SIGNAL_GW_MAC_BEGIN_RX_UPLINK) {
@@ -232,12 +232,12 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             gl_last_rx_signal_strength = lpwan_radio_get_last_rx_rssi_snr();
             gw_mac_handle_uplink_frames(gl_radio_rx_buffer, 1+LPWAN_RADIO_RX_BUFFER_MAX_LEN);
 
-            return signal ^ SIGNAL_LPWAN_RADIO_RX_OK;
+            return signal ^ SIGNAL_RLC_RX_OK;
         }
 
         if (signal & SIGNAL_RLC_RX_DURATION_TIMEOUT) {
             // beacon period cannot exceed MAX_OS_UINT16 ms.
-            __should_never_fall_here();
+            __rx_wrong_signal(signal);
 
             return signal ^ SIGNAL_RLC_RX_DURATION_TIMEOUT;
         }
@@ -252,7 +252,7 @@ static signal_bv_t gateway_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_GW_MAC_SEND_BEACON;
         }
 
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     }
 
@@ -345,7 +345,7 @@ static signal_t gw_mac_handle_driver_related_signals(signal_bv_t signals)
         processed_signal = (signal_t) SIGNAL_GW_MAC_ENGINE_UPDATE_MODEM_CHANNEL;
     }
     else {
-        __should_never_fall_here();
+        __rx_wrong_signal(signals);
     }
 
     return processed_signal;
@@ -479,11 +479,22 @@ static os_int8 gw_mac_handle_uplink_join_req(struct device_join_request *join_re
     if (len != sizeof(struct device_join_request))
         return -1;
 
+    static struct beacon_packed_ack ack;
     struct parsed_device_uplink_common up_common_info;
     lpwan_parse_device_uplink_common(& join_req->hdr, len, & up_common_info);
 
     if (up_common_info.beacon_seq_id != mac_info.bcn_info.beacon_seq_id
         || up_common_info.beacon_class_seq_id != mac_info.bcn_info.beacon_class_seq_id)
+        return -1;
+
+    // valid uplink join request
+    ack.hdr = 0x0;
+    set_bits(ack.hdr, 7, 7, OS_TRUE); // @is_join_ack
+    set_bits(ack.hdr, 2, 1, RADIO_TX_POWER_LEVELS_NUM-1); // @preferred_next_tx_power
+    ack.addr.short_uuid = short_modem_uuid(uuid);
+    ack.confirmed_seq = join_req->init_seq_id;
+
+    if (packed_ack_push(&ack) == -1)
         return -1;
 
 #if defined (LPWAN_GW_RUNNING_MODE) && LPWAN_GW_RUNNING_MODE == LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
@@ -498,14 +509,15 @@ static os_int8 gw_mac_handle_uplink_join_req(struct device_join_request *join_re
 
     // construct @join_response
     set_bits(join_response.hdr, 7, 4, JOIN_CONFIRMED_PAID);
-    join_response.distributed_short_addr = (short_addr_t) short_modem_uuid(uuid);
+    join_response.distributed_short_addr = \
+            (short_addr_t) os_hton_u16((os_uint16)short_modem_uuid(uuid));
     join_response.init_seq_id = 0;
 
     if (0 == gw_mac_prepare_tx_join_confirm(uuid, & join_response,
                     calc_expected_beacon_seq_id(mac_info.bcn_info.beacon_seq_id,
                                                 mac_info.bcn_info.packed_ack_delay_num))) {
         print_log(LOG_INFO, "virtual JOIN_CONFIRM: (%04X)",
-                  (os_uint16) join_response.distributed_short_addr);
+                os_ntoh_u16((os_uint16) join_response.distributed_short_addr));
     } else {
         print_log(LOG_WARNING, "gw_mac_tx_join_confirm() failed.");
     }
@@ -574,7 +586,7 @@ static signal_t gw_mac_handle_tx_bcn_failed(os_int8 bcn_seq_id, signal_bv_t sign
         print_log(LOG_WARNING, "rlc_tx beacon (%d) timeout", bcn_seq_id);
         processed_signal = SIGNAL_RLC_TX_TIMEOUT;
     } else {
-        __should_never_fall_here();
+        __rx_wrong_signal(signals);
     }
 
     // clear current possible downlink tx list, and wait for the next beacon's transmission.
@@ -609,7 +621,7 @@ static signal_t gw_mac_handle_tx_downlink_frame_failed(const struct gw_downlink_
     else if (signals & SIGNAL_RLC_TX_TIMEOUT) {
         processed_signal = SIGNAL_RLC_TX_TIMEOUT;
     } else {
-        __should_never_fall_here();
+        __rx_wrong_signal(signals);
     }
 
     if (fbuf->dest.type == ADDR_TYPE_MODEM_UUID) { // join confirmed frame
@@ -756,6 +768,8 @@ static os_uint8 gw_mac_engine_construct_beacon_frame(void)
     }
 
     // construct the beacon's packed ack part by @mac_info.packed_ack_delay_list
+    mac_info.bcn_info.has_packed_ack = has_packed_ack();
+
     os_uint8 packed_ack_num = 0;
     if (mac_info.bcn_info.has_packed_ack == OS_TRUE) {
         packed_ack_num = packed_ack_cur_list_len();
@@ -780,8 +794,6 @@ static os_uint8 gw_mac_engine_construct_beacon_frame(void)
     }
 
     // construct the beacon header by @mac_info.bcn_info
-    mac_info.bcn_info.has_packed_ack = has_packed_ack();
-
     len = construct_gateway_beacon_header(
                 gl_gw_mac_tx_beacon_buf + 1 + FRAME_HDR_LEN_NORMAL,
                 LPWAN_RADIO_TX_BUFFER_MAX_LEN - 1 - FRAME_HDR_LEN_NORMAL,

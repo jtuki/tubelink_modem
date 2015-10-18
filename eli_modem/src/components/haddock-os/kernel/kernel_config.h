@@ -94,7 +94,11 @@ extern const os_size_t haddock_ipc_msg_classes_blk_size[HDK_CFG_IPC_MSG_CLASSES_
  * Power saving related configuration.
  */
 
+#if defined (MODEM_FOR_END_DEVICE) && MODEM_FOR_END_DEVICE == OS_TRUE
 #define HDK_CFG_POWER_SAVING_ENABLE     OS_FALSE
+#elif defined (MODEM_FOR_GATEWAY) && MODEM_FOR_GATEWAY == OS_TRUE
+#define HDK_CFG_POWER_SAVING_ENABLE     OS_FALSE
+#endif
 
 /** sleep if the next timer's timeout value exeeds @threshold ms. 
  * \sa haddock_power_conserve_routine() */

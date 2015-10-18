@@ -145,7 +145,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             lpwan_radio_start_rx();
             return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case RADIO_STATES_TX_CCA:
         if (signal & SIGNAL_LPWAN_RADIO_RX_OK) {
@@ -178,7 +178,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
             gl_radio_controller_state = RADIO_STATES_TX_ING;
             return signal ^ SIGNAL_LPWAN_RADIO_RX_TIMEOUT;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case RADIO_STATES_TX_ING:
         if (signal & SIGNAL_LPWAN_RADIO_TX_OK) {
@@ -201,7 +201,7 @@ static signal_bv_t radio_controller_entry(os_pid_t pid, signal_bv_t signal)
 
             return signal ^ SIGNAL_LPWAN_RADIO_TX_TIMEOUT;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case RADIO_STATES_IDLE:
         print_log(LOG_INFO, "rlc(IDLE) rx signal (race condition)");
@@ -334,9 +334,7 @@ os_int8 radio_controller_tx(const os_uint8 frame[], os_uint8 len,
 static os_int8 _radio_controller_rx_frame(os_uint16 rx_duration,
                                           os_boolean is_continuous)
 {
-    if (gl_radio_controller_state != RADIO_STATES_IDLE)
-        return RADIO_CONTROLLER_RX_ERR_NOT_IDLE;
-
+    haddock_assert(gl_radio_controller_state == RADIO_STATES_IDLE);
     haddock_assert(rx_duration >= RADIO_CONTROLLER_RX_DURATION_MIN_SPAN);
 
     os_timer_reconfig(radio_controller_timeout_timer, this->_pid,
@@ -365,13 +363,15 @@ os_int8 radio_controller_rx(os_uint16 rx_duration)
 
 os_int8 radio_controller_rx_stop(void)
 {
-    if (gl_radio_controller_state != RADIO_STATES_RX)
-        return -1;
+    haddock_assert(gl_radio_controller_state == RADIO_STATES_IDLE
+                   || gl_radio_controller_state == RADIO_STATES_RX);
 
-    os_timer_stop(radio_controller_timeout_timer);
+    if (gl_radio_controller_state == RADIO_STATES_RX) {
+        os_timer_stop(radio_controller_timeout_timer);
 
-    gl_radio_controller_state = RADIO_STATES_IDLE;
-    put_radio_to_sleep();
+        gl_radio_controller_state = RADIO_STATES_IDLE;
+        put_radio_to_sleep();
+    }
 
     return 0;
 }

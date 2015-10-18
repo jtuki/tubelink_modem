@@ -9,6 +9,7 @@
 #include "kernel/timer.h"
 #include "kernel/ipc.h"
 #include "kernel/sys_signal_defs.h"
+#include "kernel/power_manager.h"
 
 #include "lib/hdk_utilities.h"
 #include "lib/assert.h"
@@ -118,6 +119,8 @@ void btracker_init(os_int8 priority)
 
     gl_btracker_states = BCN_TRACKER_INITED;
     os_ipc_set_signal(this->_pid, SIGNAL_BTRACKER_INIT_FINISHED);
+
+    process_sleep();
 }
 
 static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
@@ -128,9 +131,10 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
     case BCN_TRACKER_INITED:
         if (signal & SIGNAL_BTRACKER_INIT_FINISHED) {
             haddock_assert(gl_registered_mac_engine_pid != PROCESS_ID_RESERVED);
+            process_sleep();
             return signal ^ SIGNAL_BTRACKER_INIT_FINISHED;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case BCN_TRACKER_SEARCH_BEACON:
         if (signal & SIGNAL_BTRACKER_SEARCH_TIMEOUT) {
@@ -159,20 +163,24 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
 
                 os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_FOUND);
                 gl_btracker_states = BCN_TRACKER_BEACON_FOUND;
+
+                process_sleep();
             } else {
                 print_log(LOG_INFO, "BTR (search): rx not beacon");
             }
             return signal ^ SIGNAL_RLC_RX_OK;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case BCN_TRACKER_BEACON_FOUND:
         if (signal & SIGNAL_BTRACKER_BEGIN_BEACON_TRACKING) {
             btracker_do_begin_bcn_tracking();
             gl_btracker_states = BCN_TRACKER_BCN_TRACKING;
+
+            process_sleep();
             return signal ^ SIGNAL_BTRACKER_BEGIN_BEACON_TRACKING;
         }
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case BCN_TRACKER_BCN_TRACKING:
         if (signal & SIGNAL_BTRACKER_TRACK_BEACON) {
@@ -191,6 +199,7 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
                 btracker_start_periodical_track_timer(delta);
             }
 
+            process_sleep();
             return signal ^ SIGNAL_BTRACKER_TRACK_BEACON;
         }
 
@@ -228,6 +237,8 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
                               seq.expected_seq_id,
                               seq.seq_id);
                 }
+
+                process_sleep();
             } else {
                 print_log(LOG_INFO, "BTR (track): rx not beacon");
             }
@@ -251,11 +262,12 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_BTRACKER_TRACK_TIMEOUT;
         }
 
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     case BCN_TRACKER_BCN_TRACKING_SEARCH:
         if (signal & SIGNAL_BTRACKER_BEGIN_TRACK_SEARCH) {
             btracker_do_track_search();
+            process_sleep();
             return signal ^ SIGNAL_BTRACKER_BEGIN_TRACK_SEARCH;
         }
 
@@ -271,6 +283,8 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
                 btracker_handle_track_bcn_ok();
                 gl_btracker_states = BCN_TRACKER_BCN_TRACKING;
                 os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_TRACKED);
+
+                process_sleep();
             } else {
                 print_log(LOG_INFO, "BTR (track-search): rx not beacon");
             }
@@ -289,7 +303,7 @@ static signal_bv_t btracker_entry(os_pid_t pid, signal_bv_t signal)
             return signal ^ SIGNAL_BTRACKER_TRACK_SEARCH_TIMEOUT;
         }
 
-        __should_never_fall_here();
+        __rx_wrong_signal(signal);
         break;
     default:
         break;
@@ -317,6 +331,8 @@ void btracker_reset(void)
     btracker_track_timeout_timer = NULL;
 
     gl_btracker_states = BCN_TRACKER_INITED;
+
+    process_sleep();
 }
 
 void btracker_register_mac_engine(os_pid_t mac_engine_pid)
@@ -344,7 +360,7 @@ void btracker_search_beacon(os_uint16 duration)
     switch_rlc_caller();
     radio_controller_rx_stop(); // explicitly put radio to IDLE mode.
     /** A little longer to avoid race condition. */
-    radio_controller_rx_continuously(duration + 10);
+    radio_controller_rx_continuously(duration + 50);
 
     gl_btracker_states = BCN_TRACKER_SEARCH_BEACON;
 }
@@ -384,7 +400,6 @@ static void btracker_parse_beacon_config(struct parse_beacon_check_info *info)
     }
 
     if (gl_btracker_states == BCN_TRACKER_BCN_TRACKING_SEARCH) {
-        haddock_assert(mac_info_get_mac_states() == DE_MAC_STATES_JOINED);
         // we don't care about the packed ACK during miss tracking condition.
         info->is_check_packed_ack = OS_FALSE;
         info->is_check_join_ack = OS_FALSE;
@@ -680,7 +695,7 @@ static void btracker_do_bcn_tracking(void)
     switch_rlc_caller();
     radio_controller_rx_stop(); // explicitly put radio to IDLE mode.
     /** A little longer to avoid race condition. */
-    radio_controller_rx_continuously(DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS + 10);
+    radio_controller_rx_continuously(DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS + 50);
 }
 
 /**
@@ -732,6 +747,7 @@ static void btracker_handle_track_bcn_timeout(void)
     os_ipc_set_signal(gl_registered_mac_engine_pid,
                       SIGNAL_MAC_ENGINE_BEACON_TRACK_LOST_BEACON);
     
+    process_sleep();
     print_log(LOG_WARNING, "BTR (track): lost beacon");
 }
 
@@ -754,7 +770,7 @@ static void btracker_do_track_search(void)
     switch_rlc_caller();
     radio_controller_rx_stop();
     /** A little longer to avoid race condition. */
-    radio_controller_rx_continuously(timeout_ms + 10);
+    radio_controller_rx_continuously(timeout_ms + 50);
 }
 
 /**
@@ -766,6 +782,8 @@ static void btracker_handle_track_search_timeout(void)
     btracker_reset();
     os_ipc_set_signal(gl_registered_mac_engine_pid, SIGNAL_MAC_ENGINE_BEACON_TRACK_FAILED);
     print_log(LOG_WARNING, "BTR (track-search): timeout");
+
+    process_sleep();
 }
 
 /** Return the synced frame header. */

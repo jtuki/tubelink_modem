@@ -79,13 +79,20 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
     // range [0, info->beacon_classes_num)
     bcn->beacon_class_seq_id   = get_bits(bcn_seq_id[1], 3, 0);
 
+    /**< check the packed ACK information. @{ */
+    ack->has_ack = OS_FALSE;
+    ack->is_msg_pending = OS_FALSE;
+
     static struct beacon_packed_ack *cur_ack;
     if (check_info->is_check_packed_ack && bcn->has_packed_ack) {
-        ack->has_ack = OS_FALSE;
-
         os_uint8 _offset = bcn_offsets.offset_packed_ack_num;
         os_uint8 _packed_ack_num = beacon[_offset];
         _offset += sizeof(os_uint8); // move to the struct beacon_packed_ack(s)
+
+        short_modem_uuid_t check_suuid = \
+                (short_modem_uuid_t) os_hton_u16((os_uint16) check_info->suuid);
+        short_addr_t check_short_addr = \
+                (short_addr_t) os_hton_u16((os_uint16) check_info->short_addr);
 
         /*
          * the information stored in @cur_ack->hdr
@@ -105,13 +112,11 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
             _downlink_slots     = get_bits(cur_ack->hdr, 5, 3);
             _preferred_tx_power = get_bits(cur_ack->hdr, 2, 1);
 
-            _total_prev_downlink_slots += _downlink_slots;
-
             if ((check_info->is_check_join_ack
-                 && _is_join_ack && cur_ack->addr.short_uuid == check_info->suuid)
+                 && _is_join_ack && cur_ack->addr.short_uuid == check_suuid)
                 ||
                 (!check_info->is_check_join_ack
-                 && !_is_join_ack && cur_ack->addr.short_addr == check_info->short_addr))
+                 && !_is_join_ack && cur_ack->addr.short_addr == check_short_addr))
             {
                 /**
                  * \remark
@@ -131,9 +136,11 @@ __LPWAN os_int8 lpwan_parse_beacon (const os_uint8 beacon[], os_uint8 len,
                 break;
             }
 
+            _total_prev_downlink_slots += _downlink_slots;
             _offset += sizeof(struct beacon_packed_ack);
         }
     }
+    /**< @} */
 
     return len;
 }

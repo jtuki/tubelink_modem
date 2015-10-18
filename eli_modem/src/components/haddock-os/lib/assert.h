@@ -38,7 +38,7 @@ extern "C"
 // debug mode enabled (simply use watchdog to implement assert).
 #define haddock_assert(condition) do { \
     if (!(condition)) { \
-        print_log(LOG_ERROR, "assert fail: %d", __LINE__); \
+        print_log(LOG_ERROR, "assert fail: %s (%d)", __func__, __LINE__); \
         while (1) {} \
     } \
 } while (0)

@@ -28,6 +28,11 @@ os_boolean lpwan_uuid_is_broadcast(const modem_uuid_t *uuid);
 
 os_int16 calc_bcn_seq_delta(os_int8 _seq1, os_int8 _seq2);
 
+#define __rx_wrong_signal(signal) do {                      \
+    print_log(LOG_ERROR, "rx wrong signal (%d)", signal);   \
+    haddock_assert(OS_FALSE);                               \
+} while (0)
+
 #ifdef __cplusplus
 }
 #endif

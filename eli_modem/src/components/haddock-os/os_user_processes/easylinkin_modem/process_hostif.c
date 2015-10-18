@@ -124,7 +124,8 @@ signal_bv_t proc_HostifEntry__(os_pid_t a_nPid, signal_bv_t a_bvSig)
     }
     
     if (a_bvSig & PROC_HOSTIF_SIG_PERIOD) {
-        customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 15);
+        // jt - set 100ms period for external control resolution
+        customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 100);
         
         hostIf_Run();
         

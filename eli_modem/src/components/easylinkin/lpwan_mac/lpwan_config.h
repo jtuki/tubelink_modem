@@ -24,8 +24,8 @@ extern "C"
 // #define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
 
 /**< End-device modem running mode - is virtual JOIN or real JOIN? */
-#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_TRUE
-// #define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_FALSE
+// #define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_TRUE
+#define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_FALSE
 
 /*---------------------------------------------------------------------------*/
 /**< Radio configuration @{ */

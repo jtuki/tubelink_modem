@@ -63,8 +63,11 @@ struct beacon_tracker_info_base {
 /*---------------------------------------------------------------------------*/
 /**< Timeing settings @{ */
 
-#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       100
-#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
+#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS   100
+#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS                      \
+            (DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS +            \
+             (gl_beacon_section_length_us[LPWAN_BEACON_PERIOD]  \
+              * LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS / 1000))
 
 /**< @} */
 /*---------------------------------------------------------------------------*/

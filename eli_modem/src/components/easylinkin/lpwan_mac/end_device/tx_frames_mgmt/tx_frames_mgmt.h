@@ -58,12 +58,13 @@ typedef void (*mac_tx_frames_prepare_frame_func_t)(const struct tx_fbuf *c_fbuf,
                                                    os_int16 bcn_rssi, os_int16 bcn_snr);
 /**< join related @{ */
 const struct tx_fbuf *mac_tx_frames_get_join_frame(void);
-void mac_tx_frames_init_join_req(void);
+void mac_tx_frames_init_join_req(short_addr_t gw_cluster_addr);
 void mac_tx_frames_prepare_join_req(const struct tx_fbuf *c_fbuf,
                                     os_int8 bcn_seq_id, os_int8 expected_bcn_seq_id,
                                     os_uint8 bcn_class_seq_id,
                                     os_int16 bcn_rssi, os_int16 bcn_snr);
 void mac_tx_frames_handle_join_ok(short_addr_t my_addr, short_addr_t gw_addr);
+void mac_tx_frames_handle_join_denied(void);
 
 os_boolean mac_tx_frames_handle_join_ack(os_int8 bcn_seq_id, os_uint8 confirm_seq);
 void mac_tx_frames_handle_no_join_ack(os_int8 bcn_seq_id);

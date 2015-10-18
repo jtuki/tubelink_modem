@@ -58,11 +58,11 @@ extern struct parsed_beacon_info *_s_info;
 /**< the longest time to find beacon during joining process */
 #define DEVICE_JOINING_SEARCH_BCN_TIMEOUT_MS        (1000 * (1 + gl_beacon_period_length_list[LPWAN_BEACON_PERIOD]))
 
-#define DEVICE_MAC_TRACK_BEACON_IN_ADVANCE_MS       100
-#define DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS          300
-
-#define DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS      50
-#define DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS         300
+#define DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS      100
+#define DEVICE_MAC_RECV_DOWNLINK_TIMEOUT_MS                     \
+            (DEVICE_MAC_RECV_DOWNLINK_IN_ADVANCE_MS +           \
+             (gl_beacon_section_length_us[LPWAN_BEACON_PERIOD]  \
+              * LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS / 1000))
 
 /** LPWAN_BEACON_PERIOD_SLOTS_NUM - (1+10)*LPWAN_BEACON_DEFAULT_PER_DOWNLINK_SLOTS;
  * 1 for beacon, 10 for possible downlink frames.
