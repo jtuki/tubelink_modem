@@ -260,7 +260,7 @@ static os_int8 mac_driver_handle_c2m_control_payload(os_uint8 *control, os_uint1
 static os_int8 mac_driver_handle_c2m_data_payload(os_uint8 *data, os_uint16 len)
 {
     if (data[0] == FTYPE_GW_JOIN_CONFIRMED) {
-        if (len != (1+1+12+4))
+        if (len != (1+1+12+4)) // refer to above
             return -1;
 
         os_int8 tx_bcn_seq_id;

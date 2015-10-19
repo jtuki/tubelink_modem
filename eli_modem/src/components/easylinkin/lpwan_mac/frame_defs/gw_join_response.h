@@ -34,7 +34,7 @@ __LPWAN struct gw_join_confirmed {
      */
     os_uint8 hdr;
     os_uint8 init_seq_id;  /**< \remark gateway's join confirmed response will generate a
-                             random @init_seq_id as the initial session sequence id. */
+                             random @init_seq_id as the initial session downlink sequence id. */
     short_addr_t distributed_short_addr;
 };
 

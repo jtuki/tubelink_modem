@@ -47,6 +47,7 @@ os_int8 construct_device_frame_header(void *frame_buffer, os_uint8 buffer_len,
         __should_never_fall_here();
     }
 
+    hdr->hdr = 0;
     set_bits(hdr->hdr, 7, 7, DEVICE_END_DEVICE);
     set_bits(hdr->hdr, 6, 6, is_mobile);
     set_bits(hdr->hdr, 5, 4, tx_power_level);

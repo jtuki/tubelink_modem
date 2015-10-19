@@ -219,7 +219,7 @@ void ecp_gw_modem_m2c_send_control(enum ecp_gw_m2c_control_code code,
         hdr->frame_type = ECP_FTYPE_CONTROL;
 
         hdr->len_or_num.payload_len = 1 + ecp_gw_m2c_control_payload_len[ECP_GW_M2C_REPORT_MODEM_UUID];
-        ecp_gw_m2c_tx_buf[tx_len+1] = (os_uint8) ECP_GW_M2C_REPORT_MODEM_UUID;
+        ecp_gw_m2c_tx_buf[tx_len] = (os_uint8) ECP_GW_M2C_REPORT_MODEM_UUID;
 
         tx_len += hdr->len_or_num.payload_len;
 
