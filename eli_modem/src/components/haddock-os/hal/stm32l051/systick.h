@@ -87,6 +87,19 @@ void systick_SetWakeReload( void );
 void systick_SetSleepReload( systick_uint32 a_u32Cnt );
 
 /***************************************************************************************************
+ * @fn      systick_setReloadAfterStopWake()
+ *
+ * @brief   set reload value after wakeup from stop mode
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void systick_setReloadAfterStopWake( void );
+
+/***************************************************************************************************
  * @fn      systick_CalcTick()
  *
  * @brief   calc time escape in sleep

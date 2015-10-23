@@ -48,19 +48,19 @@ void __haddock_hal_stm32l051_sleep(os_uint16 delta_ms)
  */
 void slp_Request( os_uint16 a_u16SleepTime )
 {
+
     /* set systick in sleep mode */
     systick_SetSleepReload(a_u16SleepTime);
-    /* set clock  */
-    //clk_SleepConfig();
+    SysTick->CTRL = 0;
+    //SystemPower_Config__();
 
     /* sleep */
-    //HAL_PWR_EnterSTANDBYMode();
     //HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     HAL_PWR_EnterSLEEPMode(PWR_LOWPOWERREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-    __enable_irq();
+    HAL_Init();
     clk_HsiPll32MHz();
-    
-    /* lptim recovery in cmp int of lptim */
+    /* set wake tick after wake from stop mode */
+    systick_setReloadAfterStopWake();
 
 }   /* slp_Request() */
 
