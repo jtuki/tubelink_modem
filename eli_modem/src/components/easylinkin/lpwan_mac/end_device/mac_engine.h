@@ -29,6 +29,9 @@ extern os_pid_t gl_device_mac_engine_pid;
 
 extern struct parsed_beacon_info *_s_info;
 
+typedef void (*gw_downlink_msg_cb_func)(os_uint8 seq,
+                                        const os_uint8 *downlink_msg, os_uint8 len);
+
 /*---------------------------------------------------------------------------*/
 /**< signals @{ */
 
@@ -119,6 +122,8 @@ short_addr_t mac_info_get_short_addr(void);
 app_id_t mac_info_get_app_id(void);
 
 os_boolean mac_engine_is_allow_tx(os_uint8 classes_num, os_uint8 class_seq_id);
+
+void register_mac_engine_downlink_msg_cb(gw_downlink_msg_cb_func f);
 
 #define DEVICE_SEND_MSG_ERR_INVALID_LEN             -1
 #define DEVICE_SEND_MSG_ERR_NOT_JOINED              -2

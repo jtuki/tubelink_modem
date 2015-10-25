@@ -27,7 +27,7 @@ extern "C"
  *      group.
  */
 __LPWAN struct gw_downlink_msg {
-    gw_downlink_common_hdr_t hdr;
+    gw_downlink_common_hdr_t hdr;   // not used currently.
     os_uint8 seq;
     os_uint8 len;      /**< \sa LPWAN_MAX_PAYLAOD_LEN */
     os_uint8 msg[];

@@ -80,6 +80,10 @@ os_boolean is_gw_mac_engine_started(void);
 os_uint8 gw_mac_info_get_packed_ack_delay_num(void);
 const modem_uuid_t *gw_mac_info_get_modem_uuid(void);
 
+os_int8 gw_mac_prepare_tx_downlink_msg(short_addr_t sn_short,
+                                       const os_uint8 msg[], os_uint8 msg_len,
+                                       os_int8 tx_bcn_seq_id);
+
 os_int8 gw_mac_prepare_tx_join_confirm(const modem_uuid_t *dest_uuid,
                                const struct gw_join_confirmed *join_response,
                                os_int8 tx_bcn_seq_id);

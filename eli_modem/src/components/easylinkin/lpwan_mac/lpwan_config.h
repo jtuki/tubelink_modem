@@ -20,8 +20,8 @@ extern "C"
 /**< Gateway modem running mode selection. */
 #define LPWAN_GW_RUNNING_MODE_AUTO_TEST         0   // auto initialize and print_log() enabled
 #define LPWAN_GW_RUNNING_MODE_CPU_CONNECTED     1   // need external CPU to initialize gateway modem
-#define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_AUTO_TEST
-// #define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
+// #define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_AUTO_TEST
+#define LPWAN_GW_RUNNING_MODE   LPWAN_GW_RUNNING_MODE_CPU_CONNECTED
 
 /**< End-device modem running mode - is virtual JOIN or real JOIN? */
 // #define DE_MAC_ENGINE_IS_VIRTUAL_JOIN   OS_TRUE

@@ -313,7 +313,7 @@ os_boolean downlink_frames_check(os_boolean is_join_ack, modem_short_t *addr)
     }
 
     if (found) {
-        list_move_tail(& gl_downlink_tx_list, & fbuf->hdr);
+        list_move_tail(& fbuf->hdr, & gl_downlink_tx_list);
         gl_downlink_tx_list_len += 1;
         gl_downlink_frame_lists[gl_cur_list_id].list_len -= 1;
     }

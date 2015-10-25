@@ -18,7 +18,7 @@ os_int16 calc_bcn_seq_delta(os_int8 _seq1, os_int8 _seq2)
     os_int16 seq1 = (os_int16) _seq1;
     os_int16 seq2 = (os_int16) _seq2;
 
-    if (seq1 > 0 && seq2 > 0) {
+    if (seq1 >= 0 && seq2 >= 0) {
         if (seq1 == seq2) {
             return 0;
         } else if (seq1 > seq2 && (seq1 - seq2) <= (BEACON_MAX_SEQ_NUM / 2)) {

@@ -438,6 +438,43 @@ static os_boolean gw_mac_is_valid_tx_bcn_seq_id(os_int8 tx_bcn_seq_id)
 }
 
 /**
+ * Prepare to tx downlink message.
+ * \return -1 if @tx_bcn_seq_id is invalid, -2 if downlink frame buffer full. 0 if ok.
+ */
+os_int8 gw_mac_prepare_tx_downlink_msg(short_addr_t sn_short,
+                                       const os_uint8 msg[], os_uint8 msg_len,
+                                       os_int8 tx_bcn_seq_id)
+{
+    if (! gw_mac_is_valid_tx_bcn_seq_id(tx_bcn_seq_id))
+        return -1;
+
+    const struct gw_downlink_fbuf *c_fbuf = downlink_frame_alloc();
+    if (! c_fbuf)
+        return -2;
+
+    struct lpwan_addr dest;
+
+    dest.type = ADDR_TYPE_SHORT_ADDRESS;
+    dest.addr.short_addr = sn_short;
+
+    os_int8 frame_len = construct_gateway_downlink_msg((void *) c_fbuf->frame,
+                                        LPWAN_RADIO_TX_BUFFER_MAX_LEN,
+                                        sn_short, mac_info.gateway_cluster_addr,
+                                        msg, msg_len);
+    haddock_assert(frame_len > 0);
+
+    if (-1 == downlink_frame_put(c_fbuf, FTYPE_GW_MSG,
+                        & dest, c_fbuf->frame, frame_len,
+                        mac_info.bcn_info.beacon_seq_id, tx_bcn_seq_id)) {
+        // failed - @tx_bcn_seq_id invalid
+        downlink_frame_free(c_fbuf);
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * Prepare to tx JOIN_CONFIRM frame.
  * \return -1 if @tx_bcn_seq_id is invalid, -2 if downlink frame buffer full. 0 if ok.
  */

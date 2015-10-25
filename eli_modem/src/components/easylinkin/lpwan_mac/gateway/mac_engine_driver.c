@@ -240,19 +240,19 @@ static os_int8 mac_driver_handle_c2m_control_payload(os_uint8 *control, os_uint1
  * Handle downlink data frames from server->gateway cpu->gateway modem.
  * Frame payload format:
  *  1. JOIN_CONFIRM frame:  \sa lpwan_parse_gw_join_confirmed()
- *      [1B] type                   \sa enum frame_type_gw
+ *      [1B] type   \sa enum frame_type_gw
  *      [1B] tx_bcn_seq_id
  *      [12B] dest_modem_uuid
  *      [4B] struct gw_join_confirmed
  *           ([1B] confirm_info, [1B] init_seq_id, [2B] distributed_short_addr)
  *
  *  2. downlink message frame:
- *      [1B] type                   \sa enum frame_type_gw
- *      [1B] tx_bcn_seq_id
- *      [2B] dest_modem_short_addr
- *      [1B] seq_id
- *      [1B] len
- *      [@len] msg
+ *      [1B] type   \sa enum frame_type_gw
+ *      [1B] tx_bcn_seq_id              - offset 1
+ *      [2B] dest_modem_short_addr      - offset 2
+ *      [1B] seq_id                     - offset 4
+ *      [1B] len                        - offset 5
+ *      [@len] msg                      - offset 6
  *
  * \return 0 if ok, -1 if failed.
  * \sa _gw_c2m_data_cb()
@@ -278,6 +278,23 @@ static os_int8 mac_driver_handle_c2m_data_payload(os_uint8 *data, os_uint16 len)
     }
 
     if (data[0] == FTYPE_GW_MSG) {
+        // check if valid downlink message; contruct downlink message to destined SN
+        if (len < 1+1+2+1+1+1)
+            return -1;
+        os_uint8 msg_len = data[5];
+        if (len != msg_len + 6)
+            return -1;
+
+        os_int8 tx_bcn_seq_id = (os_int8) data[1];
+        short_addr_t sn_short = (short_addr_t) os_ntoh_u16(construct_u16_2(data[2], data[3]));
+
+        // we don't care the return value of @gw_mac_prepare_tx_downlink_msg()
+        gw_mac_prepare_tx_downlink_msg(sn_short,
+                                       /** \note msg start from @seq_id part
+                                        * \sa struct gw_downlink_msg */
+                                       & data[4], msg_len+2,
+                                       tx_bcn_seq_id);
+
         return 0;
     }
 

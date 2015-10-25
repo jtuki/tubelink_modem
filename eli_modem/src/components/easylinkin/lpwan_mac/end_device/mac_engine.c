@@ -60,6 +60,9 @@ static inline void mac_joined_state_transfer(enum device_mac_joined_states state
 static os_int8 calc_expected_beacon_seq_id(os_int8 cur_seq_id,
                                            os_int8 packed_ack_delay_num);
 
+static os_int8 mac_engine_is_valid_gw_downlink_msg(const os_uint8 *rx_buf, os_uint8 buf_len,
+                                                   short_addr_t expected_gw_addr,
+                                                   os_uint8 *gw_downlink_msg_buf, os_uint8 msg_buf_len);
 static os_int8 mac_engine_is_valid_gw_join_confirm(const os_uint8 *rx_buf, os_uint8 buf_len,
                                                    short_addr_t expected_gw_addr,
                                                    struct parsed_gw_join_confirmed *confirmed);
@@ -95,6 +98,8 @@ static struct {
 
 os_pid_t gl_device_mac_engine_pid;
 haddock_process("device_mac_engine");
+
+gw_downlink_msg_cb_func gl_gw_downlink_cb = NULL;
 
 void device_mac_engine_init(os_uint8 priority)
 {
@@ -433,9 +438,29 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
 
             if (signal & SIGNAL_RLC_RX_OK) {
                 // todo
+                // first byte for msg seq, second for msg_len
+                static os_uint8 gw_downlink_msg[2+LPWAN_MAX_PAYLAOD_LEN];
+                os_int8 len = mac_engine_is_valid_gw_downlink_msg(gl_radio_rx_buffer,
+                                                       1+LPWAN_RADIO_RX_BUFFER_MAX_LEN,
+                                                       gl_bcn_info->gateway_cluster_addr,
+                                                       gw_downlink_msg, 2+LPWAN_MAX_PAYLAOD_LEN);
+                if (len > 0) {
+                    // valid downlink msg from gateway
+                    radio_controller_rx_stop();
+                    os_timer_stop(gl_timeout_timer);
 
-                mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
-                process_sleep();
+                    if (gl_gw_downlink_cb) {
+                        gl_gw_downlink_cb(gw_downlink_msg[0], & gw_downlink_msg[2], gw_downlink_msg[1]);
+                    }
+                    print_log(LOG_INFO, "JD: rx downlink frame seq(%d) len(%d)",
+                              gw_downlink_msg[0], gw_downlink_msg[1]);
+
+                    mac_joined_state_transfer(DE_JOINED_STATES_IDLE);
+                    process_sleep();
+                } else {
+                    print_log(LOG_INFO, "JD: rx downlink but not expected");
+                }
+
                 return signal ^ SIGNAL_RLC_RX_OK;
             }
 
@@ -798,6 +823,60 @@ static void mac_engine_init_join_req(void)
     /** perform the real JOIN_REQ */
     mac_tx_frames_init_join_req(gl_bcn_info->gateway_cluster_addr);
 #endif
+}
+
+void register_mac_engine_downlink_msg_cb(gw_downlink_msg_cb_func f)
+{
+    if (f)
+        gl_gw_downlink_cb = f;
+}
+
+/**
+ * Check if received valid downlink frame from specified gateway @expected_gw_addr.
+ * \note As for gw_downlink_msg_buf, first byte for msg seq, second for msg_len.
+ * \return -1 if not valid; actual frame length if valid.
+ */
+static os_int8 mac_engine_is_valid_gw_downlink_msg(const os_uint8 *rx_buf, os_uint8 buf_len,
+                                                   short_addr_t expected_gw_addr,
+                                                   os_uint8 *gw_downlink_msg_buf, os_uint8 msg_buf_len)
+{
+    os_int8 len = -1;
+    static struct parsed_frame_hdr_info frame_hdr;
+
+    if (rx_buf[0] > 0) {
+        len = lpwan_parse_frame_header((void *) (rx_buf+1), rx_buf[0],
+                                       & frame_hdr);
+
+        if (len > 0 // frame header's length
+            && frame_hdr.frame_origin_type == DEVICE_GATEWAY
+            && frame_hdr.info.gw.frame_type == FTYPE_GW_MSG)
+        {
+            if (frame_hdr.src.addr.short_addr != expected_gw_addr) {
+                // check if the gw_cluster_addr is matched.
+                len = -1;
+                goto mac_engine_is_valid_gw_downlink_msg_return;
+            }
+
+            haddock_assert(0 < len && len <= rx_buf[0]);
+
+            struct gw_downlink_msg *dmsg = (struct gw_downlink_msg *) & rx_buf[len];
+            if (rx_buf[0] != (len + 3 + dmsg->len)) // \sa struct gw_downlink_msg
+                return -1;
+
+            if (dmsg->len + 2 > msg_buf_len)
+                return -1;
+
+            gw_downlink_msg_buf[0] = dmsg->seq;
+            gw_downlink_msg_buf[1] = dmsg->len;
+            haddock_memcpy(& gw_downlink_msg_buf[2], dmsg->msg, dmsg->len);
+
+            len += 3 + dmsg->len;
+        } else {
+            len = -1;
+        }
+    }
+mac_engine_is_valid_gw_downlink_msg_return:
+    return len;
 }
 
 /**

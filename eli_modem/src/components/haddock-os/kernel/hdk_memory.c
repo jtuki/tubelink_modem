@@ -82,6 +82,7 @@ void haddock_free(void *ptr)
 void *haddock_memcpy(void *dest, const void *src, os_size_t len)
 {
     haddock_assert(dest && src);
+    // we only consider the same address condition, not address overlap condition.
     if (dest == src)
         return dest;
     

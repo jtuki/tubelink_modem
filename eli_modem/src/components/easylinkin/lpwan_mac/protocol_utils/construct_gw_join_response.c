@@ -45,3 +45,36 @@ os_int8 construct_gateway_join_response(void *frame_buffer, os_uint8 buffer_len,
 
     return len;
 }
+
+/**
+ * Construct gateway's downlink msg frame (including the frame header).
+ * \return -1 if failed to construct JOIN response. length of JOIN_COMFIRM frame if ok.
+ * \note For convenience, we put this function here instead of a new file.
+ */
+os_int8 construct_gateway_downlink_msg(void *frame_buffer, os_uint8 buffer_len,
+                                       short_addr_t sn_short, short_addr_t gw_cluster_addr,
+                                       const os_uint8 msg[], os_uint8 msg_len)
+{
+    os_int8 len;
+
+    struct lpwan_addr src;
+    struct lpwan_addr dest;
+
+    src.type = ADDR_TYPE_SHORT_ADDRESS;
+    src.addr.short_addr = gw_cluster_addr;
+    dest.type = ADDR_TYPE_SHORT_ADDRESS;
+    dest.addr.short_addr = sn_short;
+
+    len = construct_gateway_frame_header(frame_buffer, buffer_len,
+                                         FTYPE_GW_MSG,
+                                         &src, &dest, OS_FALSE);
+    if (len < 0
+        || buffer_len < (len + 1+ msg_len)) // 1 for gw_downlink_common_hdr_t
+        return -1;
+
+    ((os_uint8 *)frame_buffer)[len++] = 0xE0;    // gw_downlink_common_hdr_t (preferred max tx power, need ack)
+    haddock_memcpy(& ((os_uint8 *)frame_buffer)[len], msg, msg_len);
+    len += msg_len;
+
+    return len;
+}
