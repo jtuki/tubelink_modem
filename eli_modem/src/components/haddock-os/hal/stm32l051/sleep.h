@@ -62,7 +62,7 @@ typedef enum{
  *
  * @return  none
  */
-void slp_Request( slpUint16 a_u16SleepTime, slpUint8 *a_pu8SlpAssert );
+// void slp_Request( slpUint16 a_u16SleepTime, slpUint8 *a_pu8SlpAssert );
 
 #ifdef __cplusplus
 }

@@ -94,7 +94,7 @@ void proc_HostifInit(os_uint8 priority)
     struct process *ptProcHostIf = process_create(proc_HostifEntry__, priority);
     g_procHostifPid = ptProcHostIf->_pid;
     hostIf_Init();
-    os_ipc_set_signal(this->_pid, PROC_HOSTIF_SIG_PERIOD); // start the set-signal loop
+    // os_ipc_set_signal(this->_pid, PROC_HOSTIF_SIG_PERIOD); // start the set-signal loop
 }
 
 /***************************************************************************************************
@@ -125,7 +125,7 @@ signal_bv_t proc_HostifEntry__(os_pid_t a_nPid, signal_bv_t a_bvSig)
     
     if (a_bvSig & PROC_HOSTIF_SIG_PERIOD) {
         // jt - set 100ms period for external control resolution
-        customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 100);
+        // customize_set_signal(g_procHostifPid, PROC_HOSTIF_SIG_PERIOD, 100);
         
         if( uartTrue == hostIf_Run() ){  /* uart IDLE */
             process_sleep();    /* task sleep when uart idle */

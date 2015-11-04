@@ -225,36 +225,38 @@ void systick_setReloadAfterStopWake( void )
 #if 1
     systick_uint32 u32Count = 0;
     systick_uint32 u32OverFlowCount = 0;   /* overflow count of reload count = count - reload */
-    const systick_uint32 u32Delta = 480;  /* delta for process delay */
+    const systick_uint32 u32Delta = 0;  /* delta for process delay */
 
     __disable_irq();
-    u32Count = HAL_LPTIM_ReadCounter( &hlptim1 );
-    
     /* when set reload, it will interrupt soon */
+     /* set new reload value */
+    __HAL_LPTIM_COMPARE_SET( &hlptim1, SYSTICK_LPTIM_WAKE_CMP_VALUE );
+    __HAL_LPTIM_AUTORELOAD_SET( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE );
+
+    u32Count = HAL_LPTIM_ReadCounter( &hlptim1 );
+    /* wait write active */
+    while( (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARROK) ==RESET) || (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK) ==RESET) ) {
+        u32Count = HAL_LPTIM_ReadCounter( &hlptim1 );
+    }
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
+    
     if( u32Count >= (SYSTICK_LPTIM_WAKE_RELOAD_VALUE + 1) ){
         u32OverFlowCount = u32Count - SYSTICK_LPTIM_WAKE_RELOAD_VALUE;
         u32WakeTime1 ++;
     }else{
-        u32OverFlowCount = 0;
+        u32OverFlowCount = 1;
     }
     u32WakeTime ++;
-     /* set new reload value */
-    __HAL_LPTIM_COMPARE_SET( &hlptim1, SYSTICK_LPTIM_WAKE_CMP_VALUE );
-    __HAL_LPTIM_AUTORELOAD_SET( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE );
-    /* wait write active */
-    while( (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARROK) ==RESET) || (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK) ==RESET) ){}
-    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
-    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
-    
     
     gs_tSystickTime.u32delta += SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(u32OverFlowCount) + u32Delta;
     
     gs_tSystickTime.u32Ms += SYSTICK_LPTIME_CALC_TIME( gs_tSystickTime.u32delta );
     gs_tSystickTime.u32delta &= 0x03FF;
 
-    //systick_SetWakeReload();
-    
     __enable_irq();
+    //systick_SetWakeReload();
+
     /* add tick */
 #endif
 

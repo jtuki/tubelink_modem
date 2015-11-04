@@ -73,6 +73,7 @@ extern void clk_HsiPll32MHz(void);
  *
  * @return  none
  */
+#if 0
 void slp_Request( slpUint16 a_u16SleepTime, slpUint8 *a_pu8SlpAssert )
 {
     slpUint16 u16ReloadCnt = 0;
@@ -94,6 +95,7 @@ void slp_Request( slpUint16 a_u16SleepTime, slpUint8 *a_pu8SlpAssert )
     systick_CalcTick();
     
 }   /* slp_Request() */
+#endif
 
 /***************************************************************************************************
  * LOCAL FUNCTIONS IMPLEMENTATION
