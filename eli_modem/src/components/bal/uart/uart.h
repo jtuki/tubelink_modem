@@ -123,9 +123,9 @@ void uart_Init( uartHandle_t *a_ptUart );
  *
  * @param   a_ptUart  - uart handle
  *
- * @return  none
+ * @return  uartFalse - uart busy, else uart idle
  */
-void uart_Poll( uartHandle_t *a_ptUart );
+uartBool uart_Poll( uartHandle_t *a_ptUart );
 
 /***************************************************************************************************
  * @fn      uart_GetSendByte()

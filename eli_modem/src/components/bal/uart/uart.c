@@ -131,10 +131,11 @@ void uart_Init( uartHandle_t *a_ptUart )
  *
  * @param   a_ptUart  - uart handle
  *
- * @return  none
+ * @return  uartFalse - uart busy, else uart idle
  */
-void uart_Poll( uartHandle_t *a_ptUart )
+uartBool uart_Poll( uartHandle_t *a_ptUart )
 {
+    uartBool bRet = uartTrue;   /* true is idle */
     uartU8 u8Evt = UART_EVT_NONE;
 
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart) );
@@ -148,7 +149,7 @@ void uart_Poll( uartHandle_t *a_ptUart )
     uart_AssertParam__( (uartBool)(uartNull != a_ptUart->hEvt) );
     
     if( a_ptUart->bInitial != uartTrue ){
-        return;
+        return bRet;
     }
 
     if( fifoTrue == fifo_isFull(a_ptUart->ptRxFifo) ){
@@ -163,6 +164,8 @@ void uart_Poll( uartHandle_t *a_ptUart )
         a_ptUart->bRxMonitorTmo = uartFalse;
         if( 0 >= uart_TimeToTimeout__( a_ptUart->u8RxTimeout, (uartU8)(a_ptUart->hGetTick() & 0xFF) )){
             u8Evt |= UART_EVT_RX_TIMEOUT;
+        }else{
+            bRet = uartFalse;   /* if rxing and rx not timeout, uart busy */
         }
     }
     
@@ -170,13 +173,18 @@ void uart_Poll( uartHandle_t *a_ptUart )
         if( fifoTrue == fifo_isEmpty( a_ptUart->ptTxFifo ) ){
             a_ptUart->bTxFlag = uartFalse;
             u8Evt |= UART_EVT_TX_FIFO_EMPTY;
-            }
+        }else{
+            bRet = uartFalse;   /* if uart txing, and uart busy */
+        }
     }
+
     
     
     if( u8Evt > 0 ){
         a_ptUart->hEvt( a_ptUart, u8Evt );
     }
+    
+    return bRet;
 
 }   /* uart_Poll() */
 

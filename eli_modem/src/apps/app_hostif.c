@@ -355,9 +355,9 @@ void hostIf_Init( void )
  *
  * @param   none
  *
- * @return  none
+ * @return  uartFalse - uart busy, else uart idle
  */
-void hostIf_Run( void )
+uartBool hostIf_Run( void )
 {
 #if 0
     static unsigned int i = 0;
@@ -368,7 +368,7 @@ void hostIf_Run( void )
     }
 #endif
     
-    uart_Poll( &gs_tHostIfUart );
+    return uart_Poll( &gs_tHostIfUart );
 } /* hostIf_Run() */
 
 

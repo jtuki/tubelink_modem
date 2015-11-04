@@ -39,7 +39,6 @@ void clk_HsiPll32MHz(void)
 {
     RCC_ClkInitTypeDef RCC_ClkInitStruct;
     RCC_OscInitTypeDef RCC_OscInitStruct;
-    RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
     /* Enable Power Control clock */
     __PWR_CLK_ENABLE();
@@ -50,10 +49,9 @@ void clk_HsiPll32MHz(void)
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
     /* Enable MSI Oscillator */
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_LSE;
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
     RCC_OscInitStruct.HSICalibrationValue = 16;
     RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-    RCC_OscInitStruct.LSEState = RCC_LSE_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
     RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_3;
     RCC_OscInitStruct.PLL.PLLDIV = RCC_PLLDIV_2;
@@ -77,10 +75,6 @@ void clk_HsiPll32MHz(void)
     /* Initialization Error */
     
     }
-    
-    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
-    PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
-    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
     
     HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);

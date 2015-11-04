@@ -18,7 +18,7 @@
 /***************************************************************************************************
  * INCLUDES
  */
-
+#include "uart/uart.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -82,9 +82,9 @@ void hostIf_Init( void );
  *
  * @param   none
  *
- * @return  none
+ * @return  uartFalse - uart busy, else uart idle
  */
-void hostIf_Run( void );
+uartBool hostIf_Run( void );
 
 /***************************************************************************************************
  * @fn      hostIf_SendToHost()

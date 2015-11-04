@@ -27,7 +27,7 @@
 #define SYSTICK_LPTIM_WAKE_CMP_VALUE                (1)
 #define SYSTICK_LPTIME_SLEEP_MAX_RELOAD_VALUE       (65535)
 /* this value is set to generate a compare interrupt to wakeup cpu, in order to set wake reload value, beacuse reload value should set before reload */
-#define SYSTICK_LPTIME_SLEEP_CMP_RELOAD_DELTA_VALUE          (5)
+#define SYSTICK_LPTIME_SLEEP_CMP_RELOAD_DELTA_VALUE          (10)
 #define SYSTICK_LPTIME_CALC_SLEEP_RELOAD_VALUE( __ms )      (((systick_uint32)(__ms)<<10)/1000)
 
 /* when __reload = 1024, period is 1 second, 1 lptim count is 1/1024/1000 ms, here, time unit cnt is for ms unit */
@@ -77,7 +77,18 @@ static systick_uint32 gs_u32CurReloadTimeUnitCnt = 0;
 /***************************************************************************************************
  * LOCAL FUNCTIONS DECLEAR
  */
-
+/***************************************************************************************************
+ * @fn      systick_ClockInit__()
+ *
+ * @brief   init clock for lptim
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+static void systick_ClockInit__( void );
 
 
 
@@ -101,6 +112,11 @@ void systick_Init( sysTick_UpdateTickCb a_hTickUpdate )
 {
     gs_tSystickTime.u32Ms = 0;
     gs_tSystickTime.u32delta = 0;
+    
+    
+    systick_ClockInit__();
+    
+    
     
     /* lptim1 init */
     hlptim1.Instance = LPTIM1;
@@ -180,14 +196,18 @@ void systick_SetSleepReload( systick_uint32 a_u32Cnt )
     
     /* wait for cpmok flag */
     while( (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARROK) ==RESET) || (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK) ==RESET) ){}
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
     __enable_irq();
 
     
-    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
-    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
+    
 
 
 }
+
+unsigned int u32WakeTime = 0;
+unsigned int u32WakeTime1 = 0;
 
 /***************************************************************************************************
  * @fn      systick_setReloadAfterStopWake()
@@ -202,28 +222,87 @@ void systick_SetSleepReload( systick_uint32 a_u32Cnt )
  */
 void systick_setReloadAfterStopWake( void )
 {
+#if 1
     systick_uint32 u32Count = 0;
     systick_uint32 u32OverFlowCount = 0;   /* overflow count of reload count = count - reload */
-    const systick_uint32 u32Delta = 0;  /* delta for process delay */
+    const systick_uint32 u32Delta = 480;  /* delta for process delay */
 
+    __disable_irq();
     u32Count = HAL_LPTIM_ReadCounter( &hlptim1 );
     
     /* when set reload, it will interrupt soon */
     if( u32Count >= (SYSTICK_LPTIM_WAKE_RELOAD_VALUE + 1) ){
-        u32OverFlowCount = u32Count - SYSTICK_LPTIM_WAKE_RELOAD_VALUE + u32Delta;
+        u32OverFlowCount = u32Count - SYSTICK_LPTIM_WAKE_RELOAD_VALUE;
+        u32WakeTime1 ++;
     }else{
         u32OverFlowCount = 0;
     }
+    u32WakeTime ++;
+     /* set new reload value */
+    __HAL_LPTIM_COMPARE_SET( &hlptim1, SYSTICK_LPTIM_WAKE_CMP_VALUE );
+    __HAL_LPTIM_AUTORELOAD_SET( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE );
+    /* wait write active */
+    while( (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARROK) ==RESET) || (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK) ==RESET) ){}
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
     
-    gs_tSystickTime.u32delta += SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(u32OverFlowCount + 1);
+    
+    gs_tSystickTime.u32delta += SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(u32OverFlowCount) + u32Delta;
     
     gs_tSystickTime.u32Ms += SYSTICK_LPTIME_CALC_TIME( gs_tSystickTime.u32delta );
     gs_tSystickTime.u32delta &= 0x03FF;
+
+    //systick_SetWakeReload();
     
-    /* set reload value */
-    systick_SetWakeReload();
-    
+    __enable_irq();
     /* add tick */
+#endif
+
+#if 0
+    systick_uint32 u32Count = 0;
+    const systick_uint32 u32Delta = 0;  /* delta for process delay */
+    
+    __disable_irq();
+    u32Count = HAL_LPTIM_ReadCounter( &hlptim1 );
+    
+    /* set new reload value */
+    __HAL_LPTIM_COMPARE_SET( &hlptim1, SYSTICK_LPTIM_WAKE_CMP_VALUE );
+    __HAL_LPTIM_AUTORELOAD_SET( &hlptim1, SYSTICK_LPTIM_WAKE_RELOAD_VALUE );
+    /* wait write active */
+    while( (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARROK) ==RESET) || (__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK) ==RESET) ){}
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARROK);
+
+    if( u32Count >= SYSTICK_LPTIM_WAKE_RELOAD_VALUE ){
+        while(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) ==RESET){
+        }
+        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
+        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
+        u32Count += 1;
+
+    }else if( (SYSTICK_LPTIM_WAKE_RELOAD_VALUE - u32Count) < 2 ){   /*  */
+        while(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_ARRM) ==RESET){
+        }
+
+        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
+        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_ARRM);
+        u32Count = SYSTICK_LPTIM_WAKE_RELOAD_VALUE + 1;
+    }else{
+        u32Count = 0;
+    }
+
+    __enable_irq();
+
+    
+    
+    __disable_irq();
+    gs_tSystickTime.u32delta += SYSTICK_LPTIME_CALC_RELOAD_TO_TIMEUNIT_CNT(u32Count) + u32Delta;
+    
+    gs_tSystickTime.u32Ms += SYSTICK_LPTIME_CALC_TIME( gs_tSystickTime.u32delta );
+    gs_tSystickTime.u32delta &= 0x03FF;
+    __enable_irq();
+
+#endif
     
 }
 
@@ -244,6 +323,36 @@ systick_uint32 systick_Get( void )
     return gs_tSystickTime.u32Ms;
 }   /* systick_Get() */
 
+
+/***************************************************************************************************
+ * @fn      systick_ClockInit__()
+ *
+ * @brief   init clock for lptim
+ *
+ * @author  chuanpengl
+ *
+ * @param   none
+ *
+ * @return  none
+ */
+void systick_ClockInit__( void )
+{
+    RCC_OscInitTypeDef RCC_OscInitStruct;
+    RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+    /* Enable MSI Oscillator */
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+    RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+    while( HAL_TIMEOUT == HAL_RCC_OscConfig(&RCC_OscInitStruct)){
+        ;
+    }
+
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1;
+    PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSE;  
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+
+}
 
 void HAL_LPTIM_MspInit(LPTIM_HandleTypeDef* hlptim)
 {
@@ -306,6 +415,8 @@ void LPTIM1_IRQHandler(void)
 {
     HAL_LPTIM_IRQHandler( &hlptim1 );
 }
+
+
 /***************************************************************************************************
  * LOCAL FUNCTIONS IMPLEMENTATION
  */
