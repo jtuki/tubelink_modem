@@ -54,6 +54,7 @@ static struct parsed_beacon_packed_ack_to_me    btracker_beacon_packed_ack;
 static struct {
     struct lpwan_last_rx_frame_rssi_snr signal_strength;    /**< last sync beacon's RSSI/SNR */
     struct lpwan_last_rx_frame_time time;                   /**< last sync beacon time */
+    struct time do_track_time;          /**< do track time */
 } btracker_beacon_meta_info;
 
 /**
@@ -696,6 +697,7 @@ static void btracker_do_bcn_tracking(void)
     radio_controller_rx_stop(); // explicitly put radio to IDLE mode.
     /** A little longer to avoid race condition. */
     radio_controller_rx_continuously(DEVICE_MAC_TRACK_BEACON_TIMEOUT_MS + 50);
+    haddock_get_time_tick_now_cached(& btracker_beacon_meta_info.do_track_time);
 }
 
 /**
@@ -818,3 +820,15 @@ const struct lpwan_last_rx_frame_rssi_snr *btracker_get_last_bcn_signal_strength
 {
     return & btracker_beacon_meta_info.signal_strength;
 }
+
+/** Get track wait time if track successfully. */
+os_uint16 btracker_get_track_wait_time(void)
+{
+    struct time delta;
+    os_int8 r = haddock_time_calc_delta(& btracker_beacon_meta_info.time.tx,
+                                        & btracker_beacon_meta_info.do_track_time,
+                                        & delta);
+    haddock_assert(r == 1); // tracked_time > do_track_time
+    return (delta.s * 1000) + delta.ms;
+}
+

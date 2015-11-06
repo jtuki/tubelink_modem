@@ -92,6 +92,7 @@ const struct parsed_beacon_packed_ack_to_me *btracker_get_parsed_packed_ack(void
 const struct beacon_tracker_info_base *btracker_get_info_base(void);
 const struct lpwan_last_rx_frame_time *btacker_get_last_bcn_time(void);
 const struct lpwan_last_rx_frame_rssi_snr *btracker_get_last_bcn_signal_strength(void);
+os_uint16 btracker_get_track_wait_time(void);
 
 #ifdef __cplusplus
 }

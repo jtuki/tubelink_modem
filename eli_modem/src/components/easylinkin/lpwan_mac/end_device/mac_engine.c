@@ -220,6 +220,8 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
             if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACKED) {
                 /* Beacon tracked, check if is waiting for JOIN_CONFIRM,
                  * else check if has JOIN_REQ. */
+                os_uint16 wait_ms = btracker_get_track_wait_time();
+
                 if (mac_tx_frames_has_waiting_join_confirm(gl_bcn_info->beacon_seq_id)) {
                     if (gl_bcn_ack->has_ack && gl_bcn_ack->is_msg_pending) {
                         if (mac_tx_frames_handle_join_ack(gl_bcn_info->beacon_seq_id,
@@ -227,31 +229,31 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                             // get ready to receive downlink JOIN_CONFIRM frame
                             mac_engine_delayed_rx_downlink_frame();
 
-                            print_log(LOG_INFO_COOL, "JI: tracked (%d) join_req ACK(%d)",
-                                      gl_bcn_info->beacon_seq_id,
+                            print_log(LOG_INFO_COOL, "JI: tracked (%d:%dms) join_req ACK(%d)",
+                                      gl_bcn_info->beacon_seq_id, wait_ms,
                                       gl_bcn_ack->confirmed_seq);
                         } else {
                             /**
                              * \note suuid conflict, discard it.
                              * \ref mac_tx_frames_handle_join_ack() */
 
-                            print_log(LOG_WARNING, "JI: tracked (%d) possible suuid conflict",
-                                      gl_bcn_info->beacon_seq_id);
+                            print_log(LOG_WARNING, "JI: tracked (%d:%dms) possible suuid conflict",
+                                      gl_bcn_info->beacon_seq_id, wait_ms);
                         }
                     } else {
                         // no valid JOIN_CONFIRM ACK received
                         mac_tx_frames_handle_no_join_ack(gl_bcn_info->beacon_seq_id);
 
-                        print_log(LOG_WARNING, "JI: tracked (%d) no join_req ACK",
-                                  gl_bcn_info->beacon_seq_id);
+                        print_log(LOG_WARNING, "JI: tracked (%d:%dms) no join_req ACK",
+                                  gl_bcn_info->beacon_seq_id, wait_ms);
                     }
                 } else if (mac_tx_frames_has_pending_join_req()
                            && gl_bcn_info->ratio.slots_uplink_msg >= DE_MAC_ENGINE_MIN_UPLINK_SLOTS) {
                     // has pending JOIN_REQ, try to tx JOIN_REQ.
                     mac_engine_delayed_tx_pending_frame();
 
-                    print_log(LOG_INFO, "JI: tracked (%d) try tx join_req",
-                              gl_bcn_info->beacon_seq_id);
+                    print_log(LOG_INFO, "JI: tracked (%d:%dms) try tx join_req",
+                              gl_bcn_info->beacon_seq_id, wait_ms);
                 }
 
                 process_sleep();
@@ -378,6 +380,8 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
         switch ((int) mac_info.joined_states) {
         case DE_JOINED_STATES_IDLE:
             if (signal & SIGNAL_MAC_ENGINE_BEACON_TRACKED) {
+                os_uint16 wait_ms = btracker_get_track_wait_time();
+
                 /** Check awaiting ACK */
                 if (mac_tx_frames_has_waiting_ack(gl_bcn_info->beacon_seq_id)) {
                     if (gl_bcn_ack->has_ack) {
@@ -403,7 +407,7 @@ static signal_bv_t device_mac_engine_entry(os_pid_t pid, signal_bv_t signal)
                     // no downlink or pending uplink frames, remains in DE_JOINED_STATES_IDLE
                 }
 
-                print_log(LOG_INFO, "JD: tracked (%d)", gl_bcn_info->beacon_seq_id);
+                print_log(LOG_INFO, "JD: tracked (%d:%dms)", gl_bcn_info->beacon_seq_id, wait_ms);
                 process_sleep();
                 return signal ^ SIGNAL_MAC_ENGINE_BEACON_TRACKED;
             }
